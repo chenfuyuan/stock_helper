@@ -6,7 +6,7 @@ from app.core.logging import setup_logging
 from app.presentation.api.api_v1.api import api_router
 from app.presentation.middlewares.error_handler import ErrorHandlingMiddleware
 from app.core.scheduler import SchedulerService
-from app.jobs.sync_job import sync_daily_data_job
+# from app.jobs.sync_job import sync_daily_data_job
 
 # 初始化日志配置
 setup_logging()
@@ -25,7 +25,7 @@ async def startup_event():
     
     # 添加定时任务：每 1 分钟执行一次
     # 注意：如果不想自动运行，请注释掉下面这行
-    scheduler = SchedulerService.get_scheduler()
+    # scheduler = SchedulerService.get_scheduler()
     # scheduler.add_job(sync_daily_data_job, 'interval', minutes=1, id='sync_daily_job', replace_existing=True)
 
 @app.on_event("shutdown")

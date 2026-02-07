@@ -1,5 +1,6 @@
 import json
 import os
+from datetime import datetime
 from loguru import logger
 from app.infrastructure.db.session import AsyncSessionLocal
 from app.infrastructure.repositories.stock_repository import StockRepositoryImpl
@@ -25,11 +26,11 @@ def save_offset(offset: int):
     with open(STATE_FILE, "w") as f:
         json.dump({"offset": offset}, f)
 
-async def sync_daily_data_job():
+async def sync_history_daily_data_job():
     """
-    定时任务：同步股票日线历史数据
+    定时任务：同步股票历史日线数据（全量历史）
     """
-    logger.info("Running sync_daily_data_job...")
+    logger.info("Running sync_history_daily_data_job...")
     
     # 1. 获取当前进度
     offset = load_offset()
@@ -61,9 +62,6 @@ async def sync_daily_data_job():
         else:
             # 如果没有同步到数据，可能是跑完了所有股票
             # 或者本批次全失败了。
-            # 这里简单判断：如果是跑完了（synced_count=0 且 total_rows=0），则重置
-            # 但 SyncDailyHistoryUseCase 如果 target_stocks 为空会返回 message="No stocks found to sync"
-            
             if "No stocks found" in total_msg:
                 logger.info("All stocks synced. Resetting offset to 0.")
                 save_offset(0)
@@ -73,3 +71,26 @@ async def sync_daily_data_job():
                 new_offset = offset + limit
                 save_offset(new_offset)
                 logger.info(f"No valid data in this batch, moving to next batch. Offset: {new_offset}")
+
+from app.application.stock.use_cases.sync_daily_by_date import SyncDailyByDateUseCase
+
+async def sync_daily_by_date_job(trade_date: str = None):
+    """
+    定时任务：同步指定日期的所有股票日线数据（增量更新）
+    如果不传日期，默认同步当天
+    """
+    logger.info(f"Running sync_daily_by_date_job...")
+    
+    async with AsyncSessionLocal() as session:
+        daily_repo = StockDailyRepositoryImpl(session)
+        provider = TushareService()
+        
+        # 使用 UseCase 封装业务逻辑
+        use_case = SyncDailyByDateUseCase(daily_repo, provider)
+        
+        try:
+            result = await use_case.execute(trade_date=trade_date)
+            logger.info(f"Job result: {result['message']}")
+                
+        except Exception as e:
+            logger.error(f"Job failed: {str(e)}")

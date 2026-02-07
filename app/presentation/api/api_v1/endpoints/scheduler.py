@@ -1,17 +1,16 @@
 from fastapi import APIRouter, status, HTTPException, Body
 from app.application.dtos import BaseResponse
 from app.core.scheduler import SchedulerService
-from app.jobs.sync_job import sync_daily_data_job
+from app.jobs.sync_job import sync_history_daily_data_job, sync_daily_by_date_job
 from pydantic import BaseModel
-from typing import Dict, Callable
+from typing import Dict, Callable, Any, Optional
 
 router = APIRouter()
 
 # 任务注册表：将任务 ID 映射到具体的任务函数
 JOB_REGISTRY: Dict[str, Callable] = {
-    "sync_daily_history": sync_daily_data_job,
-    # 未来在此添加更多任务，例如：
-    # "sync_realtime_quotes": sync_realtime_job,
+    "sync_daily_history": sync_history_daily_data_job,  # 历史数据同步（全量/断点续传）
+    "sync_daily_by_date": sync_daily_by_date_job,       # 按日期同步（每日增量）
 }
 
 class SchedulerStatusResponse(BaseModel):
@@ -105,8 +104,14 @@ async def stop_job(job_id: str):
     response_model=BaseResponse[str],
     summary="立即手动触发一次任务"
 )
-async def trigger_job_once(job_id: str):
-    """立即在后台运行一次指定任务，不影响定时设置"""
+async def trigger_job_once(
+    job_id: str,
+    kwargs: Optional[Dict[str, Any]] = Body(None, description="传递给任务的关键字参数，例如: {'trade_date': '20260207'}")
+):
+    """
+    立即在后台运行一次指定任务，不影响定时设置。
+    可以传递参数给任务函数。
+    """
     if job_id not in JOB_REGISTRY:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -117,12 +122,13 @@ async def trigger_job_once(job_id: str):
     job_func = JOB_REGISTRY[job_id]
     
     # 立即执行不需要 ID，因为它是一次性的
-    scheduler.add_job(job_func)
+    # 如果有参数，通过 kwargs 传递
+    scheduler.add_job(job_func, kwargs=kwargs or {})
     
     return BaseResponse(
         success=True,
         code="JOB_TRIGGERED",
-        message=f"已触发任务 '{job_id}' 后台执行一次",
+        message=f"已触发任务 '{job_id}' 后台执行一次，参数: {kwargs}",
         data="triggered"
     )
 
