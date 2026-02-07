@@ -3,10 +3,10 @@ import tushare as ts
 from typing import List, Optional
 from loguru import logger
 from app.core.config import settings
-from app.domain.stock.entity import StockInfo
+from app.domain.stock.entities import StockInfo, StockDaily
 from app.domain.stock.service import StockDataProvider
 from app.core.exceptions import AppException
-from app.infrastructure.acl.assembler import StockAssembler
+from app.infrastructure.acl.assembler import StockAssembler, StockDailyAssembler
 
 class TushareService(StockDataProvider):
     """
@@ -56,5 +56,32 @@ class TushareService(StockDataProvider):
                 status_code=502, # Bad Gateway
                 code="TUSHARE_FETCH_ERROR", 
                 message="获取第三方股票数据失败",
+                details=str(e)
+            )
+
+    async def fetch_daily(self, third_code: str = None, trade_date: str = None, start_date: str = None, end_date: str = None) -> List[StockDaily]:
+        """
+        获取日线行情数据
+        """
+        try:
+            # tushare daily 接口参数: ts_code, trade_date, start_date, end_date
+            # fields: ts_code, trade_date, open, high, low, close, pre_close, change, pct_chg, vol, amount
+            fields = 'ts_code,trade_date,open,high,low,close,pre_close,change,pct_chg,vol,amount'
+            
+            # 同样直接调用同步API
+            # 将 third_code 映射回 tushare 需要的 ts_code 参数
+            df = self.pro.daily(ts_code=third_code, trade_date=trade_date, start_date=start_date, end_date=end_date, fields=fields)
+            
+            if df is None or df.empty:
+                return []
+                
+            return StockDailyAssembler.to_domain_list(df)
+            
+        except Exception as e:
+            logger.error(f"获取日线数据失败: {str(e)}")
+            raise AppException(
+                status_code=502,
+                code="TUSHARE_FETCH_ERROR",
+                message="获取第三方日线数据失败",
                 details=str(e)
             )

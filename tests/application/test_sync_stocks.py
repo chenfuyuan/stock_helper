@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import MagicMock, AsyncMock, patch
 from app.application.stock.use_cases import SyncStocksUseCase
-from app.domain.stock.entity import StockInfo
+from app.domain.stock.entities import StockInfo
 from datetime import date
 
 @pytest.mark.asyncio

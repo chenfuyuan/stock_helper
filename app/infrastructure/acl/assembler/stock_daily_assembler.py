@@ -1,0 +1,57 @@
+import pandas as pd
+from typing import List, Optional
+from loguru import logger
+from app.domain.stock.entities import StockDaily
+
+class StockDailyAssembler:
+    """
+    股票日线数据装配器
+    """
+    
+    @staticmethod
+    def to_domain_list(df: pd.DataFrame) -> List[StockDaily]:
+        """
+        将 Tushare DataFrame 转换为 StockDaily 领域对象列表
+        """
+        dailies = []
+        if df is None or df.empty:
+            return dailies
+            
+        # 处理空值：将 NaN 替换为 None
+        df = df.where(pd.notnull(df), None)
+        
+        for _, row in df.iterrows():
+            try:
+                daily = StockDailyAssembler._row_to_entity(row)
+                if daily:
+                    dailies.append(daily)
+            except Exception as e:
+                logger.warning(f"日线数据转换失败: {row.get('ts_code', 'unknown')} - {str(e)}")
+                continue
+                
+        return dailies
+
+    @staticmethod
+    def _row_to_entity(row: pd.Series) -> Optional[StockDaily]:
+        def parse_date(date_str):
+            if not date_str:
+                return None
+            try:
+                return pd.to_datetime(date_str).date()
+            except ValueError:
+                return None
+
+        return StockDaily(
+            third_code=row['ts_code'],
+            trade_date=parse_date(row['trade_date']),
+            open=row['open'],
+            high=row['high'],
+            low=row['low'],
+            close=row['close'],
+            pre_close=row['pre_close'],
+            change=row['change'],
+            pct_chg=row['pct_chg'],
+            vol=row['vol'],
+            amount=row['amount'],
+            source="tushare"
+        )

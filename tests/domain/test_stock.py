@@ -1,5 +1,5 @@
 import pytest
-from app.domain.stock.entity import StockInfo
+from app.domain.stock.entities import StockInfo
 from datetime import date
 
 def test_stock_info_creation():

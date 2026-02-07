@@ -1,7 +1,7 @@
 import pandas as pd
 from typing import List, Optional
 from loguru import logger
-from app.domain.stock.entity import StockInfo
+from app.domain.stock.entities import StockInfo
 from app.domain.stock.enums import ListStatus, IsHs, ExchangeType, MarketType
 
 class StockAssembler:

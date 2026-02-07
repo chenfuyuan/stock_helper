@@ -5,6 +5,8 @@ from app.core.config import settings
 from app.core.logging import setup_logging
 from app.presentation.api.api_v1.api import api_router
 from app.presentation.middlewares.error_handler import ErrorHandlingMiddleware
+from app.core.scheduler import SchedulerService
+from app.jobs.sync_job import sync_daily_data_job
 
 # 初始化日志配置
 setup_logging()
@@ -14,6 +16,22 @@ app = FastAPI(
     openapi_url=f"{settings.API_V1_STR}/openapi.json",
     docs_url=f"{settings.API_V1_STR}/docs",
 )
+
+# 事件处理
+@app.on_event("startup")
+async def startup_event():
+    # 启动调度器
+    SchedulerService.start()
+    
+    # 添加定时任务：每 1 分钟执行一次
+    # 注意：如果不想自动运行，请注释掉下面这行
+    scheduler = SchedulerService.get_scheduler()
+    # scheduler.add_job(sync_daily_data_job, 'interval', minutes=1, id='sync_daily_job', replace_existing=True)
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    # 关闭调度器
+    SchedulerService.shutdown()
 
 # 配置 CORS 中间件
 # 允许前端跨域访问

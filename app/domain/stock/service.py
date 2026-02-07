@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import List
-from app.domain.stock.entity import StockInfo
+from app.domain.stock.entities import StockInfo, StockDaily
 
 class StockDataProvider(ABC):
     """
@@ -12,5 +12,12 @@ class StockDataProvider(ABC):
     async def fetch_stock_basic(self) -> List[StockInfo]:
         """
         获取股票基础数据列表
+        """
+        pass
+
+    @abstractmethod
+    async def fetch_daily(self, third_code: str = None, trade_date: str = None, start_date: str = None, end_date: str = None) -> List[StockDaily]:
+        """
+        获取日线行情数据
         """
         pass

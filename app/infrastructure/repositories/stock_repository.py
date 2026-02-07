@@ -2,9 +2,9 @@ from typing import List, Optional
 from sqlalchemy.future import select
 from sqlalchemy.dialects.postgresql import insert
 from app.infrastructure.base_repository import BaseRepository
-from app.domain.stock.entity import StockInfo
+from app.domain.stock.entities import StockInfo
 from app.domain.stock.repository import StockRepository
-from app.infrastructure.db.models.stock import StockModel
+from app.infrastructure.db.models.stock_info import StockModel
 
 class StockRepositoryImpl(BaseRepository[StockModel], StockRepository):
     """
@@ -29,6 +29,16 @@ class StockRepositoryImpl(BaseRepository[StockModel], StockRepository):
         )
         model = result.scalar_one_or_none()
         return StockInfo.model_validate(model) if model else None
+
+    async def get_all(self, skip: int = 0, limit: int = 100) -> List[StockInfo]:
+        """获取所有股票（支持分页）"""
+        # 复用 BaseRepository 的 get_all，它已经支持 skip/limit
+        # 但 BaseRepository 返回的是 Model，我们需要转为 Entity
+        # 这里重写以优化或明确逻辑
+        result = await self.session.execute(
+            select(StockModel).offset(skip).limit(limit)
+        )
+        return [StockInfo.model_validate(model) for model in result.scalars().all()]
 
     async def save(self, stock: StockInfo) -> StockInfo:
         """保存单个股票信息 (Create or Update)"""

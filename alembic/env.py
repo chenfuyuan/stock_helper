@@ -8,7 +8,8 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 from alembic import context
 from app.core.config import settings
 from app.infrastructure.db.base import Base
-from app.infrastructure.db.models.stock import StockModel  # noqa
+from app.infrastructure.db.models.stock_info import StockModel  # noqa
+from app.infrastructure.db.models.stock_daily import StockDailyModel  # noqa
 
 # Alembic 配置对象，提供对 .ini 文件的访问
 config = context.config
