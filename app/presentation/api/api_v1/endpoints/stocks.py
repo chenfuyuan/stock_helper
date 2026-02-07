@@ -39,7 +39,7 @@ async def sync_stocks(
         code="SYNC_SUCCESS",
         message="股票数据同步成功",
         data=SyncStockResponse(
-            synced_count=result["synced_count"],
-            message=result["message"]
+            synced_count=result.synced_count,
+            message=result.message
         )
     )

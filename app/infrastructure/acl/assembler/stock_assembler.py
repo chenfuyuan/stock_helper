@@ -2,6 +2,7 @@ import pandas as pd
 from typing import List, Optional
 from loguru import logger
 from app.domain.stock.entity import StockInfo
+from app.domain.stock.enums import ListStatus, IsHs, ExchangeType, MarketType
 
 class StockAssembler:
     """
@@ -45,21 +46,28 @@ class StockAssembler:
                 logger.warning(f"日期格式转换失败: {date_str}")
                 return None
 
+        # 安全的枚举转换
+        def safe_enum(enum_cls, value):
+            try:
+                return enum_cls(value) if value else None
+            except ValueError:
+                return None
+
         return StockInfo(
             third_code=row['ts_code'], # 映射 ts_code -> third_code
             symbol=row['symbol'],
             name=row['name'],
             area=row['area'],
             industry=row['industry'],
-            market=row['market'],
+            market=safe_enum(MarketType, row['market']),
             list_date=parse_date(row['list_date']),
             fullname=row['fullname'],
             enname=row['enname'],
             cnspell=row['cnspell'],
-            exchange=row['exchange'],
+            exchange=safe_enum(ExchangeType, row['exchange']),
             curr_type=row['curr_type'],
-            list_status=row['list_status'],
+            list_status=safe_enum(ListStatus, row['list_status']),
             delist_date=parse_date(row['delist_date']),
-            is_hs=row['is_hs'],
+            is_hs=safe_enum(IsHs, row['is_hs']),
             source="tushare"
         )

@@ -2,6 +2,7 @@ from typing import Optional
 from datetime import date
 from pydantic import Field, ConfigDict
 from app.domain.base_entity import BaseEntity
+from app.domain.stock.enums import ListStatus, IsHs, ExchangeType, MarketType
 
 class StockInfo(BaseEntity):
     """
@@ -14,24 +15,33 @@ class StockInfo(BaseEntity):
     name: str = Field(..., description="股票名称")
     area: Optional[str] = Field(None, description="所在地域")
     industry: Optional[str] = Field(None, description="所属行业")
-    market: Optional[str] = Field(None, description="市场类型 (主板/创业板/科创板/CDR)")
+    market: Optional[MarketType] = Field(None, description="市场类型")
     list_date: Optional[date] = Field(None, description="上市日期")
     
     # 新增字段
     fullname: Optional[str] = Field(None, description="股票全称")
     enname: Optional[str] = Field(None, description="英文全称")
     cnspell: Optional[str] = Field(None, description="拼音缩写")
-    exchange: Optional[str] = Field(None, description="交易所代码")
+    exchange: Optional[ExchangeType] = Field(None, description="交易所代码")
     curr_type: Optional[str] = Field(None, description="交易货币")
-    list_status: Optional[str] = Field(None, description="上市状态 L上市 D退市 P暂停上市")
+    list_status: Optional[ListStatus] = Field(None, description="上市状态")
     delist_date: Optional[date] = Field(None, description="退市日期")
-    is_hs: Optional[str] = Field(None, description="是否沪深港通标的，N否 H沪股通 S深股通")
+    is_hs: Optional[IsHs] = Field(None, description="是否沪深港通标的")
     
     # 来源标记
     source: Optional[str] = Field("tushare", description="数据来源")
     
+    def is_active(self) -> bool:
+        """是否处于上市状态"""
+        return self.list_status == ListStatus.LISTED
+        
+    def is_connect_target(self) -> bool:
+        """是否属于沪深港通标的"""
+        return self.is_hs in (IsHs.HK, IsHs.SZ)
+    
     model_config = ConfigDict(
         from_attributes=True,
+        use_enum_values=True,  # 允许使用枚举值进行序列化
         json_schema_extra={
             "example": {
                 "third_code": "000001.SZ",
@@ -41,6 +51,7 @@ class StockInfo(BaseEntity):
                 "industry": "银行",
                 "market": "主板",
                 "list_date": "1991-04-03",
+                "list_status": "L",
                 "source": "tushare"
             }
         }

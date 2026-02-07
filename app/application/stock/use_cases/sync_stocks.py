@@ -3,6 +3,7 @@ from loguru import logger
 from app.application.use_cases import BaseUseCase
 from app.domain.stock.repository import StockRepository
 from app.domain.stock.service import StockDataProvider
+from app.application.stock.dtos import SyncStockOutput
 
 class SyncStocksUseCase(BaseUseCase):
     """
@@ -13,7 +14,7 @@ class SyncStocksUseCase(BaseUseCase):
         self.stock_repo = stock_repo
         self.stock_provider = stock_provider
 
-    async def execute(self) -> Dict[str, Any]:
+    async def execute(self) -> SyncStockOutput:
         logger.info("执行股票数据同步任务...")
         
         # 1. 从第三方服务获取清洗后的领域对象
@@ -21,7 +22,11 @@ class SyncStocksUseCase(BaseUseCase):
         
         if not stocks:
             logger.info("未获取到股票数据，任务结束")
-            return {"status": "success", "synced_count": 0, "message": "No data fetched"}
+            return SyncStockOutput(
+                status="success", 
+                synced_count=0, 
+                message="No data fetched"
+            )
             
         # 2. 持久化存储 (批量)
         # 考虑到数据量可能较大 (5000+)，在生产环境中可能需要分批处理
@@ -31,8 +36,8 @@ class SyncStocksUseCase(BaseUseCase):
         count = len(saved_stocks)
         logger.info(f"股票数据同步完成，共更新 {count} 条记录")
         
-        return {
-            "status": "success",
-            "synced_count": count,
-            "message": f"Successfully synced {count} stocks"
-        }
+        return SyncStockOutput(
+            status="success",
+            synced_count=count,
+            message=f"Successfully synced {count} stocks"
+        )
