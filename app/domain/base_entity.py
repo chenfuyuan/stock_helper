@@ -14,6 +14,4 @@ class BaseEntity(BaseModel):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
-    class Config:
-        # 允许从 ORM 模型直接创建 Pydantic 模型
-        orm_mode = True
+    model_config = {"from_attributes": True}

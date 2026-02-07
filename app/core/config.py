@@ -35,7 +35,7 @@ class Settings(BaseSettings):
     POSTGRES_USER: str = "postgres"
     POSTGRES_PASSWORD: str = "password"
     POSTGRES_DB: str = "stock_helper"
-    POSTGRES_PORT: str = "5432"
+    POSTGRES_PORT: int = 5432
     SQLALCHEMY_DATABASE_URI: Union[str, PostgresDsn] | None = None
 
     @validator("SQLALCHEMY_DATABASE_URI", pre=True)
@@ -46,6 +46,7 @@ class Settings(BaseSettings):
         """
         if isinstance(v, str):
             return v
+        
         return PostgresDsn.build(
             scheme="postgresql+asyncpg",
             username=values.get("POSTGRES_USER"),
@@ -54,6 +55,9 @@ class Settings(BaseSettings):
             port=values.get("POSTGRES_PORT"),
             path=f"{values.get('POSTGRES_DB') or ''}",
         ).unicode_string()
+
+    # Tushare 配置
+    TUSHARE_TOKEN: str = "your_tushare_token_here"
 
     class Config:
         case_sensitive = True

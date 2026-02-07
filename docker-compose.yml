@@ -1,19 +1,13 @@
-version: '3.8'
-
 services:
   app:
     build: .
     container_name: stock_helper_app
     ports:
       - "8000:8000"
-    environment:
-      - PROJECT_NAME=Stock Helper
-      - POSTGRES_SERVER=db
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=stock_helper
-      - POSTGRES_PORT=5432
-      - ENVIRONMENT=dev
+    volumes:
+      - .:/app
+    env_file:
+      - .env
     depends_on:
       db:
         condition: service_healthy
@@ -27,7 +21,7 @@ services:
       start_period: 10s
 
   db:
-    image: postgres:15-alpine
+    image: public.ecr.aws/docker/library/postgres:15-alpine
     container_name: stock_helper_db
     ports:
       - "5432:5432"

@@ -9,3 +9,5 @@ httpx
 structlog
 python-json-logger
 prometheus-client
+pandas
+tushare

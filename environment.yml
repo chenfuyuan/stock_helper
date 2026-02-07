@@ -24,3 +24,5 @@ dependencies:
     - dependency-injector
     - python-json-logger
     - prometheus-client
+    - tushare
+    - pandas
