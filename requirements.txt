@@ -1,0 +1,11 @@
+fastapi[all]
+uvicorn[standard]
+sqlalchemy[asyncio]
+asyncpg
+alembic
+pydantic-settings
+loguru
+httpx
+structlog
+python-json-logger
+prometheus-client
