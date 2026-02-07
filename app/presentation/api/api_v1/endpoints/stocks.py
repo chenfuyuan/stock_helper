@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.infrastructure.db.session import get_db_session
 from app.infrastructure.repositories.stock_repository import StockRepositoryImpl
-from app.application.stock.use_cases import SyncStocksUseCase
+from app.infrastructure.acl.tushare_service import TushareService
+from app.application.stock.use_cases.sync_stocks import SyncStocksUseCase
 from app.application.dtos import BaseResponse
 from pydantic import BaseModel
 
@@ -27,7 +28,8 @@ async def sync_stocks(
     """
     # 依赖注入：Repository -> UseCase
     repo = StockRepositoryImpl(db)
-    use_case = SyncStocksUseCase(repo)
+    provider = TushareService()
+    use_case = SyncStocksUseCase(repo, provider)
     
     # 执行业务逻辑
     result = await use_case.execute()

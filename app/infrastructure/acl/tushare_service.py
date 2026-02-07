@@ -4,9 +4,11 @@ from typing import List, Optional
 from loguru import logger
 from app.core.config import settings
 from app.domain.stock.entity import StockInfo
+from app.domain.stock.service import StockDataProvider
 from app.core.exceptions import AppException
+from app.infrastructure.acl.assembler import StockAssembler
 
-class TushareService:
+class TushareService(StockDataProvider):
     """
     Tushare 服务适配器 (防腐层)
     负责调用 Tushare 接口并将数据转换为领域对象
@@ -46,7 +48,7 @@ class TushareService:
                 logger.warning("Tushare 返回数据为空")
                 return []
                 
-            return self._transform_to_domain(df)
+            return StockAssembler.to_domain_list(df)
             
         except Exception as e:
             logger.error(f"获取股票数据失败: {str(e)}")
@@ -56,50 +58,3 @@ class TushareService:
                 message="获取第三方股票数据失败",
                 details=str(e)
             )
-
-    def _transform_to_domain(self, df: pd.DataFrame) -> List[StockInfo]:
-        """
-        将 Pandas DataFrame 转换为 StockInfo 领域对象列表 (数据清洗与映射)
-        """
-        stocks = []
-        # 处理空值：将 NaN 替换为 None
-        df = df.where(pd.notnull(df), None)
-        
-        for _, row in df.iterrows():
-            try:
-                # 转换上市日期格式 YYYYMMDD -> YYYY-MM-DD
-                def parse_date(date_str):
-                    if not date_str:
-                        return None
-                    try:
-                        return pd.to_datetime(date_str).date()
-                    except ValueError:
-                        logger.warning(f"日期格式转换失败: {date_str}")
-                        return None
-
-                stock = StockInfo(
-                    third_code=row['ts_code'], # 映射 ts_code -> third_code
-                    symbol=row['symbol'],
-                    name=row['name'],
-                    area=row['area'],
-                    industry=row['industry'],
-                    market=row['market'],
-                    list_date=parse_date(row['list_date']),
-                    fullname=row['fullname'],
-                    enname=row['enname'],
-                    cnspell=row['cnspell'],
-                    exchange=row['exchange'],
-                    curr_type=row['curr_type'],
-                    list_status=row['list_status'],
-                    delist_date=parse_date(row['delist_date']),
-                    is_hs=row['is_hs'],
-                    source="tushare"
-                )
-                stocks.append(stock)
-            except Exception as e:
-                # 单条数据转换失败不应中断整个流程，记录日志即可
-                logger.warning(f"股票数据转换失败: {row.get('ts_code', 'unknown')} - {str(e)}")
-                continue
-                
-        logger.info(f"成功转换 {len(stocks)} 条股票数据")
-        return stocks
