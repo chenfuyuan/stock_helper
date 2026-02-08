@@ -61,21 +61,51 @@ class TushareService(StockDataProvider):
 
     async def fetch_daily(self, third_code: str = None, trade_date: str = None, start_date: str = None, end_date: str = None) -> List[StockDaily]:
         """
-        获取日线行情数据
+        获取日线行情数据（包含复权因子和每日指标）
         """
         try:
-            # tushare daily 接口参数: ts_code, trade_date, start_date, end_date
+            # 1. 获取基础行情 (daily)
             # fields: ts_code, trade_date, open, high, low, close, pre_close, change, pct_chg, vol, amount
-            fields = 'ts_code,trade_date,open,high,low,close,pre_close,change,pct_chg,vol,amount'
+            daily_fields = 'ts_code,trade_date,open,high,low,close,pre_close,change,pct_chg,vol,amount'
+            df_daily = self.pro.daily(ts_code=third_code, trade_date=trade_date, start_date=start_date, end_date=end_date, fields=daily_fields)
             
-            # 同样直接调用同步API
-            # 将 third_code 映射回 tushare 需要的 ts_code 参数
-            df = self.pro.daily(ts_code=third_code, trade_date=trade_date, start_date=start_date, end_date=end_date, fields=fields)
-            
-            if df is None or df.empty:
+            if df_daily is None or df_daily.empty:
                 return []
                 
-            return StockDailyAssembler.to_domain_list(df)
+            # 2. 获取复权因子 (adj_factor)
+            # fields: ts_code, trade_date, adj_factor
+            adj_fields = 'ts_code,trade_date,adj_factor'
+            try:
+                df_adj = self.pro.adj_factor(ts_code=third_code, trade_date=trade_date, start_date=start_date, end_date=end_date, fields=adj_fields)
+            except Exception as e:
+                logger.warning(f"获取复权因子失败: {str(e)}")
+                df_adj = pd.DataFrame()
+
+            # 3. 获取每日指标 (daily_basic)
+            # fields: ts_code, trade_date, turnover_rate, turnover_rate_f, volume_ratio, pe, pe_ttm, pb, ps, ps_ttm, dv_ratio, dv_ttm, total_share, float_share, free_share, total_mv, circ_mv
+            basic_fields = 'ts_code,trade_date,turnover_rate,turnover_rate_f,volume_ratio,pe,pe_ttm,pb,ps,ps_ttm,dv_ratio,dv_ttm,total_share,float_share,free_share,total_mv,circ_mv'
+            try:
+                df_basic = self.pro.daily_basic(ts_code=third_code, trade_date=trade_date, start_date=start_date, end_date=end_date, fields=basic_fields)
+            except Exception as e:
+                logger.warning(f"获取每日指标失败: {str(e)}")
+                df_basic = pd.DataFrame()
+            
+            # 4. 数据合并 (ETL)
+            # 预处理：去重，防止因数据源重复导致 merge 后数据膨胀
+            if df_daily is not None and not df_daily.empty:
+                df_daily = df_daily.drop_duplicates(subset=['ts_code', 'trade_date'])
+
+            result_df = df_daily
+            
+            if df_adj is not None and not df_adj.empty:
+                df_adj = df_adj.drop_duplicates(subset=['ts_code', 'trade_date'])
+                result_df = pd.merge(result_df, df_adj, on=['ts_code', 'trade_date'], how='left')
+                
+            if df_basic is not None and not df_basic.empty:
+                df_basic = df_basic.drop_duplicates(subset=['ts_code', 'trade_date'])
+                result_df = pd.merge(result_df, df_basic, on=['ts_code', 'trade_date'], how='left')
+                
+            return StockDailyAssembler.to_domain_list(result_df)
             
         except Exception as e:
             logger.error(f"获取日线数据失败: {str(e)}")

@@ -29,48 +29,63 @@ def save_offset(offset: int):
 async def sync_history_daily_data_job():
     """
     定时任务：同步股票历史日线数据（全量历史）
+    循环执行直到同步完所有数据
     """
-    logger.info("Running sync_history_daily_data_job...")
+    logger.info("Running sync_history_daily_data_job (Loop Mode)...")
     
-    # 1. 获取当前进度
-    offset = load_offset()
-    limit = 500
+    limit = 50
     
-    # 2. 依赖注入
-    # 注意：Job 运行在独立线程/协程中，需要手动创建 DB Session
-    async with AsyncSessionLocal() as session:
-        stock_repo = StockRepositoryImpl(session)
-        daily_repo = StockDailyRepositoryImpl(session)
-        provider = TushareService()
+    while True:
+        # 1. 获取当前进度
+        offset = load_offset()
+        logger.info(f"Starting batch sync from offset {offset} with limit {limit}")
         
-        use_case = SyncDailyHistoryUseCase(stock_repo, daily_repo, provider)
-        
-        # 3. 执行同步
-        result = await use_case.execute(limit=limit, offset=offset)
-        
-        synced_count = result["synced_stocks"]
-        total_msg = result["message"]
-        
-        logger.info(f"Job result: {total_msg}")
-        
-        # 4. 更新进度
-        if synced_count > 0:
-            # 只有确实同步到了数据才更新 offset
-            new_offset = offset + limit
-            save_offset(new_offset)
-            logger.info(f"Updated offset to {new_offset}")
-        else:
-            # 如果没有同步到数据，可能是跑完了所有股票
-            # 或者本批次全失败了。
-            if "No stocks found" in total_msg:
-                logger.info("All stocks synced. Resetting offset to 0.")
-                save_offset(0)
-            else:
-                # 还有一种情况是本批次股票都存在但都没有数据或都失败了
-                # 这种情况下我们也应该往下走，否则会死循环
-                new_offset = offset + limit
-                save_offset(new_offset)
-                logger.info(f"No valid data in this batch, moving to next batch. Offset: {new_offset}")
+        # 2. 依赖注入
+        # 注意：每次循环创建一个新的 Session，避免长时间占用
+        async with AsyncSessionLocal() as session:
+            stock_repo = StockRepositoryImpl(session)
+            daily_repo = StockDailyRepositoryImpl(session)
+            provider = TushareService()
+            
+            use_case = SyncDailyHistoryUseCase(stock_repo, daily_repo, provider)
+            
+            try:
+                # 3. 执行同步
+                result = await use_case.execute(limit=limit, offset=offset)
+                
+                synced_count = result["synced_stocks"]
+                total_msg = result["message"]
+                
+                logger.info(f"Batch result: {total_msg}")
+                
+                # 4. 更新进度与判断循环
+                if synced_count > 0:
+                    # 只有确实同步到了数据才更新 offset
+                    new_offset = offset + limit
+                    save_offset(new_offset)
+                    logger.info(f"Updated offset to {new_offset}")
+                    # 继续下一轮循环
+                else:
+                    # 如果没有同步到数据
+                    if "No stocks found" in total_msg:
+                        logger.info("All stocks synced. Resetting offset to 0 and stopping job.")
+                        save_offset(0)
+                        break  # 退出循环，任务结束
+                    else:
+                        # 本批次股票存在但无数据（如全失败或无行情），继续下一批
+                        new_offset = offset + limit
+                        save_offset(new_offset)
+                        logger.info(f"No valid data in this batch, moving to next batch. Offset: {new_offset}")
+                        # 继续下一轮循环
+            except Exception as e:
+                logger.error(f"Batch execution failed: {str(e)}")
+                # 发生异常时，为了防止死循环重试，可以选择退出或者休眠后重试
+                # 这里选择休眠后继续下一轮（假设是临时网络问题），或者你可以选择 break
+                # 为了安全起见，这里记录错误并退出当前 Job，等待下一次调度触发（虽然是 Loop 模式，但如果有未捕获异常还是稳妥点）
+                # 但这里我们捕获了 Exception，所以可以选择 break 或者 continue
+                # 考虑到可能是 API 限制等，我们 break 吧，让调度器下一次再试
+                logger.warning("Stopping job due to exception.")
+                break
 
 from app.application.stock.use_cases.sync_daily_by_date import SyncDailyByDateUseCase
 

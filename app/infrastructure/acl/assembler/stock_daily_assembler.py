@@ -53,5 +53,24 @@ class StockDailyAssembler:
             pct_chg=row['pct_chg'],
             vol=row['vol'],
             amount=row['amount'],
+            
+            # 新增字段 (使用 get 避免 KeyErrors，如果 column 不存在则返回 None)
+            adj_factor=row.get('adj_factor'),
+            turnover_rate=row.get('turnover_rate'),
+            turnover_rate_f=row.get('turnover_rate_f'),
+            volume_ratio=row.get('volume_ratio'),
+            pe=row.get('pe'),
+            pe_ttm=row.get('pe_ttm'),
+            pb=row.get('pb'),
+            ps=row.get('ps'),
+            ps_ttm=row.get('ps_ttm'),
+            dv_ratio=row.get('dv_ratio'),
+            dv_ttm=row.get('dv_ttm'),
+            total_share=row.get('total_share'),
+            float_share=row.get('float_share'),
+            free_share=row.get('free_share'),
+            total_mv=row.get('total_mv'),
+            circ_mv=row.get('circ_mv'),
+            
             source="tushare"
         )
