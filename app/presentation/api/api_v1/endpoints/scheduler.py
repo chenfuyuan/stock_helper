@@ -206,36 +206,3 @@ async def stop_job(job_id: str):
         data="stopped"
     )
 
-@router.post(
-    "/jobs/{job_id}/trigger",
-    response_model=BaseResponse[str],
-    summary="立即手动触发一次任务"
-)
-async def trigger_job_once(
-    job_id: str,
-    kwargs: Optional[Dict[str, Any]] = Body(None, description="传递给任务的关键字参数，例如: {'trade_date': '20260207'}")
-):
-    """
-    立即在后台运行一次指定任务，不影响定时设置。
-    可以传递参数给任务函数。
-    """
-    if job_id not in JOB_REGISTRY:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Job '{job_id}' not found. Available jobs: {list(JOB_REGISTRY.keys())}"
-        )
-        
-    scheduler = SchedulerService.get_scheduler()
-    job_func = JOB_REGISTRY[job_id]
-    
-    # 立即执行不需要 ID，因为它是一次性的
-    # 如果有参数，通过 kwargs 传递
-    scheduler.add_job(job_func, kwargs=kwargs or {})
-    
-    return BaseResponse(
-        success=True,
-        code="JOB_TRIGGERED",
-        message=f"已触发任务 '{job_id}' 后台执行一次，参数: {kwargs}",
-        data="triggered"
-    )
-
