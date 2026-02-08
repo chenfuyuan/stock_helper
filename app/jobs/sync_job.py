@@ -13,6 +13,7 @@ from app.application.stock.use_cases.sync_finance_history import SyncFinanceHist
 
 STATE_FILE = "sync_daily_state.json"
 FINANCE_STATE_FILE = "sync_finance_state.json"
+FINANCE_FAILURE_FILE = "sync_finance_failures.json"
 
 def load_offset() -> int:
     """从文件加载同步进度"""
@@ -43,6 +44,30 @@ def load_finance_offset() -> int:
 def save_finance_offset(offset: int):
     with open(FINANCE_STATE_FILE, "w") as f:
         json.dump({"offset": offset}, f)
+
+def load_finance_failures() -> list[str]:
+    """加载失败的股票代码"""
+    if not os.path.exists(FINANCE_FAILURE_FILE):
+        return []
+    try:
+        with open(FINANCE_FAILURE_FILE, "r") as f:
+            data = json.load(f)
+            return data.get("failures", [])
+    except Exception:
+        return []
+
+def save_finance_failures(failures: list[str]):
+    """保存失败的股票代码"""
+    with open(FINANCE_FAILURE_FILE, "w") as f:
+        json.dump({"failures": list(set(failures))}, f) # 去重保存
+
+def append_finance_failures(new_failures: list[str]):
+    """追加失败记录"""
+    if not new_failures:
+        return
+    current = load_finance_failures()
+    current.extend(new_failures)
+    save_finance_failures(current)
 
 async def sync_history_daily_data_job():
     """
@@ -146,7 +171,14 @@ async def sync_history_finance_job():
             try:
                 result = await use_case.execute(limit=limit, offset=offset)
                 synced_count = result["synced_stocks"]
+                failed_stocks = result.get("failed_stocks", [])
                 total_msg = result["message"]
+                
+                # 记录失败的股票
+                if failed_stocks:
+                    logger.warning(f"Recording {len(failed_stocks)} failed stocks.")
+                    append_finance_failures(failed_stocks)
+
                 logger.info(f"Finance batch result: {total_msg}")
                 
                 if synced_count > 0:
@@ -165,3 +197,53 @@ async def sync_history_finance_job():
                 logger.error(f"Finance batch execution failed: {str(e)}")
                 logger.warning("Stopping finance job due to exception.")
                 break
+
+async def retry_finance_sync_job():
+    """
+    重试同步失败的财务数据
+    """
+    logger.info("Running retry_finance_sync_job...")
+    
+    failures = load_finance_failures()
+    if not failures:
+        logger.info("No failed stocks to retry.")
+        return
+        
+    logger.info(f"Found {len(failures)} failed stocks to retry.")
+    
+    # 每次重试一批，比如 50 个
+    batch_size = 200
+    # 这里我们简单起见，一次只处理一批，剩下的下次任务处理，或者循环处理
+    # 考虑到是重试任务，可以循环处理完所有失败的
+    
+    # 为了避免死循环（比如一直失败），我们处理一轮
+    
+    current_batch = failures[:batch_size]
+    remaining = failures[batch_size:]
+    
+    async with AsyncSessionLocal() as session:
+        stock_repo = StockRepositoryImpl(session)
+        finance_repo = StockFinanceRepositoryImpl(session)
+        provider = TushareService()
+        
+        use_case = SyncFinanceHistoryUseCase(stock_repo, finance_repo, provider)
+        
+        # 获取股票实体
+        stocks = await stock_repo.get_by_third_codes(current_batch)
+        if not stocks:
+            logger.warning("Could not find stock info for failed codes (maybe deleted?). Removing from failure list.")
+            save_finance_failures(remaining)
+            return
+            
+        logger.info(f"Retrying {len(stocks)} stocks...")
+        result = await use_case.execute(stocks=stocks)
+        
+        failed_in_retry = result.get("failed_stocks", [])
+        success_count = result["synced_stocks"]
+        
+        logger.info(f"Retry result: Success={success_count}, Failed={len(failed_in_retry)}")
+        
+        # 更新失败列表
+        # 新的失败列表 = 剩余未处理的 + 本次重试又失败的
+        new_failures = remaining + failed_in_retry
+        save_finance_failures(new_failures)

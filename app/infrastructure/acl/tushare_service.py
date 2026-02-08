@@ -46,8 +46,13 @@ class TushareService(StockDataProvider):
             
         except Exception as e:
             logger.error(f"获取财务指标失败: {str(e)}")
-            # 这里选择返回空列表而不是抛出异常，因为单个股票失败不应中断整个批量任务
-            return []
+            # 抛出异常，让上层调用者处理（如记录失败、重试等）
+            raise AppException(
+                status_code=502,
+                code="TUSHARE_FETCH_ERROR",
+                message="获取第三方财务指标数据失败",
+                details=str(e)
+            )
 
     async def fetch_stock_basic(self) -> List[StockInfo]:
         """

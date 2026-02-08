@@ -30,6 +30,16 @@ class StockRepositoryImpl(BaseRepository[StockModel], StockRepository):
         model = result.scalar_one_or_none()
         return StockInfo.model_validate(model) if model else None
 
+    async def get_by_third_codes(self, third_codes: List[str]) -> List[StockInfo]:
+        """根据第三方代码批量查询"""
+        if not third_codes:
+            return []
+            
+        result = await self.session.execute(
+            select(StockModel).where(StockModel.third_code.in_(third_codes))
+        )
+        return [StockInfo.model_validate(model) for model in result.scalars().all()]
+
     async def get_all(self, skip: int = 0, limit: int = 100) -> List[StockInfo]:
         """获取所有股票（支持分页）"""
         # 复用 BaseRepository 的 get_all，它已经支持 skip/limit
