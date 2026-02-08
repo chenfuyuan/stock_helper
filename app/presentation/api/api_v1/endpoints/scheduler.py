@@ -3,8 +3,9 @@ from fastapi import APIRouter, status, HTTPException, Body
 from app.application.dtos import BaseResponse
 from app.core.scheduler import SchedulerService
 from app.jobs.sync_job import sync_history_daily_data_job, sync_daily_by_date_job, sync_history_finance_job, sync_incremental_finance_job
-from pydantic import BaseModel
-from typing import Dict, Callable, Any, Optional
+from pydantic import BaseModel, Field
+from typing import Dict, Callable, Any, Optional, List
+from datetime import datetime
 
 router = APIRouter()
 
@@ -16,9 +17,17 @@ JOB_REGISTRY: Dict[str, Callable] = {
     "sync_incremental_finance": sync_incremental_finance_job, # 增量财务数据同步
 }
 
+class JobDetail(BaseModel):
+    id: str = Field(..., description="任务ID")
+    name: str = Field(..., description="任务名称")
+    next_run_time: Optional[datetime] = Field(None, description="下次运行时间")
+    trigger: str = Field(..., description="触发器描述")
+    kwargs: Dict[str, Any] = Field(default_factory=dict, description="任务参数")
+
 class SchedulerStatusResponse(BaseModel):
-    is_running: bool
-    jobs: list[str]
+    is_running: bool = Field(..., description="调度器是否运行中")
+    jobs: List[JobDetail] = Field(..., description="当前已调度的任务列表")
+    available_jobs: List[str] = Field(..., description="系统支持的可注册任务列表")
 
 @router.get(
     "/status",
@@ -27,7 +36,16 @@ class SchedulerStatusResponse(BaseModel):
 )
 async def get_status():
     scheduler = SchedulerService.get_scheduler()
-    jobs = [job.id for job in scheduler.get_jobs()]
+    
+    current_jobs = []
+    for job in scheduler.get_jobs():
+        current_jobs.append(JobDetail(
+            id=job.id,
+            name=job.name,
+            next_run_time=job.next_run_time,
+            trigger=str(job.trigger),
+            kwargs=job.kwargs
+        ))
     
     return BaseResponse(
         success=True,
@@ -35,7 +53,8 @@ async def get_status():
         message="获取状态成功",
         data=SchedulerStatusResponse(
             is_running=scheduler.running,
-            jobs=jobs
+            jobs=current_jobs,
+            available_jobs=list(JOB_REGISTRY.keys())
         )
     )
 
