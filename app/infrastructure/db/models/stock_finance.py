@@ -10,7 +10,9 @@ class StockFinanceModel(Base):
 
     third_code = Column(String(20), primary_key=True, nullable=False, index=True, comment="第三方代码")
     ann_date = Column(Date, primary_key=True, nullable=False, index=True, comment="公告日期")
+
     end_date = Column(Date, primary_key=True, nullable=False, index=True, comment="报告期")
+
     
     # 每股指标
     eps = Column(Float, nullable=True, comment="基本每股收益")

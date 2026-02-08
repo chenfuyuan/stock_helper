@@ -30,6 +30,10 @@ class StockInfo(BaseEntity):
     
     # 来源标记
     source: Optional[str] = Field("tushare", description="数据来源")
+
+    # 财务数据同步状态
+    last_finance_sync_date: Optional[date] = Field(None, description="上次财务数据同步时间")
+
     
     def is_active(self) -> bool:
         """是否处于上市状态"""

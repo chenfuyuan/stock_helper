@@ -6,6 +6,10 @@ from app.domain.stock.entities import StockInfo
 from app.domain.stock.repository import StockRepository
 from app.infrastructure.db.models.stock_info import StockModel
 
+from datetime import date, datetime
+from sqlalchemy import update, and_, or_, not_
+from app.infrastructure.db.models.stock_finance import StockFinanceModel
+
 class StockRepositoryImpl(BaseRepository[StockModel], StockRepository):
     """
     股票仓储实现
@@ -14,7 +18,63 @@ class StockRepositoryImpl(BaseRepository[StockModel], StockRepository):
     def __init__(self, session):
         super().__init__(StockModel, session)
 
+    async def get_missing_finance_stocks(self, target_period: str, check_threshold_date: date, limit: int = 200) -> List[str]:
+        """
+        获取缺少指定报告期财务数据的股票代码列表
+        """
+        # 转换 target_period 字符串 (YYYYMMDD) 为 date 对象
+        try:
+            target_date = datetime.strptime(target_period, "%Y%m%d").date()
+        except ValueError:
+            # 如果格式不对，尝试直接使用（可能调用者已经传了标准格式，或者作为字符串处理）
+            # 但针对 Date 类型列，最好是 date 对象
+            target_date = target_period
+
+        # 子查询：已拥有目标报告期数据的股票
+        subquery = select(StockFinanceModel.third_code).where(StockFinanceModel.end_date == target_date)
+        
+        stmt = select(StockModel.third_code).where(
+            and_(
+                StockModel.third_code.not_in(subquery),
+
+                or_(
+                    StockModel.last_finance_sync_date == None,
+                    StockModel.last_finance_sync_date < check_threshold_date
+                )
+            )
+        ).limit(limit)
+        
+        result = await self.session.execute(stmt)
+        return list(result.scalars().all())
+
+
+    async def update_last_finance_sync_date(self, third_codes: List[str], sync_date: date) -> None:
+        """
+        批量更新最后财务同步时间
+        注意：此方法会立即 commit，如果需要作为事务的一部分，请谨慎调用或修改为不自动 commit
+        """
+        if not third_codes:
+            return
+            
+        stmt = update(StockModel).where(
+            StockModel.third_code.in_(third_codes)
+        ).values(last_finance_sync_date=sync_date)
+        
+        await self.session.execute(stmt)
+        await self.session.commit()
+
+    async def update_last_finance_sync_date_single(self, third_code: str, sync_date: date) -> None:
+        """更新单个股票最后财务同步时间"""
+        stmt = update(StockModel).where(
+            StockModel.third_code == third_code
+        ).values(last_finance_sync_date=sync_date)
+        
+        await self.session.execute(stmt)
+        await self.session.commit()
+
+
     async def get_by_symbol(self, symbol: str) -> Optional[StockInfo]:
+
         """根据股票代码查询"""
         result = await self.session.execute(
             select(StockModel).where(StockModel.symbol == symbol)

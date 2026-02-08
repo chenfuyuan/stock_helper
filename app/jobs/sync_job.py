@@ -201,16 +201,17 @@ async def sync_history_finance_job():
 
 async def sync_incremental_finance_job(actual_date: str = None):
     """
-    定时任务：增量同步股票财务指标数据（基于财报披露计划）
+    定时任务：增量同步股票财务指标数据（基于财报披露计划 + 补漏）
     :param actual_date: 实际披露日期，默认当天
     """
     logger.info(f"Running sync_incremental_finance_job for date {actual_date or 'today'}...")
     
     async with AsyncSessionLocal() as session:
         finance_repo = StockFinanceRepositoryImpl(session)
+        stock_repo = StockRepositoryImpl(session)
         provider = TushareService()
         
-        use_case = SyncIncrementalFinanceDataUseCase(finance_repo, provider)
+        use_case = SyncIncrementalFinanceDataUseCase(finance_repo, stock_repo, provider)
         
         try:
             result = await use_case.execute(actual_date=actual_date)
@@ -221,3 +222,4 @@ async def sync_incremental_finance_job(actual_date: str = None):
                 
         except Exception as e:
             logger.error(f"Incremental finance sync job failed: {str(e)}")
+

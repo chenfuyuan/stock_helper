@@ -29,3 +29,7 @@ class StockModel(Base):
     
     # 来源标记
     source = Column(String(20), nullable=True, default="tushare", comment="数据来源")
+
+    # 财务数据同步状态
+    last_finance_sync_date = Column(Date, nullable=True, comment="上次财务数据同步时间")
+
