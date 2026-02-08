@@ -13,11 +13,11 @@ from app.infrastructure.db.base import Base
 # or we mock it. But integration tests usually need a real DB.
 # We will use the settings one, assuming CI sets up a test DB.
 
-@pytest.fixture(scope="session")
-def event_loop():
-    loop = asyncio.get_event_loop_policy().new_event_loop()
-    yield loop
-    loop.close()
+import pytest
+import asyncio
+
+# 移除所有自定义 event_loop 相关 fixture
+# 让 pytest-asyncio 自动管理，通过 pytest.ini 或配置钩子指定 loop scope
 
 @pytest.fixture(scope="session")
 async def db_engine():

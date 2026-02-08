@@ -3,3 +3,4 @@ from .sync_daily_by_date import SyncDailyByDateUseCase
 from .sync_daily_history import SyncDailyHistoryUseCase
 from .sync_finance_history import SyncFinanceHistoryUseCase
 from .sync_incremental_finance_data import SyncIncrementalFinanceDataUseCase
+from .get_stock_basic_info import GetStockBasicInfoUseCase

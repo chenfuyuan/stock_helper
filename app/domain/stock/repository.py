@@ -75,6 +75,11 @@ class StockDailyRepository(ABC):
         """批量保存日线数据"""
         pass
 
+    @abstractmethod
+    async def get_latest_by_third_code(self, third_code: str) -> Optional[StockDaily]:
+        """获取某只股票最新的日线数据"""
+        pass
+
 class StockFinanceRepository(ABC):
     """
     股票财务指标仓储接口

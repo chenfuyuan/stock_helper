@@ -1,4 +1,5 @@
-from typing import List
+from typing import List, Optional
+from sqlalchemy import select, desc
 from sqlalchemy.dialects.postgresql import insert
 from app.infrastructure.base_repository import BaseRepository
 from app.domain.stock.entities import StockDaily
@@ -43,3 +44,15 @@ class StockDailyRepositoryImpl(BaseRepository[StockDailyModel], StockDailyReposi
             
         await self.session.commit()
         return total_saved
+
+    async def get_latest_by_third_code(self, third_code: str) -> Optional[StockDaily]:
+        stmt = select(StockDailyModel).where(
+            StockDailyModel.third_code == third_code
+        ).order_by(desc(StockDailyModel.trade_date)).limit(1)
+        
+        result = await self.session.execute(stmt)
+        model = result.scalars().first()
+        
+        if model:
+            return StockDaily.model_validate(model)
+        return None
