@@ -10,6 +10,7 @@ from app.infrastructure.acl.tushare_service import TushareService
 from app.application.stock.use_cases.sync_daily_history import SyncDailyHistoryUseCase
 from app.application.stock.use_cases.sync_daily_by_date import SyncDailyByDateUseCase
 from app.application.stock.use_cases.sync_finance_history import SyncFinanceHistoryUseCase
+from app.application.stock.use_cases.sync_incremental_finance_data import SyncIncrementalFinanceDataUseCase
 
 STATE_FILE = "sync_daily_state.json"
 FINANCE_STATE_FILE = "sync_finance_state.json"
@@ -198,52 +199,25 @@ async def sync_history_finance_job():
                 logger.warning("Stopping finance job due to exception.")
                 break
 
-async def retry_finance_sync_job():
+async def sync_incremental_finance_job(actual_date: str = None):
     """
-    重试同步失败的财务数据
+    定时任务：增量同步股票财务指标数据（基于财报披露计划）
+    :param actual_date: 实际披露日期，默认当天
     """
-    logger.info("Running retry_finance_sync_job...")
-    
-    failures = load_finance_failures()
-    if not failures:
-        logger.info("No failed stocks to retry.")
-        return
-        
-    logger.info(f"Found {len(failures)} failed stocks to retry.")
-    
-    # 每次重试一批，比如 50 个
-    batch_size = 200
-    # 这里我们简单起见，一次只处理一批，剩下的下次任务处理，或者循环处理
-    # 考虑到是重试任务，可以循环处理完所有失败的
-    
-    # 为了避免死循环（比如一直失败），我们处理一轮
-    
-    current_batch = failures[:batch_size]
-    remaining = failures[batch_size:]
+    logger.info(f"Running sync_incremental_finance_job for date {actual_date or 'today'}...")
     
     async with AsyncSessionLocal() as session:
-        stock_repo = StockRepositoryImpl(session)
         finance_repo = StockFinanceRepositoryImpl(session)
         provider = TushareService()
         
-        use_case = SyncFinanceHistoryUseCase(stock_repo, finance_repo, provider)
+        use_case = SyncIncrementalFinanceDataUseCase(finance_repo, provider)
         
-        # 获取股票实体
-        stocks = await stock_repo.get_by_third_codes(current_batch)
-        if not stocks:
-            logger.warning("Could not find stock info for failed codes (maybe deleted?). Removing from failure list.")
-            save_finance_failures(remaining)
-            return
+        try:
+            result = await use_case.execute(actual_date=actual_date)
+            logger.info(f"Incremental finance sync result: {json.dumps(result, ensure_ascii=False)}")
             
-        logger.info(f"Retrying {len(stocks)} stocks...")
-        result = await use_case.execute(stocks=stocks)
-        
-        failed_in_retry = result.get("failed_stocks", [])
-        success_count = result["synced_stocks"]
-        
-        logger.info(f"Retry result: Success={success_count}, Failed={len(failed_in_retry)}")
-        
-        # 更新失败列表
-        # 新的失败列表 = 剩余未处理的 + 本次重试又失败的
-        new_failures = remaining + failed_in_retry
-        save_finance_failures(new_failures)
+            if result['status'] == 'failed':
+                logger.error(f"Incremental finance sync failed: {result.get('message')}")
+                
+        except Exception as e:
+            logger.error(f"Incremental finance sync job failed: {str(e)}")

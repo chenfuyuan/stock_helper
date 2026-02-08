@@ -1,7 +1,8 @@
+import pandas as pd
 from fastapi import APIRouter, status, HTTPException, Body
 from app.application.dtos import BaseResponse
 from app.core.scheduler import SchedulerService
-from app.jobs.sync_job import sync_history_daily_data_job, sync_daily_by_date_job, sync_history_finance_job, retry_finance_sync_job
+from app.jobs.sync_job import sync_history_daily_data_job, sync_daily_by_date_job, sync_history_finance_job, sync_incremental_finance_job
 from pydantic import BaseModel
 from typing import Dict, Callable, Any, Optional
 
@@ -12,7 +13,7 @@ JOB_REGISTRY: Dict[str, Callable] = {
     "sync_daily_history": sync_history_daily_data_job,  # 历史数据同步（全量/断点续传）
     "sync_daily_by_date": sync_daily_by_date_job,       # 按日期同步（每日增量）
     "sync_history_finance": sync_history_finance_job,   # 历史财务数据同步
-    "retry_finance_sync": retry_finance_sync_job,       # 重试失败的财务数据同步
+    "sync_incremental_finance": sync_incremental_finance_job, # 增量财务数据同步
 }
 
 class SchedulerStatusResponse(BaseModel):
@@ -41,15 +42,15 @@ async def get_status():
 @router.post(
     "/jobs/{job_id}/start",
     response_model=BaseResponse[str],
-    summary="启动指定定时任务"
+    summary="启动指定定时任务 (Interval 模式)"
 )
 async def start_job(
     job_id: str, 
     interval_minutes: int = Body(..., embed=True, description="执行间隔(分钟)")
 ):
     """
-    启动一个定时任务
-    :param job_id: 任务ID (目前支持: sync_daily_history)
+    启动一个 Interval 模式的定时任务 (每隔 X 分钟执行一次)
+    :param job_id: 任务ID (见 /status 返回的可选列表)
     :param interval_minutes: 间隔分钟数
     """
     if job_id not in JOB_REGISTRY:
@@ -79,6 +80,91 @@ async def start_job(
         message=f"已启动任务 '{job_id}'，每 {interval_minutes} 分钟执行一次",
         data="started"
     )
+
+@router.post(
+    "/jobs/{job_id}/schedule",
+    response_model=BaseResponse[str],
+    summary="启动指定定时任务 (Cron 模式)"
+)
+async def schedule_job(
+    job_id: str,
+    hour: int = Body(..., embed=True, description="执行小时 (0-23)"),
+    minute: int = Body(..., embed=True, description="执行分钟 (0-59)")
+):
+    """
+    启动一个 Cron 模式的定时任务 (每天固定时间执行)
+    :param job_id: 任务ID (见 /status 返回的可选列表)
+    :param hour: 小时
+    :param minute: 分钟
+    """
+    if job_id not in JOB_REGISTRY:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Job '{job_id}' not found. Available jobs: {list(JOB_REGISTRY.keys())}"
+        )
+
+    scheduler = SchedulerService.get_scheduler()
+    job_func = JOB_REGISTRY[job_id]
+    
+    # 如果任务已存在，先移除
+    if scheduler.get_job(job_id):
+        scheduler.remove_job(job_id)
+
+    scheduler.add_job(
+        job_func,
+        'cron',
+        hour=hour,
+        minute=minute,
+        id=job_id,
+        replace_existing=True
+    )
+
+    return BaseResponse(
+        success=True,
+        code="JOB_SCHEDULED",
+        message=f"已调度任务 '{job_id}'，每天 {hour:02d}:{minute:02d} 执行",
+        data="scheduled"
+    )
+
+@router.post(
+    "/jobs/{job_id}/trigger",
+    response_model=BaseResponse[str],
+    summary="立即触发一次任务"
+)
+async def trigger_job(
+    job_id: str,
+    params: Optional[Dict[str, Any]] = Body(None, description="任务参数")
+):
+    """
+    立即异步执行一次任务
+    """
+    if job_id not in JOB_REGISTRY:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Job '{job_id}' not found. Available jobs: {list(JOB_REGISTRY.keys())}"
+        )
+
+    scheduler = SchedulerService.get_scheduler()
+    job_func = JOB_REGISTRY[job_id]
+    
+    # 使用 kwargs 传递参数
+    kwargs = params or {}
+    
+    # 立即提交到线程池/协程池执行，不影响调度器
+    scheduler.add_job(
+        job_func,
+        kwargs=kwargs,
+        id=f"{job_id}_manual_{pd.Timestamp.now().timestamp()}", # 临时任务ID
+        misfire_grace_time=3600
+    )
+    
+    return BaseResponse(
+        success=True,
+        code="JOB_TRIGGERED",
+        message=f"已触发任务 '{job_id}'",
+        data="triggered"
+    )
+
 
 @router.post(
     "/jobs/{job_id}/stop",

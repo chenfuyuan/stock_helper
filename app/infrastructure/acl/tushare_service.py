@@ -3,10 +3,10 @@ import tushare as ts
 from typing import List, Optional
 from loguru import logger
 from app.core.config import settings
-from app.domain.stock.entities import StockInfo, StockDaily, StockFinance
+from app.domain.stock.entities import StockInfo, StockDaily, StockFinance, StockDisclosure
 from app.domain.stock.service import StockDataProvider
 from app.core.exceptions import AppException
-from app.infrastructure.acl.assembler import StockAssembler, StockDailyAssembler, StockFinanceAssembler
+from app.infrastructure.acl.assembler import StockAssembler, StockDailyAssembler, StockFinanceAssembler, StockDisclosureAssembler
 
 class TushareService(StockDataProvider):
     """
@@ -27,6 +27,31 @@ class TushareService(StockDataProvider):
                 status_code=500,
                 code="TUSHARE_INIT_ERROR",
                 message="第三方数据服务初始化失败",
+                details=str(e)
+            )
+
+    async def fetch_disclosure_date(self, actual_date: str = None) -> List[StockDisclosure]:
+        """
+        获取财报披露计划
+        """
+        try:
+            logger.info(f"开始从 Tushare 获取财报披露计划: actual_date={actual_date}")
+            fields = 'ts_code,ann_date,end_date,pre_date,actual_date'
+            
+            df = self.pro.disclosure_date(actual_date=actual_date, fields=fields)
+            
+            if df is None or df.empty:
+                logger.warning(f"Tushare 财报披露计划为空: actual_date={actual_date}")
+                return []
+                
+            return StockDisclosureAssembler.to_domain_list(df)
+            
+        except Exception as e:
+            logger.error(f"获取财报披露计划失败: {str(e)}")
+            raise AppException(
+                status_code=502,
+                code="TUSHARE_FETCH_ERROR",
+                message="获取财报披露计划失败",
                 details=str(e)
             )
 

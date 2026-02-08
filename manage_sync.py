@@ -1,0 +1,28 @@
+import asyncio
+import sys
+import argparse
+from loguru import logger
+from app.core.config import settings
+from app.jobs.sync_job import sync_incremental_finance_job
+
+async def main():
+    parser = argparse.ArgumentParser(description="Stock Helper CLI")
+    subparsers = parser.add_subparsers(dest="command", help="Available commands")
+    
+    # Sync Finance Command
+    sync_finance_parser = subparsers.add_parser("sync_finance", help="Sync incremental finance data")
+    sync_finance_parser.add_argument("--date", type=str, help="Specific date to sync (YYYYMMDD), defaults to today")
+
+    args = parser.parse_args()
+
+    if args.command == "sync_finance":
+        logger.info(f"Triggering sync_finance manually for date: {args.date or 'today'}")
+        await sync_incremental_finance_job(actual_date=args.date)
+    else:
+        parser.print_help()
+
+if __name__ == "__main__":
+    if sys.platform == 'win32':
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+        
+    asyncio.run(main())
