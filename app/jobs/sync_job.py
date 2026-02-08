@@ -5,10 +5,14 @@ from loguru import logger
 from app.infrastructure.db.session import AsyncSessionLocal
 from app.infrastructure.repositories.stock_repository import StockRepositoryImpl
 from app.infrastructure.repositories.stock_daily_repository import StockDailyRepositoryImpl
+from app.infrastructure.repositories.stock_finance_repository import StockFinanceRepositoryImpl
 from app.infrastructure.acl.tushare_service import TushareService
 from app.application.stock.use_cases.sync_daily_history import SyncDailyHistoryUseCase
+from app.application.stock.use_cases.sync_daily_by_date import SyncDailyByDateUseCase
+from app.application.stock.use_cases.sync_finance_history import SyncFinanceHistoryUseCase
 
 STATE_FILE = "sync_daily_state.json"
+FINANCE_STATE_FILE = "sync_finance_state.json"
 
 def load_offset() -> int:
     """从文件加载同步进度"""
@@ -24,6 +28,20 @@ def load_offset() -> int:
 def save_offset(offset: int):
     """保存同步进度到文件"""
     with open(STATE_FILE, "w") as f:
+        json.dump({"offset": offset}, f)
+
+def load_finance_offset() -> int:
+    if not os.path.exists(FINANCE_STATE_FILE):
+        return 0
+    try:
+        with open(FINANCE_STATE_FILE, "r") as f:
+            data = json.load(f)
+            return data.get("offset", 0)
+    except Exception:
+        return 0
+
+def save_finance_offset(offset: int):
+    with open(FINANCE_STATE_FILE, "w") as f:
         json.dump({"offset": offset}, f)
 
 async def sync_history_daily_data_job():
@@ -87,8 +105,6 @@ async def sync_history_daily_data_job():
                 logger.warning("Stopping job due to exception.")
                 break
 
-from app.application.stock.use_cases.sync_daily_by_date import SyncDailyByDateUseCase
-
 async def sync_daily_by_date_job(trade_date: str = None):
     """
     定时任务：同步指定日期的所有股票日线数据（增量更新）
@@ -109,3 +125,43 @@ async def sync_daily_by_date_job(trade_date: str = None):
                 
         except Exception as e:
             logger.error(f"Job failed: {str(e)}")
+
+async def sync_history_finance_job():
+    """
+    定时任务：同步股票历史财务指标数据
+    """
+    logger.info("Running sync_history_finance_job (Loop Mode)...")
+    limit = 50
+    while True:
+        offset = load_finance_offset()
+        logger.info(f"Starting finance batch sync from offset {offset} with limit {limit}")
+        
+        async with AsyncSessionLocal() as session:
+            stock_repo = StockRepositoryImpl(session)
+            finance_repo = StockFinanceRepositoryImpl(session)
+            provider = TushareService()
+            
+            use_case = SyncFinanceHistoryUseCase(stock_repo, finance_repo, provider)
+            
+            try:
+                result = await use_case.execute(limit=limit, offset=offset)
+                synced_count = result["synced_stocks"]
+                total_msg = result["message"]
+                logger.info(f"Finance batch result: {total_msg}")
+                
+                if synced_count > 0:
+                    new_offset = offset + limit
+                    save_finance_offset(new_offset)
+                else:
+                    if "No stocks found" in total_msg:
+                        logger.info("All stocks synced (finance). Resetting offset to 0 and stopping job.")
+                        save_finance_offset(0)
+                        break
+                    else:
+                        new_offset = offset + limit
+                        save_finance_offset(new_offset)
+                        logger.info(f"No valid finance data in this batch, moving to next. Offset: {new_offset}")
+            except Exception as e:
+                logger.error(f"Finance batch execution failed: {str(e)}")
+                logger.warning("Stopping finance job due to exception.")
+                break

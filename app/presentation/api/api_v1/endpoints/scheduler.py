@@ -1,7 +1,7 @@
 from fastapi import APIRouter, status, HTTPException, Body
 from app.application.dtos import BaseResponse
 from app.core.scheduler import SchedulerService
-from app.jobs.sync_job import sync_history_daily_data_job, sync_daily_by_date_job
+from app.jobs.sync_job import sync_history_daily_data_job, sync_daily_by_date_job, sync_history_finance_job
 from pydantic import BaseModel
 from typing import Dict, Callable, Any, Optional
 
@@ -11,6 +11,7 @@ router = APIRouter()
 JOB_REGISTRY: Dict[str, Callable] = {
     "sync_daily_history": sync_history_daily_data_job,  # 历史数据同步（全量/断点续传）
     "sync_daily_by_date": sync_daily_by_date_job,       # 按日期同步（每日增量）
+    "sync_history_finance": sync_history_finance_job,   # 历史财务数据同步
 }
 
 class SchedulerStatusResponse(BaseModel):

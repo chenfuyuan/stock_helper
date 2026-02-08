@@ -3,10 +3,10 @@ import tushare as ts
 from typing import List, Optional
 from loguru import logger
 from app.core.config import settings
-from app.domain.stock.entities import StockInfo, StockDaily
+from app.domain.stock.entities import StockInfo, StockDaily, StockFinance
 from app.domain.stock.service import StockDataProvider
 from app.core.exceptions import AppException
-from app.infrastructure.acl.assembler import StockAssembler, StockDailyAssembler
+from app.infrastructure.acl.assembler import StockAssembler, StockDailyAssembler, StockFinanceAssembler
 
 class TushareService(StockDataProvider):
     """
@@ -29,6 +29,25 @@ class TushareService(StockDataProvider):
                 message="第三方数据服务初始化失败",
                 details=str(e)
             )
+
+    async def fetch_fina_indicator(self, third_code: str = None, start_date: str = None, end_date: str = None) -> List[StockFinance]:
+        """
+        获取财务指标数据
+        """
+        try:
+            fields = 'ts_code,ann_date,end_date,eps,dt_eps,total_revenue_ps,revenue_ps,capital_rese_ps,surplus_rese_ps,undist_profit_ps,extra_item,profit_dedt,gross_margin,current_ratio,quick_ratio,cash_ratio,inv_turn,ar_turn,ca_turn,fa_turn,assets_turn,invturn_days,arturn_days,op_income,valuechange_income,interst_income,daa,ebit,ebitda,fcff,fcfe,current_exint,noncurrent_exint,interestdebt,netdebt,tangible_asset,working_capital,networking_capital,invest_capital,retained_earnings,diluted2_eps,bps,ocfps,retainedps,cfps,ebit_ps,fcff_ps,fcfe_ps,netprofit_margin,grossprofit_margin,cogs_of_sales,expense_of_sales,profit_to_gr,saleexp_to_gr,adminexp_of_gr,finaexp_of_gr,impai_ttm,gc_of_gr,op_of_gr,ebit_of_gr,roe,roe_waa,roe_dt,roa,npta,roic,roe_yearly,roa2_yearly,roe_avg,opincome_of_ebt,investincome_of_ebt,n_op_profit_of_ebt,tax_to_ebt,dtprofit_to_profit,salescash_to_or,ocf_to_or,ocf_to_opincome,capitalized_to_da,debt_to_assets,assets_to_eqt,dp_assets_to_eqt,ca_to_assets,nca_to_assets,tbassets_to_totalassets,int_to_talcap,eqt_to_talcapital,currentdebt_to_debt,longdeb_to_debt,ocf_to_shortdebt,debt_to_eqt'
+            
+            df = self.pro.fina_indicator(ts_code=third_code, start_date=start_date, end_date=end_date, fields=fields)
+            
+            if df is None or df.empty:
+                return []
+                
+            return StockFinanceAssembler.to_domain_list(df)
+            
+        except Exception as e:
+            logger.error(f"获取财务指标失败: {str(e)}")
+            # 这里选择返回空列表而不是抛出异常，因为单个股票失败不应中断整个批量任务
+            return []
 
     async def fetch_stock_basic(self) -> List[StockInfo]:
         """

@@ -1,2 +1,3 @@
 from .stock_assembler import StockAssembler
 from .stock_daily_assembler import StockDailyAssembler
+from .stock_finance_assembler import StockFinanceAssembler

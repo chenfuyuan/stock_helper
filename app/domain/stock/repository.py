@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional
-from app.domain.stock.entities import StockInfo, StockDaily
+from app.domain.stock.entities import StockInfo, StockDaily, StockFinance
 
 class StockRepository(ABC):
     """
@@ -40,4 +40,13 @@ class StockDailyRepository(ABC):
     @abstractmethod
     async def save_all(self, dailies: List[StockDaily]) -> int:
         """批量保存日线数据"""
+        pass
+
+class StockFinanceRepository(ABC):
+    """
+    股票财务指标仓储接口
+    """
+    @abstractmethod
+    async def save_all(self, finances: List[StockFinance]) -> int:
+        """批量保存财务指标数据"""
         pass
