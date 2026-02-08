@@ -1,5 +1,5 @@
 import pytest
-from app.domain.stock.entities import StockDaily
+from src.modules.market_data.domain.entities import StockDaily
 from datetime import date
 
 def test_stock_daily_creation():

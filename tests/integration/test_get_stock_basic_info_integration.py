@@ -1,10 +1,10 @@
 import pytest
 from datetime import date
-from app.infrastructure.repositories.stock_repository import StockRepositoryImpl
-from app.infrastructure.repositories.stock_daily_repository import StockDailyRepositoryImpl
-from app.application.stock.use_cases.get_stock_basic_info import GetStockBasicInfoUseCase
-from app.domain.stock.entities import StockInfo, StockDaily
-from app.domain.stock.enums import MarketType, ListStatus
+from src.modules.market_data.infrastructure.adapters.persistence.repositories.stock_repository import StockRepositoryImpl
+from src.modules.market_data.infrastructure.adapters.persistence.repositories.stock_daily_repository import StockDailyRepositoryImpl
+from src.modules.market_data.application.use_cases.get_stock_basic_info import GetStockBasicInfoUseCase
+from src.modules.market_data.domain.entities import StockInfo, StockDaily
+from src.modules.market_data.domain.enums import MarketType, ListStatus
 
 @pytest.mark.asyncio
 async def test_get_stock_basic_info_integration(db_session):

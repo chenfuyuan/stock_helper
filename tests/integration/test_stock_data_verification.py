@@ -1,7 +1,7 @@
 import pytest
-from app.infrastructure.repositories.stock_repository import StockRepositoryImpl
-from app.infrastructure.repositories.stock_daily_repository import StockDailyRepositoryImpl
-from app.application.stock.use_cases.get_stock_basic_info import GetStockBasicInfoUseCase
+from src.modules.market_data.infrastructure.adapters.persistence.repositories.stock_repository import StockRepositoryImpl
+from src.modules.market_data.infrastructure.adapters.persistence.repositories.stock_daily_repository import StockDailyRepositoryImpl
+from src.modules.market_data.application.use_cases.get_stock_basic_info import GetStockBasicInfoUseCase
 
 @pytest.mark.asyncio
 class TestStockFetchIntegration:

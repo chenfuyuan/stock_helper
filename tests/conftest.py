@@ -4,9 +4,9 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 
-from app.core.config import settings
-from app.main import app
-from app.infrastructure.db.base import Base
+from src.shared.config import settings
+from src.main import app
+from src.shared.infrastructure.db.base import Base
 
 # Use an in-memory SQLite for testing or a separate Postgres DB
 # For this skeleton, we assume the environment provides a test DB URL

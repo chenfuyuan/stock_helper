@@ -2,8 +2,8 @@ import asyncio
 import sys
 import argparse
 from loguru import logger
-from app.core.config import settings
-from app.jobs.sync_job import sync_incremental_finance_job
+from src.shared.config import settings
+from src.modules.market_data.presentation.cron.sync_job import sync_incremental_finance_job
 
 async def main():
     parser = argparse.ArgumentParser(description="Stock Helper CLI")
