@@ -24,6 +24,16 @@ stock_helper/
 └── scripts/                # Utility Scripts
 ```
 
+## Documentation
+
+- [Architecture Overview](docs/architecture.md): Detailed explanation of DDD layers and patterns.
+- [Development Guide](docs/development_guide.md): Setup, testing, and coding standards.
+- [API Reference](docs/api_reference.md): Overview of REST API endpoints.
+- [Database Schema](docs/database_schema.md): Description of tables and models.
+- **Modules**:
+  - [Data Engineering](docs/modules/data_engineering.md)
+  - [LLM Platform](docs/modules/llm_platform.md)
+
 ## Tech Stack
 
 - **Web Framework**: FastAPI (ASGI)

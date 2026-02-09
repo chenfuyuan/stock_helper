@@ -1,80 +1,58 @@
-# Architecture Documentation
+# 架构概览
 
-## Overview
+本项目采用 **领域驱动设计 (DDD)** 原则构建，以确保业务逻辑与基础设施细节之间的可维护性、可扩展性和松耦合。
 
-Stock Helper follows the **Domain-Driven Design (DDD)** principles, structured to ensure separation of concerns, scalability, and maintainability. The application is divided into distinct layers: Presentation, Application, Domain, and Infrastructure.
+## 核心分层
 
-## Directory Structure
+应用遵循整洁架构 (Clean Architecture) 范式，分为四个截然不同的层：
 
-```
-src/
-├── api/                # API Routes & Middlewares (Global Presentation)
-├── modules/            # Business Modules
-│   └── market_data/    # Market Data Bounded Context
-│       ├── application/    # Application Layer
-│       ├── domain/         # Domain Layer
-│       ├── infrastructure/ # Infrastructure Layer
-│       └── presentation/   # Presentation Layer (Module specific)
-├── shared/             # Shared Kernel
-└── main.py             # Application Entrypoint
-```
+### 1. 展示层 (`presentation`)
+- **职责**: 处理外部交互（HTTP 请求、CLI 命令、定时任务）。
+- **组件**:
+  - `rest/`: FastAPI 路由和控制器。
+  - `jobs/`: 定时任务 (APScheduler)。
+- **规则**: 此层**不应**包含业务规则。它仅负责解析输入、调用应用层并格式化输出。
 
-## Layers
+### 2. 应用层 (`application`)
+- **职责**: 编排领域逻辑和基础设施以实现用例。
+- **组件**:
+  - `services/`: 协调领域实体和存储库的应用服务。
+  - `commands/`: CQRS 命令处理器（例如：`sync_stock_list_cmd.py`）。
+  - `dtos.py`: 数据传输对象。
+- **规则**: 不包含业务逻辑状态，但负责指导数据流向。
 
-### 1. Domain Layer (`domain/`)
+### 3. 领域层 (`domain`)
+- **职责**: 代表业务概念、规则和逻辑。这是软件的核心。
+- **组件**:
+  - `model/` 或 `entities/`: 代表业务实体的纯 Python 对象（例如：`Stock`、`LLMConfig`）。
+  - `ports/`: 定义存储库和外部服务合约的接口（抽象基类）。
+- **规则**: **对外部层（数据库、Web 等）零依赖**。纯 Python 代码。
 
-The heart of the business logic. It contains entities, value objects, domain events, and repository interfaces.
+### 4. 基础设施层 (`infrastructure`)
+- **职责**: 为领域层中定义的接口提供具体实现。
+- **组件**:
+  - `persistence/`: 数据库模型 (SQLAlchemy)、存储库实现。
+  - `external_apis/`: 第三方 API 客户端（例如：Tushare、OpenAI）。
+  - `adapters/`: 特定技术的适配器。
+- **规则**: 依赖于领域层和应用层。
 
-- **Entities**: Objects with identity and lifecycle (e.g., `StockInfo`, `StockDaily`).
-- **Repositories (Interfaces)**: Abstractions for data access (e.g., `StockRepository`).
-- **Services**: Domain services for logic that doesn't fit into a single entity.
-- **Exceptions**: Domain-specific errors.
+## 模块结构
 
-**Dependencies**: This layer has **no dependencies** on other layers or external frameworks.
+项目被划分为垂直模块（限界上下文）：
 
-### 2. Application Layer (`application/`)
+- **`data_engineering`**: 处理股票市场数据的获取、处理和存储。
+- **`llm_platform`**: 管理大语言模型配置和使用。
+- **`shared`**: 跨模块使用的通用工具、基类和配置。
 
-Orchestrates the domain logic to fulfill user use cases.
+## 关键模式
 
-- **Use Cases**: Specific business actions (e.g., `SyncStocksUseCase`, `GetStockBasicInfo`).
-- **DTOs**: Data Transfer Objects to decouple domain entities from external interfaces.
-- **Interfaces**: Definitions for services required by the application (e.g., `StockDataProvider`).
+### 存储库模式 (Repository Pattern)
+我们使用存储库模式将领域模型与数据存储解耦。
+- **接口**: 定义在 `domain/ports/repositories`。
+- **实现**: 定义在 `infrastructure/persistence/repositories`。
 
-**Dependencies**: Depends only on the **Domain Layer**.
+### 依赖注入 (Dependency Injection)
+依赖项（如存储库和服务）被注入，通常使用 FastAPI 的 `Depends` 机制，或者在组合根（主入口点或服务工厂）中手动构建。
 
-### 3. Infrastructure Layer (`infrastructure/`)
-
-Implements the interfaces defined in Domain and Application layers.
-
-- **Persistence**: Database models (SQLAlchemy), repository implementations.
-- **Data Sources**: External API clients (e.g., Tushare API integration).
-- **Jobs**: Background jobs and workers.
-
-**Dependencies**: Depends on **Domain** and **Application** layers, and external libraries (SQLAlchemy, requests, etc.).
-
-### 4. Presentation Layer (`presentation/` & `src/api/`)
-
-Handles external interactions (HTTP requests).
-
-- **API Endpoints**: FastAPI routers and controllers.
-- **Schemas**: Request/Response models (Pydantic).
-
-**Dependencies**: Depends on **Application** layer to execute use cases.
-
-## Key Flows
-
-### Data Synchronization Flow
-
-1. **Trigger**: A scheduled job or API request initiates the sync process.
-2. **Application**: `SyncStocksUseCase` is invoked.
-3. **Infrastructure (Data Source)**: `TushareService` fetches raw data from the external API.
-4. **Domain**: Raw data is converted into Domain Entities (`StockInfo`).
-5. **Infrastructure (Persistence)**: `StockRepositoryImpl` saves the entities to the database.
-
-## Shared Kernel (`src/shared/`)
-
-Contains components shared across multiple modules, such as:
-- Base classes for Entities and Use Cases.
-- Configuration (`config.py`).
-- Logging setup.
-- Common utilities (e.g., SchedulerService).
+### CQRS (命令查询职责分离)
+对于复杂操作，特别是数据同步，我们将读写操作分离为命令和查询（在本项目中简化为 Command 类）。
