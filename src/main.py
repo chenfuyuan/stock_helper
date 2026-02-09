@@ -21,6 +21,17 @@ app = FastAPI(
 async def startup_event():
     # 启动调度器
     SchedulerService.start()
+    
+    # 初始化 LLM 注册表 (从 DB 加载配置)
+    from src.shared.infrastructure.db.session import AsyncSessionLocal
+    from src.modules.llm_platform.infrastructure.registry import LLMRegistry
+    from src.modules.llm_platform.infrastructure.persistence.repositories.pg_config_repo import PgLLMConfigRepository
+    
+    async with AsyncSessionLocal() as session:
+        repo = PgLLMConfigRepository(session)
+        registry = LLMRegistry()
+        registry.set_repository(repo)
+        await registry.refresh()
 
 @app.on_event("shutdown")
 async def shutdown_event():

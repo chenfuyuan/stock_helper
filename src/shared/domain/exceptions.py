@@ -57,3 +57,33 @@ class ForbiddenException(AppException):
             code="FORBIDDEN",
             status_code=403
         )
+
+
+class LLMConnectionError(AppException):
+    """LLM 连接或调用异常 (503)"""
+    def __init__(self, message: str = "LLM Service Unavailable"):
+        super().__init__(
+            message=message,
+            code="LLM_SERVICE_ERROR",
+            status_code=503
+        )
+
+
+class ModelConfigurationError(AppException):
+    """模型配置错误 (500)"""
+    def __init__(self, message: str = "Invalid model configuration"):
+        super().__init__(
+            message=message,
+            code="MODEL_CONFIG_ERROR",
+            status_code=500
+        )
+
+
+class NoAvailableModelError(AppException):
+    """无可用模型异常 (503)"""
+    def __init__(self, message: str = "No available LLM models found"):
+        super().__init__(
+            message=message,
+            code="NO_AVAILABLE_MODEL",
+            status_code=503
+        )

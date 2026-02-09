@@ -1,6 +1,7 @@
-from typing import List, Union
+from typing import List, Union, Optional
+import json
 
-from pydantic import AnyHttpUrl, PostgresDsn, validator
+from pydantic import AnyHttpUrl, PostgresDsn, validator, BaseModel
 from pydantic_settings import BaseSettings
 
 
@@ -58,6 +59,12 @@ class Settings(BaseSettings):
 
     # Tushare 配置
     TUSHARE_TOKEN: str = "your_tushare_token_here"
+
+    # LLM 配置
+    LLM_PROVIDER: str = "openai"  # openai, anthropic, etc.
+    LLM_API_KEY: str = "your_llm_api_key_here"
+    LLM_BASE_URL: str = "https://api.openai.com/v1"
+    LLM_MODEL: str = "gpt-3.5-turbo"
 
     class Config:
         case_sensitive = True

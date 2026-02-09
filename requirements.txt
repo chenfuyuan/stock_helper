@@ -12,3 +12,4 @@ prometheus-client
 pandas
 tushare
 APScheduler==3.10.4
+openai
