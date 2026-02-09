@@ -28,22 +28,44 @@ def add_siliconflow_model():
     print(f"Adding config for {config_data['alias']}...")
     print(json.dumps(config_data, indent=2))
 
-    # 2. 发送 POST 请求
+    send_request(config_data)
+
+def add_qwen_model():
+    """
+    添加硅基流动 (SiliconFlow) 的 Qwen/Qwen3-8B 模型配置
+    """
+    config_data = {
+        "alias": "qwen-3-8b",
+        "vendor": "SiliconFlow",
+        "provider_type": "openai",
+        "api_key": SILICONFLOW_API_KEY,
+        "base_url": "https://api.siliconflow.cn/v1",
+        "model_name": "Qwen/Qwen3-8B", 
+        "description": "通义千问 Qwen3 8B 模型",
+        "priority": 5,
+        "tags": ["fast", "chinese", "qwen"],
+        "is_active": True
+    }
+
+    send_request(config_data)
+
+def send_request(config_data):
+    print(f"Adding config for {config_data['alias']}...")
     try:
         response = requests.post(API_BASE_URL, json=config_data)
-        
-        # 3. 处理响应
         if response.status_code == 201:
-            print("\n✅ Successfully added configuration!")
-            print("Response:", json.dumps(response.json(), indent=2))
+            print(f"✅ Successfully added {config_data['alias']}!")
         elif response.status_code == 409:
-            print(f"\n⚠️ Configuration with alias '{config_data['alias']}' already exists.")
+            # Try to update if it exists (optional, or just log it)
+            # For now, just say it exists.
+            # Or better, we could implement update logic, but let's stick to simple add.
+            print(f"⚠️ {config_data['alias']} already exists.")
         else:
-            print(f"\n❌ Failed to add configuration. Status Code: {response.status_code}")
-            print("Error:", response.text)
-            
-    except requests.exceptions.ConnectionError:
-        print(f"\n❌ Could not connect to {API_BASE_URL}. Is the server running?")
+            print(f"❌ Failed. Status: {response.status_code}, Error: {response.text}")
+    except Exception as e:
+        print(f"❌ Connection error: {str(e)}")
 
 if __name__ == "__main__":
+    # 您可以选择运行哪一个
     add_siliconflow_model()
+    add_qwen_model() # 取消注释以添加 Qwen 模型

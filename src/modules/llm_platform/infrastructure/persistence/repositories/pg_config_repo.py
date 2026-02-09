@@ -30,10 +30,12 @@ class PgLLMConfigRepository(ILLMConfigRepository):
     async def save(self, config: LLMConfig) -> LLMConfig:
         data = {
             "alias": config.alias,
+            "vendor": config.vendor,
             "provider_type": config.provider_type,
             "api_key": config.api_key,
             "base_url": config.base_url,
             "model_name": config.model_name,
+            "description": config.description,
             "priority": config.priority,
             "tags": config.tags,
             "is_active": config.is_active,
@@ -44,10 +46,12 @@ class PgLLMConfigRepository(ILLMConfigRepository):
         stmt = stmt.on_conflict_do_update(
             index_elements=['alias'],
             set_={
+                "vendor": stmt.excluded.vendor,
                 "provider_type": stmt.excluded.provider_type,
                 "api_key": stmt.excluded.api_key,
                 "base_url": stmt.excluded.base_url,
                 "model_name": stmt.excluded.model_name,
+                "description": stmt.excluded.description,
                 "priority": stmt.excluded.priority,
                 "tags": stmt.excluded.tags,
                 "is_active": stmt.excluded.is_active,
@@ -57,9 +61,11 @@ class PgLLMConfigRepository(ILLMConfigRepository):
         
         result = await self.session.execute(stmt)
         model = result.scalars().first()
+        await self.session.commit()
         return model.to_entity()
 
     async def delete_by_alias(self, alias: str) -> bool:
         stmt = delete(LLMConfigModel).where(LLMConfigModel.alias == alias)
         result = await self.session.execute(stmt)
+        await self.session.commit()
         return result.rowcount > 0

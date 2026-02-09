@@ -37,6 +37,9 @@ class LLMConfigModel(Base):
             created_at=self.created_at,
             updated_at=self.updated_at
         )
+
+    def __repr__(self):
+        return f"<LLMConfigModel(alias={self.alias}, model={self.model_name}, id={self.id})>"
     
     @staticmethod
     def from_entity(entity):

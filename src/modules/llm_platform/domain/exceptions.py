@@ -15,3 +15,11 @@ class DuplicateConfigException(AppException):
             code="LLM_CONFIG_DUPLICATE",
             status_code=409
         )
+
+class LLMProviderException(AppException):
+    def __init__(self, message: str):
+        super().__init__(
+            message=message,
+            code="LLM_PROVIDER_ERROR",
+            status_code=500
+        )

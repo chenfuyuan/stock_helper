@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.shared.infrastructure.db.session import get_db_session
@@ -42,6 +42,12 @@ class LLMConfigUpdate(BaseModel):
 class LLMConfigResponse(LLMConfigBase):
     id: int
     
+    @validator("api_key", always=True)
+    def mask_api_key(cls, v):
+        if not v or len(v) < 8:
+            return "******"
+        return f"{v[:3]}...{v[-4:]}"
+
     class Config:
         from_attributes = True
 
