@@ -81,6 +81,7 @@ class TushareClient(IStockBasicProvider, IMarketQuoteProvider, IFinancialDataPro
         获取财务指标数据
         """
         try:
+            logger.info(f"开始从 Tushare 获取财务指标: code={third_code}, start={start_date}, end={end_date}")
             fields = 'ts_code,ann_date,end_date,eps,dt_eps,total_revenue_ps,revenue_ps,capital_rese_ps,surplus_rese_ps,undist_profit_ps,extra_item,profit_dedt,gross_margin,current_ratio,quick_ratio,cash_ratio,inv_turn,ar_turn,ca_turn,fa_turn,assets_turn,invturn_days,arturn_days,op_income,valuechange_income,interst_income,daa,ebit,ebitda,fcff,fcfe,current_exint,noncurrent_exint,interestdebt,netdebt,tangible_asset,working_capital,networking_capital,invest_capital,retained_earnings,diluted2_eps,bps,ocfps,retainedps,cfps,ebit_ps,fcff_ps,fcfe_ps,netprofit_margin,grossprofit_margin,cogs_of_sales,expense_of_sales,profit_to_gr,saleexp_to_gr,adminexp_of_gr,finaexp_of_gr,impai_ttm,gc_of_gr,op_of_gr,ebit_of_gr,roe,roe_waa,roe_dt,roa,npta,roic,roe_yearly,roa2_yearly,roe_avg,opincome_of_ebt,investincome_of_ebt,n_op_profit_of_ebt,tax_to_ebt,dtprofit_to_profit,salescash_to_or,ocf_to_or,ocf_to_opincome,capitalized_to_da,debt_to_assets,assets_to_eqt,dp_assets_to_eqt,ca_to_assets,nca_to_assets,tbassets_to_totalassets,int_to_talcap,eqt_to_talcapital,currentdebt_to_debt,longdeb_to_debt,ocf_to_shortdebt,debt_to_eqt'
             
             # 使用 run_in_executor 执行同步的 Tushare API
@@ -93,6 +94,7 @@ class TushareClient(IStockBasicProvider, IMarketQuoteProvider, IFinancialDataPro
             )
             
             if df is None or df.empty:
+                logger.warning(f"Tushare 财务指标数据为空: code={third_code}")
                 return []
                 
             return StockFinanceAssembler.to_domain_list(df)
@@ -145,6 +147,7 @@ class TushareClient(IStockBasicProvider, IMarketQuoteProvider, IFinancialDataPro
         获取日线行情数据（包含复权因子和每日指标）
         """
         try:
+            logger.info(f"开始从 Tushare 获取日线数据: code={third_code}, date={trade_date}, start={start_date}, end={end_date}")
             # 1. 获取基础行情 (daily)
             # fields: ts_code, trade_date, open, high, low, close, pre_close, change, pct_chg, vol, amount
             daily_fields = 'ts_code,trade_date,open,high,low,close,pre_close,change,pct_chg,vol,amount'
@@ -154,6 +157,7 @@ class TushareClient(IStockBasicProvider, IMarketQuoteProvider, IFinancialDataPro
             )
             
             if df_daily is None or df_daily.empty:
+                logger.warning(f"Tushare 日线数据为空: code={third_code}, date={trade_date}")
                 return []
                 
             # 2. 获取复权因子 (adj_factor)

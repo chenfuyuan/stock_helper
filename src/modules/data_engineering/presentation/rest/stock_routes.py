@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
+from loguru import logger
 from src.shared.infrastructure.db.session import get_db_session
 from src.shared.dtos import BaseResponse
 
@@ -55,17 +56,25 @@ async def get_sync_daily_use_case(
 
 @router.post("/sync", response_model=BaseResponse[SyncStockResponse])
 async def sync_stocks(use_case: SyncStocksUseCase = Depends(get_sync_stocks_use_case)):
-    result = await use_case.execute()
-    # result is dict based on my previous edit
-    return BaseResponse(
-        success=True,
-        code="SYNC_SUCCESS",
-        message="Stock sync success",
-        data=SyncStockResponse(
-            synced_count=result["synced_count"],
-            message=result["message"]
+    """
+    同步股票基础列表
+    """
+    logger.info("Received request to sync stock list")
+    try:
+        result = await use_case.execute()
+        logger.info(f"Stock list sync completed: {result['synced_count']} stocks")
+        return BaseResponse(
+            success=True,
+            code="SYNC_SUCCESS",
+            message="Stock sync success",
+            data=SyncStockResponse(
+                synced_count=result["synced_count"],
+                message=result["message"]
+            )
         )
-    )
+    except Exception as e:
+        logger.exception(f"Stock sync failed: {str(e)}")
+        raise e
 
 @router.post("/sync/daily", response_model=BaseResponse[SyncStockDailyResponse])
 async def sync_stock_daily(
@@ -73,15 +82,24 @@ async def sync_stock_daily(
     offset: int = 0,
     use_case: SyncDailyHistoryUseCase = Depends(get_sync_daily_use_case),
 ):
-    result = await use_case.execute(limit=limit, offset=offset)
-    
-    return BaseResponse(
-        success=True,
-        code="SYNC_DAILY_SUCCESS",
-        message="股票日线数据同步成功",
-        data=SyncStockDailyResponse(
-            synced_stocks=result["synced_stocks"],
-            total_rows=result["total_rows"],
-            message=result["message"]
+    """
+    同步股票日线历史数据
+    """
+    logger.info(f"Received request to sync daily history: limit={limit}, offset={offset}")
+    try:
+        result = await use_case.execute(limit=limit, offset=offset)
+        logger.info(f"Daily history sync completed: {result['synced_stocks']} stocks, {result['total_rows']} rows")
+        
+        return BaseResponse(
+            success=True,
+            code="SYNC_DAILY_SUCCESS",
+            message="股票日线数据同步成功",
+            data=SyncStockDailyResponse(
+                synced_stocks=result["synced_stocks"],
+                total_rows=result["total_rows"],
+                message=result["message"]
+            )
         )
-    )
+    except Exception as e:
+        logger.exception(f"Daily history sync failed: {str(e)}")
+        raise e

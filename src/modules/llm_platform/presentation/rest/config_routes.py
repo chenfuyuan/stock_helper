@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List, Optional
 from pydantic import BaseModel, validator
 from sqlalchemy.ext.asyncio import AsyncSession
+from loguru import logger
 
 from src.shared.infrastructure.db.session import get_db_session
 from src.modules.llm_platform.infrastructure.persistence.repositories.pg_config_repo import PgLLMConfigRepository
@@ -60,6 +61,10 @@ def get_config_service(db: AsyncSession = Depends(get_db_session)) -> ConfigServ
 
 @router.get("", response_model=List[LLMConfigResponse])
 async def get_configs(service: ConfigService = Depends(get_config_service)):
+    """
+    获取所有大模型配置。
+    """
+    logger.info("API: get_configs called")
     return await service.get_all_configs()
 
 @router.get("/{alias}", response_model=LLMConfigResponse)
@@ -67,9 +72,14 @@ async def get_config(
     alias: str, 
     service: ConfigService = Depends(get_config_service)
 ):
+    """
+    根据别名获取大模型配置详情。
+    """
+    logger.info(f"API: get_config called with alias={alias}")
     try:
         return await service.get_config(alias)
     except ConfigNotFoundException as e:
+        logger.warning(f"API: Config not found: {alias}")
         raise HTTPException(status_code=404, detail=str(e))
 
 @router.post("", response_model=LLMConfigResponse, status_code=status.HTTP_201_CREATED)
@@ -77,10 +87,17 @@ async def create_config(
     dto: LLMConfigCreate, 
     service: ConfigService = Depends(get_config_service)
 ):
+    """
+    创建新的大模型配置。
+    """
+    logger.info(f"API: create_config called with alias={dto.alias}")
     entity = LLMConfig(**dto.dict())
     try:
-        return await service.create_config(entity)
+        result = await service.create_config(entity)
+        logger.info(f"API: Config created successfully: {dto.alias}")
+        return result
     except DuplicateConfigException as e:
+        logger.warning(f"API: Duplicate config: {dto.alias}")
         raise HTTPException(status_code=409, detail=str(e))
 
 @router.patch("/{alias}", response_model=LLMConfigResponse)
@@ -89,9 +106,16 @@ async def update_config(
     dto: LLMConfigUpdate, 
     service: ConfigService = Depends(get_config_service)
 ):
+    """
+    更新现有的大模型配置。
+    """
+    logger.info(f"API: update_config called with alias={alias}")
     try:
-        return await service.update_config(alias, dto.dict(exclude_unset=True))
+        result = await service.update_config(alias, dto.dict(exclude_unset=True))
+        logger.info(f"API: Config updated successfully: {alias}")
+        return result
     except ConfigNotFoundException as e:
+        logger.warning(f"API: Config not found for update: {alias}")
         raise HTTPException(status_code=404, detail=str(e))
 
 @router.delete("/{alias}", status_code=status.HTTP_204_NO_CONTENT)
@@ -99,12 +123,22 @@ async def delete_config(
     alias: str, 
     service: ConfigService = Depends(get_config_service)
 ):
+    """
+    删除大模型配置。
+    """
+    logger.info(f"API: delete_config called with alias={alias}")
     try:
         await service.delete_config(alias)
+        logger.info(f"API: Config deleted successfully: {alias}")
     except ConfigNotFoundException as e:
+        logger.warning(f"API: Config not found for deletion: {alias}")
         raise HTTPException(status_code=404, detail=str(e))
 
 @router.post("/refresh")
 async def refresh_registry(service: ConfigService = Depends(get_config_service)):
+    """
+    手动刷新大模型注册表。
+    """
+    logger.info("API: refresh_registry called")
     await service.refresh_registry()
     return {"status": "refreshed"}

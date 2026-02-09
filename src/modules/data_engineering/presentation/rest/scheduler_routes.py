@@ -1,5 +1,6 @@
 import pandas as pd
 from fastapi import APIRouter, status, HTTPException, Body
+from loguru import logger
 from src.shared.dtos import BaseResponse
 from src.shared.infrastructure.scheduler import SchedulerService
 # Updated imports to point to the new location
@@ -24,6 +25,9 @@ JOB_REGISTRY: Dict[str, Callable] = {
 }
 
 class JobDetail(BaseModel):
+    """
+    任务详情 DTO
+    """
     id: str = Field(..., description="任务ID")
     name: str = Field(..., description="任务名称")
     next_run_time: Optional[datetime] = Field(None, description="下次运行时间")
@@ -31,6 +35,9 @@ class JobDetail(BaseModel):
     kwargs: Dict[str, Any] = Field(default_factory=dict, description="任务参数")
 
 class SchedulerStatusResponse(BaseModel):
+    """
+    调度器状态响应 DTO
+    """
     is_running: bool = Field(..., description="调度器是否运行中")
     jobs: List[JobDetail] = Field(..., description="当前已调度的任务列表")
     available_jobs: List[str] = Field(..., description="系统支持的可注册任务列表")
@@ -41,6 +48,10 @@ class SchedulerStatusResponse(BaseModel):
     summary="获取调度器状态"
 )
 async def get_status():
+    """
+    获取当前调度器的运行状态以及已注册的任务列表。
+    """
+    logger.debug("API: get_scheduler_status called")
     scheduler = SchedulerService.get_scheduler()
     
     current_jobs = []
@@ -52,6 +63,8 @@ async def get_status():
             trigger=str(job.trigger),
             kwargs=job.kwargs
         ))
+    
+    logger.debug(f"API: Scheduler status retrieved. Running: {scheduler.running}, Job Count: {len(current_jobs)}")
     
     return BaseResponse(
         success=True,
@@ -78,7 +91,10 @@ async def start_job(
     :param job_id: 任务ID (见 /status 返回的可选列表)
     :param interval_minutes: 间隔分钟数
     """
+    logger.info(f"API: start_job called. JobID={job_id}, Interval={interval_minutes}m")
+    
     if job_id not in JOB_REGISTRY:
+        logger.warning(f"API: Job not found: {job_id}")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Job '{job_id}' not found. Available jobs: {list(JOB_REGISTRY.keys())}"
@@ -89,6 +105,7 @@ async def start_job(
     
     # 如果任务已存在，先移除
     if scheduler.get_job(job_id):
+        logger.info(f"API: Removing existing job before restart: {job_id}")
         scheduler.remove_job(job_id)
         
     scheduler.add_job(
@@ -98,6 +115,7 @@ async def start_job(
         id=job_id, 
         replace_existing=True
     )
+    logger.info(f"API: Job started successfully: {job_id}")
     
     return BaseResponse(
         success=True,

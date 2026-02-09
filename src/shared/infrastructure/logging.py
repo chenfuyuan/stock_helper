@@ -32,6 +32,13 @@ def setup_logging():
     """
     配置日志系统
     接管标准库 logging，统一使用 Loguru 输出
+    
+    配置格式：
+    - 时间戳 (YYYY-MM-DD HH:mm:ss.SSS)
+    - 日志级别 (DEBUG/INFO/WARN/ERROR)
+    - 线程信息 (ID)
+    - 模块名:函数名:行号
+    - 日志消息
     """
     # 拦截所有 root logger 的日志
     logging.root.handlers = [InterceptHandler()]
@@ -42,8 +49,25 @@ def setup_logging():
         logging.getLogger(name).handlers = []
         logging.getLogger(name).propagate = True
 
+    # 定义日志格式
+    # 时间 | 级别 | 线程ID | 模块:函数:行号 | 消息
+    log_format = (
+        "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | "
+        "<level>{level: <8}</level> | "
+        "<cyan>Thread-{thread.id}</cyan> | "
+        "<magenta>{name}</magenta>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - "
+        "<level>{message}</level>"
+    )
+
     # 配置 Loguru
     # 在生产环境(prod)使用序列化(JSON)输出，便于日志收集系统解析
+    # 在开发环境使用自定义格式输出
     logger.configure(
-        handlers=[{"sink": sys.stdout, "serialize": settings.ENVIRONMENT == "prod"}]
+        handlers=[
+            {
+                "sink": sys.stdout, 
+                "serialize": settings.ENVIRONMENT == "prod",
+                "format": log_format if settings.ENVIRONMENT != "prod" else "{message}"
+            }
+        ]
     )

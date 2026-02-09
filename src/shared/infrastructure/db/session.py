@@ -1,5 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
+from loguru import logger
 
 from src.shared.config import settings
 
@@ -22,8 +23,18 @@ AsyncSessionLocal = sessionmaker(
 
 async def get_db_session() -> AsyncSession:
     """
-    获取数据库会话的依赖注入函数
-    FastAPI Depends 使用此生成器管理会话生命周期
+    获取数据库会话的依赖注入函数 (Dependency)
+    FastAPI Depends 使用此生成器管理会话生命周期。
+    
+    Yields:
+        AsyncSession: 异步数据库会话
     """
     async with AsyncSessionLocal() as session:
-        yield session
+        try:
+            yield session
+        except Exception as e:
+            logger.error(f"Database session error: {str(e)}")
+            await session.rollback()
+            raise
+        finally:
+            await session.close()

@@ -73,7 +73,11 @@ def append_finance_failures(new_failures: list[str]):
 async def sync_history_daily_data_job():
     """
     定时任务：同步股票历史日线数据（全量历史）
-    循环执行直到同步完所有数据
+    
+    描述:
+        该任务会循环执行，直到同步完所有股票的历史数据。
+        使用分页机制（offset/limit）来控制每次同步的股票数量，避免内存溢出。
+        进度会保存在本地文件 `sync_daily_state.json` 中，以便中断后恢复。
     """
     logger.info("Running sync_history_daily_data_job (Loop Mode)...")
     
@@ -94,6 +98,7 @@ async def sync_history_daily_data_job():
             
             try:
                 # 3. 执行同步
+                logger.debug(f"Executing SyncDailyHistoryUseCase with limit={limit}, offset={offset}")
                 result = await use_case.execute(limit=limit, offset=offset)
                 
                 synced_count = result["synced_stocks"]
@@ -109,15 +114,19 @@ async def sync_history_daily_data_job():
                 # 4. 更新进度
                 offset += synced_count
                 save_offset(offset)
+                logger.debug(f"Updated offset to {offset}")
                 
             except Exception as e:
-                logger.error(f"Job execution failed: {str(e)}")
+                logger.exception(f"Job execution failed: {str(e)}")
                 break
 
 async def sync_daily_data_job():
     """
     定时任务：每日增量同步
-    每天收盘后执行
+    
+    描述:
+        每天收盘后执行，同步当天的股票日线数据。
+        会自动获取当前日期作为同步日期。
     """
     logger.info("Running sync_daily_data_job...")
     
@@ -130,14 +139,18 @@ async def sync_daily_data_job():
         today_str = datetime.now().strftime("%Y%m%d")
         
         try:
+            logger.info(f"Starting daily sync for date: {today_str}")
             await use_case.execute(trade_date=today_str)
-            logger.info("Daily sync job completed.")
+            logger.info(f"Daily sync job completed for date: {today_str}")
         except Exception as e:
-            logger.error(f"Daily sync job failed: {str(e)}")
+            logger.exception(f"Daily sync job failed: {str(e)}")
 
 async def sync_finance_history_job():
     """
     定时任务：同步历史财务数据
+    
+    描述:
+        同步指定时间范围内的财务报表数据。
     """
     logger.info("Running sync_finance_history_job...")
     
@@ -153,14 +166,18 @@ async def sync_finance_history_job():
         use_case = SyncFinanceHistoryUseCase(stock_repo, finance_repo, provider)
         
         try:
+            logger.info(f"Starting finance history sync from {start_date} to {end_date}")
             await use_case.execute(start_date=start_date, end_date=end_date)
             logger.info("Finance history sync job completed.")
         except Exception as e:
-            logger.error(f"Finance history sync job failed: {str(e)}")
+            logger.exception(f"Finance history sync job failed: {str(e)}")
 
 async def sync_incremental_finance_job():
     """
     定时任务：增量同步财务数据
+    
+    描述:
+        定期检查并同步最新的财务数据公告。
     """
     logger.info("Running sync_incremental_finance_job...")
     
@@ -172,7 +189,8 @@ async def sync_incremental_finance_job():
         use_case = SyncIncrementalFinanceDataUseCase(finance_repo, stock_repo, provider)
         
         try:
+            logger.info("Starting incremental finance sync execution...")
             await use_case.execute()
             logger.info("Incremental finance sync job completed.")
         except Exception as e:
-            logger.error(f"Incremental finance sync job failed: {str(e)}")
+            logger.exception(f"Incremental finance sync job failed: {str(e)}")

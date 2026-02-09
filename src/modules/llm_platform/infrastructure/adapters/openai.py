@@ -6,6 +6,10 @@ from src.shared.domain.exceptions import LLMConnectionError
 from src.modules.llm_platform.infrastructure.adapters.base import BaseLLMProvider
 
 class OpenAIProvider(BaseLLMProvider):
+    """
+    OpenAI 接口适配器
+    支持 OpenAI 官方 API 以及兼容 OpenAI 协议的第三方服务（如 SiliconFlow）
+    """
     def __init__(self, api_key: str, base_url: str, model: str):
         super().__init__(model)
         self.client = AsyncOpenAI(
@@ -19,11 +23,16 @@ class OpenAIProvider(BaseLLMProvider):
         system_message: Optional[str] = None, 
         temperature: float = 0.7
     ) -> str:
+        """
+        调用 LLM 生成文本
+        """
         messages = []
         if system_message:
             messages.append({"role": "system", "content": system_message})
         
         messages.append({"role": "user", "content": prompt})
+        
+        logger.debug(f"Calling LLM API: model={self.model}, prompt_length={len(prompt)}")
         
         try:
             response = await self.client.chat.completions.create(
@@ -31,7 +40,9 @@ class OpenAIProvider(BaseLLMProvider):
                 messages=messages,
                 temperature=temperature
             )
-            return response.choices[0].message.content
+            content = response.choices[0].message.content
+            logger.debug(f"LLM Response received: length={len(content) if content else 0}")
+            return content
             
         except (APIConnectionError, RateLimitError) as e:
             logger.error(f"LLM Connection/RateLimit Error: {str(e)}")

@@ -16,7 +16,7 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
             return response
         except AppException as e:
             # 处理自定义应用异常
-            logger.error(f"AppException: {e.message}")
+            logger.error(f"AppException: {e.message} | Path: {request.method} {request.url}")
             return JSONResponse(
                 status_code=e.status_code,
                 content={
@@ -28,7 +28,7 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
             )
         except Exception as e:
             # 处理未捕获的系统异常
-            logger.exception(f"Unhandled exception: {str(e)}")
+            logger.exception(f"Unhandled exception: {str(e)} | Path: {request.method} {request.url}")
             return JSONResponse(
                 status_code=500,
                 content={
