@@ -28,12 +28,16 @@ async def get_db_session() -> AsyncSession:
     
     Yields:
         AsyncSession: 异步数据库会话
+    
+    Note:
+        使用 context manager 确保即使发生异常也能正确关闭会话。
+        如果发生异常，会执行 rollback 并记录错误日志。
     """
     async with AsyncSessionLocal() as session:
         try:
             yield session
         except Exception as e:
-            logger.error(f"Database session error: {str(e)}")
+            logger.error(f"数据库会话运行异常: {str(e)}")
             await session.rollback()
             raise
         finally:

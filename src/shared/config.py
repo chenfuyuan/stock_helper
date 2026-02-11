@@ -57,26 +57,28 @@ class Settings(BaseSettings):
             path=f"{values.get('POSTGRES_DB') or ''}",
         ).unicode_string()
 
-    # Tushare 配置
+    # Tushare 数据接口配置
     TUSHARE_TOKEN: str = "your_tushare_token_here"
     
-    # Tushare API 限速配置：最小调用间隔（秒），默认 0.35s ≈ 170 次/分钟，低于 200 次/分钟限制
+    # Tushare API 限速配置：最小调用间隔（秒）
+    # 默认 0.35s ≈ 170 次/分钟，低于 Tushare 大部分 API 的 200 次/分钟限制
     TUSHARE_MIN_INTERVAL: float = 0.35
 
-    # 数据同步配置
-    # 历史日线同步的每批股票数量，影响单次批处理的数据量
+    # 数据同步引擎配置
+    # 历史日线同步的每批股票数量，影响单次批处理的消息条数和内存占用
     SYNC_DAILY_HISTORY_BATCH_SIZE: int = 50
     # 历史财务同步的每批股票数量
     SYNC_FINANCE_HISTORY_BATCH_SIZE: int = 100
-    # 历史财务同步的起始日期（格式：YYYYMMDD），用于限定财务数据拉取范围
+    # 历史财务同步的起始日期（格式：YYYYMMDD），建议根据具体存储需求调整
     SYNC_FINANCE_HISTORY_START_DATE: str = "20200101"
-    # 增量财务同步中"缺数补齐"查询的上限条数，避免一次性拉取过多缺失数据
+    # 增量财务同步中"缺数补齐"查询的上限条数，用于性能保护
     SYNC_INCREMENTAL_MISSING_LIMIT: int = 300
-    # 同步失败记录的最大重试次数，超过后需人工介入
+    # 同步失败后的最大重试次数，建议范围 3-10
     SYNC_FAILURE_MAX_RETRIES: int = 3
 
-    # LLM 配置
-    LLM_PROVIDER: str = "openai"  # openai, anthropic, etc.
+    # LLM 平台配置
+    # 默认使用的模型供应商
+    LLM_PROVIDER: str = "openai"  # 可选: openai, anthropic, azure 等
     LLM_API_KEY: str = "your_llm_api_key_here"
     LLM_BASE_URL: str = "https://api.openai.com/v1"
     LLM_MODEL: str = "gpt-3.5-turbo"

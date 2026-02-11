@@ -27,13 +27,19 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
                 }
             )
         except Exception as e:
-            # 处理未捕获的系统异常
-            logger.exception(f"Unhandled exception: {str(e)} | Path: {request.method} {request.url}")
+            # 处理所有未捕获的系统异常
+            # 记录详细的栈信息，便于线上排查
+            logger.exception(
+                f"系统未处理异常: {str(e)} | "
+                f"Method: {request.method} | "
+                f"Path: {request.url.path} | "
+                f"Client: {request.client.host if request.client else 'unknown'}"
+            )
             return JSONResponse(
                 status_code=500,
                 content={
                     "success": False,
                     "code": "INTERNAL_SERVER_ERROR",
-                    "message": "Internal server error",
+                    "message": "服务器内部错误，请稍后重试",
                 }
             )

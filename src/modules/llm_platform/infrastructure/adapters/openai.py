@@ -34,9 +34,10 @@ class OpenAIProvider(BaseLLMProvider):
         
         messages.append({"role": "user", "content": prompt})
         
-        logger.debug(f"Calling LLM API: model={self.model}, prompt_length={len(prompt)}")
-        
         try:
+            # 记录请求的关键信息（不含敏感 key）
+            logger.info(f"开始调用 LLM: {self.model} | Prompt 长度: {len(prompt)}")
+            
             response = await self.client.chat.completions.create(
                 model=self.model,
                 messages=messages,
@@ -45,7 +46,10 @@ class OpenAIProvider(BaseLLMProvider):
             content = response.choices[0].message.content
             # API 可能返回 None（如部分 tool/function 场景），契约要求返回 str，统一转为空字符串
             result = content if content is not None else ""
-            logger.debug(f"LLM Response received: length={len(result)}")
+            
+            # 记录响应摘要，便于调试。如果是长文本，只截取前 50 个字符。
+            log_preview = result.replace("\n", " ")[:50] + "..." if len(result) > 50 else result
+            logger.info(f"LLM 响应成功 | 长度: {len(result)} | 内容预览: {log_preview}")
             return result
             
         except (APIConnectionError, RateLimitError) as e:

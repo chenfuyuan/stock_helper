@@ -58,9 +58,9 @@ class LLMRegistry:
                 
             logger.info(f"LLM Registry refreshed. Loaded {success_count} providers out of {len(configs)} configs.")
         except Exception as e:
-            logger.error(f"Failed to refresh LLM Registry: {str(e)}")
-            # 这里可以考虑是否重新抛出异常，或者只是记录错误让系统继续运行（使用旧缓存或空）
-            # 目前选择仅记录错误
+            logger.error(f"LLM 注册表刷新失败: {str(e)}")
+            # 这里选择记录错误而不是抛出异常，以防启动流程被中断
+            # 系统将继续使用之前的旧配置（如果存在）
 
     def _register(self, config: LLMConfig) -> bool:
         """
@@ -88,7 +88,7 @@ class LLMRegistry:
             self._configs[config.alias] = config
             return True
         except Exception as e:
-            logger.error(f"Failed to register LLM provider {config.alias}: {str(e)}")
+            logger.error(f"LLM Provider {config.alias} 注册异常: {str(e)}")
             return False
 
     def get_provider(self, alias: str) -> Optional[ILLMProvider]:

@@ -69,8 +69,12 @@ class SyncEngine:
             return latest_task
         
         # 2. 判断是否需要恢复任务（断点续跑）
+        # 如果存在之前的任务且处于可恢复状态，则从上次的 offset 继续同步
         if latest_task and latest_task.is_resumable():
-            logger.info(f"恢复未完成的任务：task_id={latest_task.id}, current_offset={latest_task.current_offset}")
+            logger.info(
+                f"发现可恢复任务，执行断点续跑: task_id={latest_task.id}, "
+                f"current_offset={latest_task.current_offset}, job_type={job_type.value}"
+            )
             task = latest_task
             task.start()  # 更新状态为 RUNNING
             await self.sync_task_repo.update(task)
@@ -103,12 +107,16 @@ class SyncEngine:
                     await self.sync_task_repo.update(task)
                     break
                 
-                # 更新进度
+                # 更新进度并持久化状态
                 new_offset = task.current_offset + task.batch_size
                 task.update_progress(processed_count, new_offset)
                 await self.sync_task_repo.update(task)
                 
-                logger.info(f"本批完成：处理 {processed_count} 只股票，新 offset={new_offset}")
+                logger.info(
+                    f"批处理成功: 已同步 {processed_count} 只股票 | "
+                    f"当前总进度: {task.total_processed} | "
+                    f"下次 offset: {new_offset}"
+                )
         
         except Exception as e:
             logger.error(f"历史同步失败：{str(e)}", exc_info=True)
