@@ -1,0 +1,41 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv
+venv
+env
+.env
+.env.*
+!.env.example
+
+# IDE / 本地
+.idea
+.vscode
+.cursor
+*.swp
+*.swo
+
+# 测试与覆盖率
+.pytest_cache
+.coverage
+htmlcov
+.tox
+.mypy_cache
+
+# 文档与 OpenSpec（构建镜像不需要）
+openspec
+*.md
+!README.md
+
+# 其他
+*.log
+.DS_Store
+sync_*_state.json
+sync_*_failures.json

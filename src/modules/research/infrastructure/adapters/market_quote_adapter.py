@@ -34,6 +34,7 @@ class MarketQuoteAdapter(IMarketQuotePort):
                 close=d.close,
                 vol=d.vol,
                 amount=d.amount,
+                pct_chg=getattr(d, "pct_chg", 0.0) or 0.0,
             )
             for d in dto_list
         ]

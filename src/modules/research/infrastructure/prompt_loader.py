@@ -41,23 +41,32 @@ def fill_user_prompt(
     """用本次调用的 ticker、analysis_date、指标快照填充 User Prompt 占位符。"""
     support_str = json.dumps(snapshot.calculated_support_levels) if snapshot.calculated_support_levels else "[]"
     resistance_str = json.dumps(snapshot.calculated_resistance_levels) if snapshot.calculated_resistance_levels else "[]"
-    patterns_str = json.dumps(snapshot.detected_patterns, ensure_ascii=False) if snapshot.detected_patterns else "无明显形态"
+    patterns_str = json.dumps(snapshot.detected_patterns, ensure_ascii=False) if snapshot.detected_patterns else "[]"
     return template.format(
         ticker=ticker,
         analysis_date=analysis_date,
         current_price=snapshot.current_price,
-        ma20_position=snapshot.ma20_position,
-        ma200_position=snapshot.ma200_position,
-        ma_alignment=snapshot.ma_alignment,
-        adx_value=snapshot.adx_value,
-        adx_interpretation=snapshot.adx_interpretation,
+        change_percent=snapshot.change_percent,
+        ma5=snapshot.ma5,
+        ma20=snapshot.ma20,
+        ma60=snapshot.ma60,
+        ma200=snapshot.ma200,
+        vwap_value=snapshot.vwap_value,
+        price_vs_vwap_status=snapshot.price_vs_vwap_status,
         rsi_value=snapshot.rsi_value,
-        rsi_status=snapshot.rsi_status,
-        macd_status=snapshot.macd_status,
-        kdj_status=snapshot.kdj_status,
-        volume_status=snapshot.volume_status,
+        macd_dif=snapshot.macd_dif,
+        macd_dea=snapshot.macd_dea,
+        macd_histogram=snapshot.macd_histogram,
+        kdj_k=snapshot.kdj_k,
+        kdj_d=snapshot.kdj_d,
+        bb_upper=snapshot.bb_upper,
+        bb_lower=snapshot.bb_lower,
+        bb_middle=snapshot.bb_middle,
+        bb_bandwidth=snapshot.bb_bandwidth,
+        atr_value=snapshot.atr_value,
+        volume_ratio=snapshot.volume_ratio,
         obv_trend=snapshot.obv_trend,
-        detected_patterns=patterns_str,
         calculated_support_levels=support_str,
         calculated_resistance_levels=resistance_str,
+        detected_patterns=patterns_str,
     )

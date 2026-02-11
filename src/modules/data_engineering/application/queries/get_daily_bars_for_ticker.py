@@ -14,7 +14,7 @@ from src.modules.data_engineering.domain.ports.repositories.market_quote_repo im
 
 
 class DailyBarDTO(BaseModel):
-    """日线 DTO，仅暴露开高低收量等分析所需字段。"""
+    """日线 DTO，仅暴露开高低收量、涨跌幅等分析所需字段。"""
 
     trade_date: date = Field(..., description="交易日期")
     open: float = Field(..., description="开盘价")
@@ -23,6 +23,7 @@ class DailyBarDTO(BaseModel):
     close: float = Field(..., description="收盘价")
     vol: float = Field(..., description="成交量")
     amount: float = Field(default=0.0, description="成交额")
+    pct_chg: float = Field(default=0.0, description="涨跌幅（%）")
 
     model_config = {"frozen": True}
 
@@ -60,6 +61,7 @@ class GetDailyBarsForTickerUseCase:
                 close=d.close,
                 vol=d.vol,
                 amount=d.amount,
+                pct_chg=getattr(d, "pct_chg", 0.0) or 0.0,
             )
             for d in dailies
         ]

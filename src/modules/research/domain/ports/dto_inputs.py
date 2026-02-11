@@ -16,3 +16,4 @@ class DailyBarInput(BaseModel):
     close: float
     vol: float
     amount: float = 0.0
+    pct_chg: float = 0.0  # 涨跌幅（%），用于日涨跌幅展示，数据源无则传 0

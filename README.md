@@ -2,18 +2,25 @@
 
 ## Docker 运行
 
+**前置**：需已安装 [Docker](https://docs.docker.com/get-docker/) 与 [Docker Compose](https://docs.docker.com/compose/install/)。
+
 ```bash
-# 复制环境变量并填写必要配置（如 TUSHARE_TOKEN、数据库等）
+# 1. 复制环境变量（首次或需要改配置时）
 cp .env.example .env
+# 编辑 .env，至少可先保留默认；TUSHARE_TOKEN、LLM 等按需填写
 
-# 启动应用与数据库
-docker compose up -d
+# 2. 构建并启动（数据库 + 应用，自动执行 alembic 迁移）
+docker compose up -d --build
 
-# 查看日志
+# 3. 查看应用日志
 docker compose logs -f app
 ```
 
-应用默认端口 **8000**，健康检查：`GET http://localhost:8000/api/v1/health`。
+- 应用端口：**8000**  
+- 健康检查：`GET http://localhost:8000/api/v1/health`  
+- API 文档：`http://localhost:8000/api/v1/docs`  
+
+仅停止：`docker compose down`。连数据卷一起删：`docker compose down -v`。
 
 ## 技术分析接口（按股票测试）
 

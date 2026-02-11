@@ -30,6 +30,6 @@ def test_indicator_calculator_adapter_with_bars_returns_snapshot():
     # 至少 15 根才能算 RSI(14)，这里仅验证返回结构
     snapshot = adapter.compute(bars)
     assert snapshot.current_price == 11.0
-    assert hasattr(snapshot, "ma20_position")
+    assert hasattr(snapshot, "ma20") and hasattr(snapshot, "ma5")
     assert hasattr(snapshot, "rsi_value")
     assert hasattr(snapshot, "calculated_support_levels")
