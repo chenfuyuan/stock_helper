@@ -1,8 +1,22 @@
 import pandas as pd
 import tushare as ts
 import asyncio
+import time
 from typing import List, Optional
 from loguru import logger
+
+# Tushare 每分钟 200 次限制，间隔至少 60/200=0.3s，取 0.35s 留余量
+TUSHARE_MIN_INTERVAL = 0.35
+_tushare_rate_lock: asyncio.Lock | None = None
+_tushare_last_call: float = 0.0
+
+
+def _get_tushare_rate_lock() -> asyncio.Lock:
+    """获取进程内共享的 Tushare 限速锁。"""
+    global _tushare_rate_lock
+    if _tushare_rate_lock is None:
+        _tushare_rate_lock = asyncio.Lock()
+    return _tushare_rate_lock
 from src.shared.config import settings
 from src.modules.data_engineering.domain.model.stock import StockInfo
 from src.modules.data_engineering.domain.model.daily_bar import StockDaily
@@ -46,6 +60,23 @@ class TushareClient(IStockBasicProvider, IMarketQuoteProvider, IFinancialDataPro
         loop = asyncio.get_running_loop()
         return await loop.run_in_executor(None, lambda: func(*args, **kwargs))
 
+    async def _rate_limited_call(self, func, *args, **kwargs):
+        """
+        带限速的 Tushare API 调用。全进程共享限速，确保不超过 200 次/分钟。
+        """
+        global _tushare_last_call
+        lock = _get_tushare_rate_lock()
+        async with lock:
+            now = time.monotonic()
+            elapsed = now - _tushare_last_call
+            if elapsed < TUSHARE_MIN_INTERVAL and _tushare_last_call > 0:
+                wait_time = TUSHARE_MIN_INTERVAL - elapsed
+                logger.debug(f"Tushare 限速：等待 {wait_time:.2f}s")
+                await asyncio.sleep(wait_time)
+            result = await self._run_in_executor(func, *args, **kwargs)
+            _tushare_last_call = time.monotonic()
+            return result
+
     async def fetch_disclosure_date(self, actual_date: Optional[str] = None) -> List[StockDisclosure]:
         """
         获取财报披露计划
@@ -54,11 +85,10 @@ class TushareClient(IStockBasicProvider, IMarketQuoteProvider, IFinancialDataPro
             logger.info(f"开始从 Tushare 获取财报披露计划: actual_date={actual_date}")
             fields = 'ts_code,ann_date,end_date,pre_date,actual_date'
             
-            # 使用 run_in_executor 执行同步的 Tushare API
-            df = await self._run_in_executor(
-                self.pro.disclosure_date, 
-                actual_date=actual_date, 
-                fields=fields
+            df = await self._rate_limited_call(
+                self.pro.disclosure_date,
+                actual_date=actual_date,
+                fields=fields,
             )
             
             if df is None or df.empty:
@@ -84,13 +114,12 @@ class TushareClient(IStockBasicProvider, IMarketQuoteProvider, IFinancialDataPro
             logger.info(f"开始从 Tushare 获取财务指标: code={third_code}, start={start_date}, end={end_date}")
             fields = 'ts_code,ann_date,end_date,eps,dt_eps,total_revenue_ps,revenue_ps,capital_rese_ps,surplus_rese_ps,undist_profit_ps,extra_item,profit_dedt,gross_margin,current_ratio,quick_ratio,cash_ratio,inv_turn,ar_turn,ca_turn,fa_turn,assets_turn,invturn_days,arturn_days,op_income,valuechange_income,interst_income,daa,ebit,ebitda,fcff,fcfe,current_exint,noncurrent_exint,interestdebt,netdebt,tangible_asset,working_capital,networking_capital,invest_capital,retained_earnings,diluted2_eps,bps,ocfps,retainedps,cfps,ebit_ps,fcff_ps,fcfe_ps,netprofit_margin,grossprofit_margin,cogs_of_sales,expense_of_sales,profit_to_gr,saleexp_to_gr,adminexp_of_gr,finaexp_of_gr,impai_ttm,gc_of_gr,op_of_gr,ebit_of_gr,roe,roe_waa,roe_dt,roa,npta,roic,roe_yearly,roa2_yearly,roe_avg,opincome_of_ebt,investincome_of_ebt,n_op_profit_of_ebt,tax_to_ebt,dtprofit_to_profit,salescash_to_or,ocf_to_or,ocf_to_opincome,capitalized_to_da,debt_to_assets,assets_to_eqt,dp_assets_to_eqt,ca_to_assets,nca_to_assets,tbassets_to_totalassets,int_to_talcap,eqt_to_talcapital,currentdebt_to_debt,longdeb_to_debt,ocf_to_shortdebt,debt_to_eqt'
             
-            # 使用 run_in_executor 执行同步的 Tushare API
-            df = await self._run_in_executor(
+            df = await self._rate_limited_call(
                 self.pro.fina_indicator,
-                ts_code=third_code, 
-                start_date=start_date, 
-                end_date=end_date, 
-                fields=fields
+                ts_code=third_code,
+                start_date=start_date,
+                end_date=end_date,
+                fields=fields,
             )
             
             if df is None or df.empty:
@@ -118,13 +147,11 @@ class TushareClient(IStockBasicProvider, IMarketQuoteProvider, IFinancialDataPro
             # 获取数据字段：ts_code, symbol, name, area, industry, market, list_date, fullname, enname, cnspell, exchange, curr_type, list_status, delist_date, is_hs
             fields = 'ts_code,symbol,name,area,industry,market,list_date,fullname,enname,cnspell,exchange,curr_type,list_status,delist_date,is_hs'
             
-            # 使用 run_in_executor 执行同步的 Tushare API
-            # 避免阻塞 asyncio 事件循环
-            df = await self._run_in_executor(
+            df = await self._rate_limited_call(
                 self.pro.stock_basic,
-                exchange='', 
-                list_status='L', 
-                fields=fields
+                exchange='',
+                list_status='L',
+                fields=fields,
             )
             
             if df is None or df.empty:
@@ -151,9 +178,13 @@ class TushareClient(IStockBasicProvider, IMarketQuoteProvider, IFinancialDataPro
             # 1. 获取基础行情 (daily)
             # fields: ts_code, trade_date, open, high, low, close, pre_close, change, pct_chg, vol, amount
             daily_fields = 'ts_code,trade_date,open,high,low,close,pre_close,change,pct_chg,vol,amount'
-            df_daily = await self._run_in_executor(
+            df_daily = await self._rate_limited_call(
                 self.pro.daily,
-                ts_code=third_code, trade_date=trade_date, start_date=start_date, end_date=end_date, fields=daily_fields
+                ts_code=third_code,
+                trade_date=trade_date,
+                start_date=start_date,
+                end_date=end_date,
+                fields=daily_fields,
             )
             
             if df_daily is None or df_daily.empty:
@@ -164,9 +195,13 @@ class TushareClient(IStockBasicProvider, IMarketQuoteProvider, IFinancialDataPro
             # fields: ts_code, trade_date, adj_factor
             adj_fields = 'ts_code,trade_date,adj_factor'
             try:
-                df_adj = await self._run_in_executor(
+                df_adj = await self._rate_limited_call(
                     self.pro.adj_factor,
-                    ts_code=third_code, trade_date=trade_date, start_date=start_date, end_date=end_date, fields=adj_fields
+                    ts_code=third_code,
+                    trade_date=trade_date,
+                    start_date=start_date,
+                    end_date=end_date,
+                    fields=adj_fields,
                 )
             except Exception as e:
                 logger.warning(f"获取复权因子失败: {str(e)}")
@@ -176,9 +211,13 @@ class TushareClient(IStockBasicProvider, IMarketQuoteProvider, IFinancialDataPro
             # fields: ts_code, trade_date, turnover_rate, turnover_rate_f, volume_ratio, pe, pe_ttm, pb, ps, ps_ttm, dv_ratio, dv_ttm, total_share, float_share, free_share, total_mv, circ_mv
             basic_fields = 'ts_code,trade_date,turnover_rate,turnover_rate_f,volume_ratio,pe,pe_ttm,pb,ps,ps_ttm,dv_ratio,dv_ttm,total_share,float_share,free_share,total_mv,circ_mv'
             try:
-                df_basic = await self._run_in_executor(
+                df_basic = await self._rate_limited_call(
                     self.pro.daily_basic,
-                    ts_code=third_code, trade_date=trade_date, start_date=start_date, end_date=end_date, fields=basic_fields
+                    ts_code=third_code,
+                    trade_date=trade_date,
+                    start_date=start_date,
+                    end_date=end_date,
+                    fields=basic_fields,
                 )
             except Exception as e:
                 logger.warning(f"获取每日指标失败: {str(e)}")

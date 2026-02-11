@@ -70,3 +70,75 @@ def fill_user_prompt(
         calculated_resistance_levels=resistance_str,
         detected_patterns=patterns_str,
     )
+
+
+# 财务审计员 Prompt 填充
+
+
+def load_financial_auditor_system_prompt(prompts_dir: Path) -> str:
+    """加载财务审计员 System Prompt。"""
+    path = prompts_dir / "system.md"
+    if not path.exists():
+        return ""
+    return path.read_text(encoding="utf-8").strip()
+
+
+def load_financial_auditor_user_template(prompts_dir: Path) -> str:
+    """加载财务审计员 User Prompt 模板（含占位符）。"""
+    path = prompts_dir / "user.md"
+    if not path.exists():
+        return ""
+    return path.read_text(encoding="utf-8").strip()
+
+
+def fill_financial_auditor_user_prompt(template: str, snapshot) -> str:
+    """用财务快照 DTO 填充 User Prompt 占位符。snapshot 为 FinancialSnapshotDTO。"""
+    # 序列需 JSON 序列化以便模板中的 JSON 块正确
+    quarter_list = json.dumps(snapshot.quarter_list, ensure_ascii=False)
+    revenue_growth_series = json.dumps(
+        snapshot.revenue_growth_series, ensure_ascii=False
+    )
+    profit_growth_series = json.dumps(
+        snapshot.profit_growth_series, ensure_ascii=False
+    )
+    gross_margin_series = json.dumps(
+        snapshot.gross_margin_series, ensure_ascii=False
+    )
+    roic_series = json.dumps(snapshot.roic_series, ensure_ascii=False)
+    fcff_series = json.dumps(snapshot.fcff_series, ensure_ascii=False)
+    invturn_days_series = json.dumps(
+        snapshot.invturn_days_series, ensure_ascii=False
+    )
+    arturn_days_series = json.dumps(
+        snapshot.arturn_days_series, ensure_ascii=False
+    )
+    return template.format(
+        symbol=snapshot.symbol,
+        report_period=snapshot.report_period,
+        source=snapshot.source,
+        gross_margin=snapshot.gross_margin,
+        netprofit_margin=snapshot.netprofit_margin,
+        roe_waa=snapshot.roe_waa,
+        roic=snapshot.roic,
+        eps=snapshot.eps,
+        eps_deducted=snapshot.eps_deducted,
+        ocfps=snapshot.ocfps,
+        fcff_ps=snapshot.fcff_ps,
+        quality_ratio=snapshot.quality_ratio,
+        current_ratio=snapshot.current_ratio,
+        quick_ratio=snapshot.quick_ratio,
+        debt_to_assets=snapshot.debt_to_assets,
+        interestdebt=snapshot.interestdebt,
+        netdebt=snapshot.netdebt,
+        invturn_days=snapshot.invturn_days,
+        arturn_days=snapshot.arturn_days,
+        assets_turn=snapshot.assets_turn,
+        quarter_list=quarter_list,
+        revenue_growth_series=revenue_growth_series,
+        profit_growth_series=profit_growth_series,
+        gross_margin_series=gross_margin_series,
+        roic_series=roic_series,
+        fcff_series=fcff_series,
+        invturn_days_series=invturn_days_series,
+        arturn_days_series=arturn_days_series,
+    )

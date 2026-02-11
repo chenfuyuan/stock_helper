@@ -147,28 +147,45 @@ async def sync_daily_data_job():
 
 async def sync_finance_history_job():
     """
-    定时任务：同步历史财务数据
-    
+    定时任务：同步历史财务数据（分批执行，带进度保存）
+
     描述:
-        同步指定时间范围内的财务报表数据。
+        每批处理 100 只股票，进度保存在 sync_finance_state.json。
+        Tushare 限速 200 次/分钟，单批约 100 次请求，耗时约 35s，安全不超限。
     """
     logger.info("Running sync_finance_history_job...")
-    
-    # 示例逻辑，实际可能需要更复杂的进度管理
+    limit = 100
     start_date = "20200101"
     end_date = datetime.now().strftime("%Y%m%d")
-    
+    offset = load_finance_offset()
+
     async with AsyncSessionLocal() as session:
         stock_repo = StockRepositoryImpl(session)
         finance_repo = StockFinanceRepositoryImpl(session)
         provider = TushareClient()
-        
         use_case = SyncFinanceHistoryUseCase(stock_repo, finance_repo, provider)
-        
+
         try:
-            logger.info(f"Starting finance history sync from {start_date} to {end_date}")
-            await use_case.execute(start_date=start_date, end_date=end_date)
-            logger.info("Finance history sync job completed.")
+            logger.info(
+                f"Starting finance history sync from {start_date} to {end_date}, offset={offset}, limit={limit}"
+            )
+            result = await use_case.execute(
+                start_date=start_date,
+                end_date=end_date,
+                offset=offset,
+                limit=limit,
+            )
+            batch_size = result.get("batch_size", 0)
+            count = result.get("count", 0)
+            if batch_size == 0:
+                logger.info("No more stocks to sync. Resetting offset to 0.")
+                save_finance_offset(0)
+            else:
+                offset += batch_size
+                save_finance_offset(offset)
+                logger.info(
+                    f"Finance history batch completed. Synced {count} rows, offset now {offset}"
+                )
         except Exception as e:
             logger.exception(f"Finance history sync job failed: {str(e)}")
 
