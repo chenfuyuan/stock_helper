@@ -22,80 +22,51 @@ class SyncDailyHistoryUseCase:
     async def execute(self, limit: int = 10, offset: int = 0) -> Dict[str, Any]:
         """
         执行同步逻辑（支持分页）
+        
+        改为纯串行调用，限速完全由 TushareClient 的 _rate_limited_call 统一处理。
+        移除了 Semaphore 和 sleep 等 Application 层的限速代码。
         """
         target_stocks = await self.stock_repo.get_all(skip=offset, limit=limit)
         
         if not target_stocks:
-            logger.warning(f"No stocks found to sync (offset={offset}, limit={limit})")
+            logger.warning(f"未找到需要同步的股票 (offset={offset}, limit={limit})")
             return {
                 "synced_stocks": 0,
                 "total_rows": 0,
-                "message": f"No stocks found to sync (offset={offset}, limit={limit})"
+                "message": f"未找到需要同步的股票 (offset={offset}, limit={limit})"
             }
 
-        logger.info(f"Starting sync for {len(target_stocks)} stocks (offset={offset})...")
+        logger.info(f"开始同步 {len(target_stocks)} 只股票的历史日线数据 (offset={offset})...")
         
         synced_stocks_count = 0
         total_rows_saved = 0
         
-        semaphore = asyncio.Semaphore(5)
-        queue = asyncio.Queue(maxsize=5)
-        
-        async def producer(stock):
-            async with semaphore:
-                try:
-                    if not stock.third_code:
-                        return
-                        
-                    logger.info(f"Fetching daily data for {stock.third_code} ({stock.name})...")
-                    dailies = await self.data_provider.fetch_daily(third_code=stock.third_code)
+        # 串行处理每只股票：拉取 -> 保存
+        for stock in target_stocks:
+            try:
+                if not stock.third_code:
+                    logger.warning(f"股票 {stock.name} 缺少 third_code，跳过")
+                    continue
                     
-                    if dailies:
-                        logger.info(f"Fetched {len(dailies)} records for {stock.third_code}. Putting into queue...")
-                        await queue.put((stock, dailies))
-                    else:
-                        logger.warning(f"No daily data found for {stock.third_code}")
-                    
-                    await asyncio.sleep(0.1)
-                        
-                except Exception as e:
-                    logger.error(f"Failed to fetch daily data for {stock.third_code}: {str(e)}")
-
-        async def consumer():
-            nonlocal synced_stocks_count, total_rows_saved
-            while True:
-                item = await queue.get()
+                logger.info(f"正在拉取 {stock.third_code} ({stock.name}) 的历史日线数据...")
+                dailies = await self.data_provider.fetch_daily(third_code=stock.third_code)
                 
-                if item is None:
-                    queue.task_done()
-                    break
-                
-                stock, dailies = item
-                try:
-                    logger.info(f"Saving {len(dailies)} records for {stock.third_code} into DB...")
+                if dailies:
+                    logger.info(f"成功拉取 {len(dailies)} 条记录，准备写入数据库...")
                     saved_count = await self.daily_repo.save_all(dailies)
                     total_rows_saved += saved_count
                     synced_stocks_count += 1
-                    logger.info(f"Successfully saved {saved_count} records for {stock.third_code}")
-                except Exception as e:
-                    logger.error(f"Failed to save data for {stock.third_code} to DB: {str(e)}")
-                    # Assuming repo has access to session or handles rollback internally
-                    # BaseRepository usually doesn't expose session directly in interface, 
-                    # but Implementation has it. Interface doesn't have rollback.
-                    # We might need to handle exception gracefully.
-                finally:
-                    queue.task_done()
-
-        consumer_task = asyncio.create_task(consumer())
-        
-        producers = [producer(stock) for stock in target_stocks]
-        await asyncio.gather(*producers)
-        
-        await queue.put(None)
-        await consumer_task
+                    logger.info(f"成功保存 {stock.third_code} 的 {saved_count} 条日线记录")
+                else:
+                    logger.warning(f"{stock.third_code} 没有返回日线数据")
+                        
+            except Exception as e:
+                logger.error(f"同步 {stock.third_code} 失败: {str(e)}")
+                # 单只股票失败不中断整批，继续处理下一只
+                continue
         
         return {
             "synced_stocks": synced_stocks_count,
             "total_rows": total_rows_saved,
-            "message": f"Synced {synced_stocks_count} stocks, total {total_rows_saved} rows"
+            "message": f"成功同步 {synced_stocks_count} 只股票，共 {total_rows_saved} 条日线记录"
         }

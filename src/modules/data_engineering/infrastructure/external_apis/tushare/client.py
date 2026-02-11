@@ -5,8 +5,7 @@ import time
 from typing import List, Optional
 from loguru import logger
 
-# Tushare 每分钟 200 次限制，间隔至少 60/200=0.3s，取 0.35s 留余量
-TUSHARE_MIN_INTERVAL = 0.35
+# Tushare 限速锁：全进程共享，确保 API 调用频率不超过限制
 _tushare_rate_lock: asyncio.Lock | None = None
 _tushare_last_call: float = 0.0
 
@@ -63,14 +62,16 @@ class TushareClient(IStockBasicProvider, IMarketQuoteProvider, IFinancialDataPro
     async def _rate_limited_call(self, func, *args, **kwargs):
         """
         带限速的 Tushare API 调用。全进程共享限速，确保不超过 200 次/分钟。
+        限速间隔从配置中读取（settings.TUSHARE_MIN_INTERVAL），默认 0.35s。
         """
         global _tushare_last_call
         lock = _get_tushare_rate_lock()
         async with lock:
             now = time.monotonic()
             elapsed = now - _tushare_last_call
-            if elapsed < TUSHARE_MIN_INTERVAL and _tushare_last_call > 0:
-                wait_time = TUSHARE_MIN_INTERVAL - elapsed
+            min_interval = settings.TUSHARE_MIN_INTERVAL
+            if elapsed < min_interval and _tushare_last_call > 0:
+                wait_time = min_interval - elapsed
                 logger.debug(f"Tushare 限速：等待 {wait_time:.2f}s")
                 await asyncio.sleep(wait_time)
             result = await self._run_in_executor(func, *args, **kwargs)

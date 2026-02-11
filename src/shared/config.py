@@ -59,6 +59,21 @@ class Settings(BaseSettings):
 
     # Tushare 配置
     TUSHARE_TOKEN: str = "your_tushare_token_here"
+    
+    # Tushare API 限速配置：最小调用间隔（秒），默认 0.35s ≈ 170 次/分钟，低于 200 次/分钟限制
+    TUSHARE_MIN_INTERVAL: float = 0.35
+
+    # 数据同步配置
+    # 历史日线同步的每批股票数量，影响单次批处理的数据量
+    SYNC_DAILY_HISTORY_BATCH_SIZE: int = 50
+    # 历史财务同步的每批股票数量
+    SYNC_FINANCE_HISTORY_BATCH_SIZE: int = 100
+    # 历史财务同步的起始日期（格式：YYYYMMDD），用于限定财务数据拉取范围
+    SYNC_FINANCE_HISTORY_START_DATE: str = "20200101"
+    # 增量财务同步中"缺数补齐"查询的上限条数，避免一次性拉取过多缺失数据
+    SYNC_INCREMENTAL_MISSING_LIMIT: int = 300
+    # 同步失败记录的最大重试次数，超过后需人工介入
+    SYNC_FAILURE_MAX_RETRIES: int = 3
 
     # LLM 配置
     LLM_PROVIDER: str = "openai"  # openai, anthropic, etc.

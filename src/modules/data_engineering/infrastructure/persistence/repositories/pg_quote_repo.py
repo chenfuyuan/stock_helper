@@ -1,6 +1,6 @@
 from datetime import date
-from typing import List
-from sqlalchemy import select
+from typing import List, Optional
+from sqlalchemy import select, func
 from sqlalchemy.dialects.postgresql import insert
 from src.shared.infrastructure.base_repository import BaseRepository
 from src.modules.data_engineering.domain.model.daily_bar import StockDaily
@@ -80,3 +80,10 @@ class StockDailyRepositoryImpl(BaseRepository[StockDailyModel], IMarketQuoteRepo
             )
             for r in rows
         ]
+
+    async def get_latest_trade_date(self) -> Optional[date]:
+        """查询数据库中最新的交易日期（max(trade_date)）"""
+        stmt = select(func.max(StockDailyModel.trade_date))
+        result = await self.session.execute(stmt)
+        latest_date = result.scalar_one_or_none()
+        return latest_date
