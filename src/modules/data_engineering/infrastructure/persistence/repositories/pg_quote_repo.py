@@ -1,9 +1,12 @@
+from datetime import date
 from typing import List
+from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from src.shared.infrastructure.base_repository import BaseRepository
 from src.modules.data_engineering.domain.model.daily_bar import StockDaily
 from src.modules.data_engineering.domain.ports.repositories.market_quote_repo import IMarketQuoteRepository
 from src.modules.data_engineering.infrastructure.persistence.models.daily_bar_model import StockDailyModel
+
 
 class StockDailyRepositoryImpl(BaseRepository[StockDailyModel], IMarketQuoteRepository):
     def __init__(self, session):
@@ -43,3 +46,37 @@ class StockDailyRepositoryImpl(BaseRepository[StockDailyModel], IMarketQuoteRepo
             
         await self.session.commit()
         return total_saved
+
+    async def get_by_third_code_and_date_range(
+        self, third_code: str, start_date: date, end_date: date
+    ) -> List[StockDaily]:
+        """按第三方代码与日期区间查询日线，按交易日期升序返回。"""
+        stmt = (
+            select(StockDailyModel)
+            .where(
+                StockDailyModel.third_code == third_code,
+                StockDailyModel.trade_date >= start_date,
+                StockDailyModel.trade_date <= end_date,
+            )
+            .order_by(StockDailyModel.trade_date.asc())
+        )
+        result = await self.session.execute(stmt)
+        rows = result.scalars().all()
+        return [
+            StockDaily(
+                third_code=r.third_code,
+                trade_date=r.trade_date,
+                open=r.open or 0.0,
+                high=r.high or 0.0,
+                low=r.low or 0.0,
+                close=r.close or 0.0,
+                pre_close=r.pre_close or 0.0,
+                change=r.change or 0.0,
+                pct_chg=r.pct_chg or 0.0,
+                vol=r.vol or 0.0,
+                amount=r.amount or 0.0,
+                adj_factor=r.adj_factor,
+                source=r.source or "tushare",
+            )
+            for r in rows
+        ]

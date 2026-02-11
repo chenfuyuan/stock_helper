@@ -1,9 +1,11 @@
 from typing import Optional
+
 from openai import AsyncOpenAI, APIError, APIConnectionError, RateLimitError
 from loguru import logger
 
-from src.shared.domain.exceptions import LLMConnectionError
+from src.modules.llm_platform.domain.exceptions import LLMConnectionError
 from src.modules.llm_platform.infrastructure.adapters.base import BaseLLMProvider
+
 
 class OpenAIProvider(BaseLLMProvider):
     """
@@ -41,8 +43,10 @@ class OpenAIProvider(BaseLLMProvider):
                 temperature=temperature
             )
             content = response.choices[0].message.content
-            logger.debug(f"LLM Response received: length={len(content) if content else 0}")
-            return content
+            # API 可能返回 None（如部分 tool/function 场景），契约要求返回 str，统一转为空字符串
+            result = content if content is not None else ""
+            logger.debug(f"LLM Response received: length={len(result)}")
+            return result
             
         except (APIConnectionError, RateLimitError) as e:
             logger.error(f"LLM Connection/RateLimit Error: {str(e)}")

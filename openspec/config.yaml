@@ -1,0 +1,26 @@
+# OpenSpec project config — see https://thedocs.io/openspec/
+schema: spec-driven
+
+# Project context: shown to AI when creating proposals, design, tasks.
+# Keeps DDD/module boundaries and tech stack in context for every change.
+context: |
+  Stock Helper: AI-Native virtual investment team. Philosophy: "价值为盾，投机为矛". Flow: 采集 → 辩论 → 决策.
+
+  Bounded Contexts (see openspec/specs/vision-and-modules.md):
+  - Coordinator: orchestration only; no research, no decision.
+  - Research: fact factory; calls data_engineering + llm_platform via Ports only; outputs ResearchReport.
+  - Debate: bull/bear + risk matrix; no data fetch, no final decision.
+  - Judge: final verdict + position/risk; no research, no debate flow.
+  - data_engineering (existing): hard data — stock list, daily bars, finance; src/modules/data_engineering.
+  - llm_platform (existing): LLM config + multi-vendor Chat; src/modules/llm_platform.
+
+  Tech: Python 3.10+, FastAPI, PostgreSQL, Alembic. Strict DDD layers: Presentation / Application / Domain / Infrastructure. Ports in domain/ports; no cross-module dependency on infrastructure. Shared kernel: src/shared.
+
+  Code standards: openspec/specs/tech-standards.md. New modules go under src/modules/<context>/.
+
+# Optional: per-artifact rules (uncomment and tune as needed)
+# rules:
+#   proposal:
+#     - Keep under 500 words; include Non-goals.
+#   tasks:
+#     - Max 2-hour chunks; each task must belong to one Bounded Context.

@@ -1,8 +1,10 @@
 from typing import Optional, List
 from loguru import logger
-from src.shared.domain.ports.llm import ILLMProvider
+
+from src.modules.llm_platform.domain.ports.llm import ILLMProvider
 from src.modules.llm_platform.infrastructure.router import LLMRouter
 from src.modules.llm_platform.infrastructure.registry import LLMRegistry
+
 
 class LLMService(ILLMProvider):
     """

@@ -1,119 +1,34 @@
 # Stock Helper
 
-Enterprise-grade Python DDD Project Skeleton for Stock Market Data Analysis.
-
-## Project Structure
-
-The project follows Domain-Driven Design (DDD) principles with a layered architecture:
-
-```
-stock_helper/
-├── src/
-│   ├── api/                # API Routes & Middlewares
-│   ├── modules/            # Business Modules
-│   │   └── market_data/    # Market Data Module
-│   │       ├── application/    # Application Layer (Use Cases, DTOs)
-│   │       ├── domain/         # Domain Layer (Entities, Interfaces)
-│   │       ├── infrastructure/ # Infrastructure Layer (DB, Repositories Impl, External APIs)
-│   │       └── presentation/   # Presentation Layer (API Endpoints)
-│   ├── shared/             # Shared Kernel (Config, Base Classes, Utilities)
-│   └── main.py             # Application Entrypoint
-├── alembic/                # Database Migrations
-├── docs/                   # Documentation
-├── tests/                  # Test Suite
-└── scripts/                # Utility Scripts
-```
-
-## Documentation
-
-- [Architecture Overview](docs/architecture.md): Detailed explanation of DDD layers and patterns.
-- [Development Guide](docs/development_guide.md): Setup, testing, and coding standards.
-- [API Reference](docs/api_reference.md): Overview of REST API endpoints.
-- [Database Schema](docs/database_schema.md): Description of tables and models.
-- **Modules**:
-  - [Data Engineering](docs/modules/data_engineering.md)
-  - [LLM Platform](docs/modules/llm_platform.md)
-
-## Tech Stack
-
-- **Web Framework**: FastAPI (ASGI)
-- **Database**: PostgreSQL + SQLAlchemy (Async)
-- **Migrations**: Alembic
-- **Scheduler**: APScheduler (AsyncIO)
-- **Dependency Management**: Conda + Pip
-- **Containerization**: Docker + Docker Compose
-- **Logging**: Loguru
-- **Testing**: Pytest
-
-## Core Features
-
-- **Stock Basic Info**: Sync and manage stock basic information (symbol, name, industry, etc.).
-- **Daily Quotations**: Sync historical and daily incremental stock market data.
-- **Financial Data**: Sync stock financial indicators and reports.
-- **Task Scheduling**: Built-in scheduler for automated data synchronization.
-
-## Getting Started
-
-### Prerequisites
-
-- Python 3.10+
-- Docker & Docker Compose
-- Conda (Optional)
-- Tushare Token (Set in `.env`)
-
-### Installation
-
-1. Create environment:
-   ```bash
-   make install
-   ```
-
-2. Activate environment:
-   ```bash
-   conda activate stock_helper
-   ```
-
-3. Configure Environment Variables:
-   Copy `.env.example` to `.env` and fill in your database credentials and Tushare token.
-
-4. Run locally:
-   ```bash
-   make run
-   ```
-
-### Running with Docker
+## Docker 运行
 
 ```bash
-docker-compose up --build
+# 复制环境变量并填写必要配置（如 TUSHARE_TOKEN、数据库等）
+cp .env.example .env
+
+# 启动应用与数据库
+docker compose up -d
+
+# 查看日志
+docker compose logs -f app
 ```
 
-### Testing
+应用默认端口 **8000**，健康检查：`GET http://localhost:8000/api/v1/health`。
+
+## 技术分析接口（按股票测试）
+
+对指定股票运行技术分析（依赖已同步的日线数据与 LLM 配置）：
 
 ```bash
-make test
+# 指定股票代码，分析基准日可选（默认当天）
+curl -s "http://localhost:8000/api/v1/research/technical-analysis?ticker=000001.SZ&analysis_date=2024-01-15"
 ```
 
-## API Documentation
+- **ticker**（必填）：股票代码，如 `000001.SZ`
+- **analysis_date**（可选）：分析基准日 `YYYY-MM-DD`，不传则使用当前日期
 
-Once running, access:
-- Swagger UI: http://localhost:8000/api/v1/docs
-- ReDoc: http://localhost:8000/api/v1/redoc
+返回为 JSON：`signal`（BULLISH/BEARISH/NEUTRAL）、`confidence`、`summary_reasoning`、`key_technical_levels`、`risk_warning`。
 
-## Task Scheduler Management
+**注意**：需先同步该标的日线（如通过 `/api/v1/stocks/sync/daily` 等），并已在 LLM 平台配置可用模型，否则接口可能返回 422/500。
 
-The project includes a powerful scheduler API to manage background jobs.
-
-- **Check Status**: `GET /api/v1/scheduler/status`
-- **Trigger Job Immediately**: `POST /api/v1/scheduler/jobs/{job_id}/trigger`
-- **Start Interval Job**: `POST /api/v1/scheduler/jobs/{job_id}/start`
-- **Schedule Cron Job**: `POST /api/v1/scheduler/jobs/{job_id}/schedule`
-- **Stop Job**: `POST /api/v1/scheduler/jobs/{job_id}/stop`
-
-Available Jobs:
-- `sync_daily_history`: Sync all historical daily data (supports resume from breakpoint).
-- `sync_daily_by_date`: Sync daily data for a specific date (default: today).
-- `sync_history_finance`: Sync historical financial data.
-
-## License
-
-MIT
+API 文档：`http://localhost:8000/api/v1/docs`。

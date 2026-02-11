@@ -51,3 +51,9 @@ htmlcov/
 Thumbs.db
 
 .trae/
+
+
+
+# Cursor / Antigravity (OpenSpec tooling - local or team-shared; uncomment to ignore)
+.cursor/
+.agent/

@@ -2,11 +2,12 @@ from typing import Dict, Optional, List
 from loguru import logger
 import asyncio
 
-from src.shared.domain.ports.llm import ILLMProvider
+from src.modules.llm_platform.domain.ports.llm import ILLMProvider
 from src.modules.llm_platform.infrastructure.adapters.openai import OpenAIProvider
 from src.modules.llm_platform.domain.entities.llm_config import LLMConfig
 from src.modules.llm_platform.domain.ports.repositories.config_repo import ILLMConfigRepository
 from src.shared.config import settings
+
 
 class LLMRegistry:
     """

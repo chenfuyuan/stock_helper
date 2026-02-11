@@ -1,11 +1,12 @@
 from typing import List, Optional, TYPE_CHECKING
 from loguru import logger
 
-from src.shared.domain.ports.llm import ILLMProvider
-from src.shared.domain.exceptions import LLMConnectionError, NoAvailableModelError
+from src.modules.llm_platform.domain.ports.llm import ILLMProvider
+from src.modules.llm_platform.domain.exceptions import LLMConnectionError, NoAvailableModelError
 
 if TYPE_CHECKING:
     from src.modules.llm_platform.infrastructure.registry import LLMRegistry
+
 
 class LLMRouter(ILLMProvider):
     def __init__(self, registry):
