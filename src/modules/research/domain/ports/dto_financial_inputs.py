@@ -26,6 +26,7 @@ class FinanceRecordInput(BaseModel):
     roic: Optional[float] = None
 
     eps: Optional[float] = None
+    bps: Optional[float] = None
     profit_dedt: Optional[float] = None
     ocfps: Optional[float] = None
     fcff_ps: Optional[float] = None

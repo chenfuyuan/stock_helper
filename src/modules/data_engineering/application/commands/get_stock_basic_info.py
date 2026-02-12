@@ -28,7 +28,11 @@ class GetStockBasicInfoUseCase:
         :return: 聚合信息 DTO
         """
         # 1. 获取基础信息
-        stock_info = await self.stock_repo.get_by_symbol(symbol)
+        if "." in symbol:
+            stock_info = await self.stock_repo.get_by_third_code(symbol)
+        else:
+            stock_info = await self.stock_repo.get_by_symbol(symbol)
+            
         if not stock_info:
             return None
 

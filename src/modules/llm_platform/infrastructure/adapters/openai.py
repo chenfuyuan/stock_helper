@@ -36,12 +36,13 @@ class OpenAIProvider(BaseLLMProvider):
         
         try:
             # 记录请求的关键信息（不含敏感 key）
-            logger.info(f"开始调用 LLM: {self.model} | Prompt 长度: {len(prompt)}")
+            logger.info(f"开始调用 LLM: {self.model} | Prompt 长度: {len(prompt)}, message: {messages}")
             
             response = await self.client.chat.completions.create(
                 model=self.model,
                 messages=messages,
-                temperature=temperature
+                temperature=temperature,
+                extra_body={"reasoning_split": True}
             )
             content = response.choices[0].message.content
             # API 可能返回 None（如部分 tool/function 场景），契约要求返回 str，统一转为空字符串

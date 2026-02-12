@@ -142,3 +142,53 @@ def fill_financial_auditor_user_prompt(template: str, snapshot) -> str:
         invturn_days_series=invturn_days_series,
         arturn_days_series=arturn_days_series,
     )
+
+
+# 估值建模师 Prompt 填充
+
+
+def load_valuation_modeler_system_prompt(prompts_dir: Path) -> str:
+    """加载估值建模师 System Prompt。"""
+    path = prompts_dir / "system.md"
+    if not path.exists():
+        return ""
+    return path.read_text(encoding="utf-8").strip()
+
+
+def load_valuation_modeler_user_template(prompts_dir: Path) -> str:
+    """加载估值建模师 User Prompt 模板（含占位符）。"""
+    path = prompts_dir / "user.md"
+    if not path.exists():
+        return ""
+    return path.read_text(encoding="utf-8").strip()
+
+
+def fill_valuation_modeler_user_prompt(template: str, snapshot) -> str:
+    """
+    用估值快照 DTO 填充 User Prompt 占位符。snapshot 为 ValuationSnapshotDTO。
+    所有占位符与 User Prompt 模板中的占位符一一对应。
+    """
+    return template.format(
+        stock_name=snapshot.stock_name,
+        stock_code=snapshot.stock_code,
+        current_date=snapshot.current_date,
+        industry=snapshot.industry,
+        current_price=snapshot.current_price,
+        total_mv=snapshot.total_mv,
+        pe_ttm=snapshot.pe_ttm,
+        pe_percentile=snapshot.pe_percentile,
+        pb=snapshot.pb,
+        pb_percentile=snapshot.pb_percentile,
+        ps_ttm=snapshot.ps_ttm,
+        ps_percentile=snapshot.ps_percentile,
+        dv_ratio=snapshot.dv_ratio,
+        roe=snapshot.roe,
+        gros_profit_margin=snapshot.gros_profit_margin,
+        gross_margin_trend=snapshot.gross_margin_trend,
+        net_profit_margin=snapshot.net_profit_margin,
+        debt_to_assets=snapshot.debt_to_assets,
+        growth_rate_avg=snapshot.growth_rate_avg,
+        peg_ratio=snapshot.peg_ratio,
+        graham_intrinsic_val=snapshot.graham_intrinsic_val,
+        graham_safety_margin=snapshot.graham_safety_margin,
+    )

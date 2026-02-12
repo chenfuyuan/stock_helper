@@ -5,6 +5,7 @@ from src.modules.llm_platform.presentation.rest import config_routes, chat_route
 from src.modules.research.presentation.rest import (
     technical_analyst_routes,
     financial_auditor_routes,
+    valuation_modeler_routes,
 )
 
 api_router = APIRouter()
@@ -15,3 +16,4 @@ api_router.include_router(config_routes.router)
 api_router.include_router(chat_routes.router)
 api_router.include_router(technical_analyst_routes.router)
 api_router.include_router(financial_auditor_routes.router)
+api_router.include_router(valuation_modeler_routes.router)

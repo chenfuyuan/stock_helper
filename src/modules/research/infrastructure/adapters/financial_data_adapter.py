@@ -25,6 +25,7 @@ def _to_finance_record(d: FinanceIndicatorDTO) -> FinanceRecordInput:
         roe_waa=d.roe_waa,
         roic=d.roic,
         eps=d.eps,
+        bps=d.bps,
         profit_dedt=d.profit_dedt,
         ocfps=d.ocfps,
         fcff_ps=d.fcff_ps,

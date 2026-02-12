@@ -32,6 +32,7 @@ class FinanceIndicatorDTO(BaseModel):
 
     # 每股指标
     eps: Optional[float] = Field(None, description="基本每股收益")
+    bps: Optional[float] = Field(None, description="每股净资产")
     profit_dedt: Optional[float] = Field(None, description="扣非净利润")
     ocfps: Optional[float] = Field(None, description="每股经营现金流")
     fcff_ps: Optional[float] = Field(None, description="每股企业自由现金流")
@@ -67,6 +68,7 @@ def _to_dto(f: StockFinance) -> FinanceIndicatorDTO:
         roe_waa=f.roe_waa,
         roic=f.roic,
         eps=f.eps,
+        bps=f.bps,
         profit_dedt=f.profit_dedt,
         ocfps=f.ocfps,
         fcff_ps=f.fcff_ps,

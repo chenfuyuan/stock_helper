@@ -81,9 +81,92 @@ class StockDailyRepositoryImpl(BaseRepository[StockDailyModel], IMarketQuoteRepo
             for r in rows
         ]
 
+    async def get_latest_by_third_code(self, third_code: str) -> Optional[StockDaily]:
+        """查询指定标的最新的一条日线数据"""
+        stmt = (
+            select(StockDailyModel)
+            .where(StockDailyModel.third_code == third_code)
+            .order_by(StockDailyModel.trade_date.desc())
+            .limit(1)
+        )
+        result = await self.session.execute(stmt)
+        r = result.scalar_one_or_none()
+        
+        if not r:
+            return None
+            
+        return StockDaily(
+            third_code=r.third_code,
+            trade_date=r.trade_date,
+            open=r.open or 0.0,
+            high=r.high or 0.0,
+            low=r.low or 0.0,
+            close=r.close or 0.0,
+            pre_close=r.pre_close or 0.0,
+            change=r.change or 0.0,
+            pct_chg=r.pct_chg or 0.0,
+            vol=r.vol or 0.0,
+            amount=r.amount or 0.0,
+            adj_factor=r.adj_factor,
+            source=r.source or "tushare",
+        )
+
     async def get_latest_trade_date(self) -> Optional[date]:
         """查询数据库中最新的交易日期（max(trade_date)）"""
         stmt = select(func.max(StockDailyModel.trade_date))
         result = await self.session.execute(stmt)
         latest_date = result.scalar_one_or_none()
         return latest_date
+
+    async def get_valuation_dailies(
+        self, third_code: str, start_date: date, end_date: date
+    ) -> List[StockDaily]:
+        """
+        按第三方代码与日期区间查询日线（含估值字段），用于估值分析。
+        返回的 StockDaily 包含完整的估值字段：pe_ttm、pb、ps_ttm、dv_ratio、total_mv 等。
+        按交易日期升序返回。
+        """
+        stmt = (
+            select(StockDailyModel)
+            .where(
+                StockDailyModel.third_code == third_code,
+                StockDailyModel.trade_date >= start_date,
+                StockDailyModel.trade_date <= end_date,
+            )
+            .order_by(StockDailyModel.trade_date.asc())
+        )
+        result = await self.session.execute(stmt)
+        rows = result.scalars().all()
+        return [
+            StockDaily(
+                third_code=r.third_code,
+                trade_date=r.trade_date,
+                open=r.open or 0.0,
+                high=r.high or 0.0,
+                low=r.low or 0.0,
+                close=r.close or 0.0,
+                pre_close=r.pre_close or 0.0,
+                change=r.change or 0.0,
+                pct_chg=r.pct_chg or 0.0,
+                vol=r.vol or 0.0,
+                amount=r.amount or 0.0,
+                adj_factor=r.adj_factor,
+                turnover_rate=r.turnover_rate,
+                turnover_rate_f=r.turnover_rate_f,
+                volume_ratio=r.volume_ratio,
+                pe=r.pe,
+                pe_ttm=r.pe_ttm,
+                pb=r.pb,
+                ps=r.ps,
+                ps_ttm=r.ps_ttm,
+                dv_ratio=r.dv_ratio,
+                dv_ttm=r.dv_ttm,
+                total_share=r.total_share,
+                float_share=r.float_share,
+                free_share=r.free_share,
+                total_mv=r.total_mv,
+                circ_mv=r.circ_mv,
+                source=r.source or "tushare",
+            )
+            for r in rows
+        ]
