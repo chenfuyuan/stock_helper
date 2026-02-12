@@ -59,3 +59,36 @@ class NoAvailableModelError(AppException):
             code="NO_AVAILABLE_MODEL",
             status_code=503,
         )
+
+
+class WebSearchError(AppException):
+    """通用 Web 搜索错误（如 API 返回错误码、响应格式异常）(502)."""
+
+    def __init__(self, message: str = "Web search error"):
+        super().__init__(
+            message=message,
+            code="WEB_SEARCH_ERROR",
+            status_code=502,
+        )
+
+
+class WebSearchConnectionError(AppException):
+    """Web 搜索网络连接/超时错误 (503)."""
+
+    def __init__(self, message: str = "Web search connection error"):
+        super().__init__(
+            message=message,
+            code="WEB_SEARCH_CONNECTION_ERROR",
+            status_code=503,
+        )
+
+
+class WebSearchConfigError(AppException):
+    """Web 搜索配置错误（如 API Key 未配置）(503)."""
+
+    def __init__(self, message: str = "Web search configuration error"):
+        super().__init__(
+            message=message,
+            code="WEB_SEARCH_CONFIG_ERROR",
+            status_code=503,
+        )

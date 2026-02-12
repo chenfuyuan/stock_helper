@@ -83,6 +83,10 @@ class Settings(BaseSettings):
     LLM_BASE_URL: str = "https://api.openai.com/v1"
     LLM_MODEL: str = "gpt-3.5-turbo"
 
+    # 博查 AI Web Search 配置
+    BOCHA_API_KEY: str = ""
+    BOCHA_BASE_URL: str = "https://api.bochaai.com"
+
     class Config:
         case_sensitive = True
         env_file = ".env"
