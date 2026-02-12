@@ -9,7 +9,7 @@ from typing import List
 from src.modules.data_engineering.application.queries.get_daily_bars_for_ticker import (
     GetDailyBarsForTickerUseCase,
 )
-from src.modules.research.domain.ports.dto_inputs import DailyBarInput
+from src.modules.research.domain.dtos.daily_bar_input import DailyBarInput
 from src.modules.research.domain.ports.market_quote import IMarketQuotePort
 
 

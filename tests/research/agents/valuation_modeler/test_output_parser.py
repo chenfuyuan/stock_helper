@@ -5,10 +5,10 @@
 """
 import pytest
 
-from src.modules.research.agents.valuation_modeler.output_parser import (
+from src.modules.research.infrastructure.agents.valuation_modeler.output_parser import (
     parse_valuation_result,
 )
-from src.modules.research.domain.valuation_dtos import ValuationResultDTO
+from src.modules.research.domain.dtos.valuation_dtos import ValuationResultDTO
 from src.modules.research.domain.exceptions import LLMOutputParseError
 
 

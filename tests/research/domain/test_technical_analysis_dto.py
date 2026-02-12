@@ -5,7 +5,7 @@ signal 仅允许 BULLISH/BEARISH/NEUTRAL；confidence 在 [0,1]；必填字段�
 import pytest
 from pydantic import ValidationError
 
-from src.modules.research.domain.dtos import TechnicalAnalysisResultDTO, KeyTechnicalLevelsDTO
+from src.modules.research.domain.dtos.technical_analysis_dtos import TechnicalAnalysisResultDTO, KeyTechnicalLevelsDTO
 
 
 def test_result_dto_signal_only_allow_bullish_bearish_neutral():

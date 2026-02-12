@@ -1,8 +1,9 @@
 """
-Research 模块内使用的输入型 DTO（与下游模块解耦）。
+Research 模块内使用的日线输入型 DTO。
 Adapter 将 data_engineering 的 DailyBarDTO 转为 DailyBarInput。
 """
 from datetime import date
+
 from pydantic import BaseModel, Field
 
 

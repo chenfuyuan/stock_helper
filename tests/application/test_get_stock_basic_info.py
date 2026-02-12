@@ -1,9 +1,10 @@
 import pytest
 from unittest.mock import AsyncMock
 from datetime import date
-from src.modules.market_data.application.use_cases import GetStockBasicInfoUseCase
-from src.modules.market_data.domain.entities import StockInfo, StockDaily
-from src.modules.market_data.domain.enums import MarketType, ListStatus
+from src.modules.data_engineering.application.queries.get_stock_basic_info import GetStockBasicInfoUseCase
+from src.modules.data_engineering.domain.model.stock import StockInfo
+from src.modules.data_engineering.domain.model.stock_daily import StockDaily
+from src.modules.data_engineering.domain.model.enums import MarketType, ListStatus
 
 @pytest.mark.asyncio
 class TestGetStockBasicInfoUseCase:

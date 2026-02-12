@@ -7,11 +7,11 @@ PEG 增速为负时为 N/A；EPS 为 0 时 Graham 为 N/A；Graham 正确时安�
 import pytest
 from datetime import date
 
-from src.modules.research.domain.ports.dto_valuation_inputs import (
+from src.modules.research.domain.dtos.valuation_inputs import (
     StockOverviewInput,
     ValuationDailyInput,
 )
-from src.modules.research.domain.ports.dto_financial_inputs import FinanceRecordInput
+from src.modules.research.domain.dtos.financial_record_input import FinanceRecordInput
 from src.modules.research.infrastructure.valuation_snapshot.snapshot_builder import (
     ValuationSnapshotBuilderImpl,
 )

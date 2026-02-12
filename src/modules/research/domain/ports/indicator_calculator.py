@@ -6,8 +6,8 @@ Application 通过此 Port 获取指标快照，不直接依赖实现或第三�
 from abc import ABC, abstractmethod
 from typing import List
 
-from src.modules.research.domain.indicators_snapshot import TechnicalIndicatorsSnapshot
-from src.modules.research.domain.ports.dto_inputs import DailyBarInput
+from src.modules.research.domain.dtos.indicators_snapshot import TechnicalIndicatorsSnapshot
+from src.modules.research.domain.dtos.daily_bar_input import DailyBarInput
 
 
 class IIndicatorCalculator(ABC):

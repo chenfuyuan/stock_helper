@@ -5,8 +5,8 @@
 """
 from abc import ABC, abstractmethod
 
-from src.modules.research.domain.financial_dtos import FinancialAuditAgentResult
-from src.modules.research.domain.ports.dto_financial_inputs import FinancialSnapshotDTO
+from src.modules.research.domain.dtos.financial_dtos import FinancialAuditAgentResult
+from src.modules.research.domain.dtos.financial_snapshot import FinancialSnapshotDTO
 
 
 class IFinancialAuditorAgentPort(ABC):

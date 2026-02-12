@@ -11,7 +11,7 @@ from src.modules.data_engineering.application.queries.get_valuation_dailies_for_
     GetValuationDailiesForTickerUseCase,
     ValuationDailyDTO,
 )
-from src.modules.data_engineering.domain.model.daily_bar import StockDaily
+from src.modules.data_engineering.domain.model.stock_daily import StockDaily
 
 
 @pytest.mark.asyncio

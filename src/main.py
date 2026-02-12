@@ -31,22 +31,9 @@ async def startup_event():
     logger.info("Initializing Scheduler Service...")
     SchedulerService.start()
     
-    # 初始化 LLM 注册表 (从 DB 加载配置)
-    logger.info("Initializing LLM Registry...")
-    try:
-        from src.shared.infrastructure.db.session import AsyncSessionLocal
-        from src.modules.llm_platform.infrastructure.registry import LLMRegistry
-        from src.modules.llm_platform.infrastructure.persistence.repositories.pg_config_repo import PgLLMConfigRepository
-        
-        async with AsyncSessionLocal() as session:
-            repo = PgLLMConfigRepository(session)
-            registry = LLMRegistry()
-            registry.set_repository(repo)
-            await registry.refresh()
-        logger.info("LLM Registry initialization completed.")
-    except Exception as e:
-        logger.error(f"Failed to initialize LLM Registry: {str(e)}")
-        # 不阻断启动，但记录严重错误
+    # 初始化 LLM 注册表（委托 Application 层服务，不直接依赖 Infrastructure）
+    from src.modules.llm_platform.application.services.startup import LLMPlatformStartup
+    await LLMPlatformStartup.initialize()
 
 @app.on_event("shutdown")
 async def shutdown_event():

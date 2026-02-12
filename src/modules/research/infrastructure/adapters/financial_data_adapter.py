@@ -9,7 +9,7 @@ from src.modules.data_engineering.application.queries.get_finance_for_ticker imp
     GetFinanceForTickerUseCase,
     FinanceIndicatorDTO,
 )
-from src.modules.research.domain.ports.dto_financial_inputs import FinanceRecordInput
+from src.modules.research.domain.dtos.financial_record_input import FinanceRecordInput
 from src.modules.research.domain.ports.financial_data import IFinancialDataPort
 
 

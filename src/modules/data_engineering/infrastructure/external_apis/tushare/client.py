@@ -16,9 +16,9 @@ def _get_tushare_rate_lock() -> asyncio.Lock:
     if _tushare_rate_lock is None:
         _tushare_rate_lock = asyncio.Lock()
     return _tushare_rate_lock
-from src.shared.config import settings
+from src.modules.data_engineering.infrastructure.config import de_config
 from src.modules.data_engineering.domain.model.stock import StockInfo
-from src.modules.data_engineering.domain.model.daily_bar import StockDaily
+from src.modules.data_engineering.domain.model.stock_daily import StockDaily
 from src.modules.data_engineering.domain.model.financial_report import StockFinance
 from src.modules.data_engineering.domain.model.disclosure import StockDisclosure
 from src.modules.data_engineering.domain.ports.providers.stock_basic_provider import IStockBasicProvider
@@ -37,11 +37,11 @@ class TushareClient(IStockBasicProvider, IMarketQuoteProvider, IFinancialDataPro
     """
     def __init__(self):
         # 初始化 Tushare Pro 接口
-        if not settings.TUSHARE_TOKEN or settings.TUSHARE_TOKEN == "your_tushare_token_here":
+        if not de_config.TUSHARE_TOKEN or de_config.TUSHARE_TOKEN == "your_tushare_token_here":
             logger.warning("Tushare Token 未配置，可能无法获取数据")
         
         try:
-            ts.set_token(settings.TUSHARE_TOKEN)
+            ts.set_token(de_config.TUSHARE_TOKEN)
             self.pro = ts.pro_api()
         except Exception as e:
             logger.error(f"Tushare 初始化失败: {str(e)}")
@@ -62,14 +62,14 @@ class TushareClient(IStockBasicProvider, IMarketQuoteProvider, IFinancialDataPro
     async def _rate_limited_call(self, func, *args, **kwargs):
         """
         带限速的 Tushare API 调用。全进程共享限速，确保不超过 200 次/分钟。
-        限速间隔从配置中读取（settings.TUSHARE_MIN_INTERVAL），默认 0.35s。
+        限速间隔从配置中读取（de_config.TUSHARE_MIN_INTERVAL），默认 0.35s。
         """
         global _tushare_last_call
         lock = _get_tushare_rate_lock()
         async with lock:
             now = time.monotonic()
             elapsed = now - _tushare_last_call
-            min_interval = settings.TUSHARE_MIN_INTERVAL
+            min_interval = de_config.TUSHARE_MIN_INTERVAL
             if elapsed < min_interval and _tushare_last_call > 0:
                 wait_time = min_interval - elapsed
                 logger.debug(f"Tushare 限速：等待 {wait_time:.2f}s")

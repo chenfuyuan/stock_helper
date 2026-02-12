@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 from datetime import date
 from typing import List
 
-from src.modules.research.domain.ports.dto_inputs import DailyBarInput
+from src.modules.research.domain.dtos.daily_bar_input import DailyBarInput
 
 
 class IMarketQuotePort(ABC):

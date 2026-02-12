@@ -9,7 +9,7 @@
 from datetime import date
 from typing import List, Optional, Any
 
-from src.modules.data_engineering.application.commands.get_stock_basic_info import (
+from src.modules.data_engineering.application.queries.get_stock_basic_info import (
     GetStockBasicInfoUseCase,
 )
 from src.modules.data_engineering.application.queries.get_valuation_dailies_for_ticker import (
@@ -20,11 +20,11 @@ from src.modules.data_engineering.application.queries.get_finance_for_ticker imp
     GetFinanceForTickerUseCase,
     FinanceIndicatorDTO,
 )
-from src.modules.research.domain.ports.dto_valuation_inputs import (
+from src.modules.research.domain.dtos.valuation_inputs import (
     StockOverviewInput,
     ValuationDailyInput,
 )
-from src.modules.research.domain.ports.dto_financial_inputs import FinanceRecordInput
+from src.modules.research.domain.dtos.financial_record_input import FinanceRecordInput
 from src.modules.research.domain.ports.valuation_data import IValuationDataPort
 
 

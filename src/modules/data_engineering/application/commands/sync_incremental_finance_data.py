@@ -10,7 +10,7 @@ from src.modules.data_engineering.domain.ports.providers.financial_data_provider
 from src.modules.data_engineering.domain.model.disclosure import StockDisclosure
 from src.modules.data_engineering.domain.model.sync_failure_record import SyncFailureRecord
 from src.modules.data_engineering.domain.model.enums import SyncJobType
-from src.shared.config import settings
+from src.modules.data_engineering.infrastructure.config import de_config
 
 
 class SyncIncrementalFinanceDataUseCase:
@@ -134,7 +134,7 @@ class SyncIncrementalFinanceDataUseCase:
         
         # 策略 B: 长尾轮询（低优先级，缺数补齐）
         check_threshold = current_date - timedelta(days=3)
-        limit = settings.SYNC_INCREMENTAL_MISSING_LIMIT  # 从配置读取
+        limit = de_config.SYNC_INCREMENTAL_MISSING_LIMIT  # 从配置读取
         
         try:
             logger.info(f"从数据库查询缺失财务数据的股票（上限 {limit} 只）...")
@@ -186,7 +186,7 @@ class SyncIncrementalFinanceDataUseCase:
                         job_type=SyncJobType.FINANCE_INCREMENTAL,
                         third_code=code,
                         error_message=str(e)[:500],  # 限制长度
-                        max_retries=settings.SYNC_FAILURE_MAX_RETRIES,
+                        max_retries=de_config.SYNC_FAILURE_MAX_RETRIES,
                     )
                     failure_record.increment_retry()  # 初始尝试算第 1 次
                     await self.sync_task_repo.create_failure(failure_record)

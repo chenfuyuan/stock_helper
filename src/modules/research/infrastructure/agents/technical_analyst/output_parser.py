@@ -11,7 +11,7 @@ from typing import Any, Union
 from loguru import logger
 from pydantic import ValidationError
 
-from src.modules.research.domain.dtos import TechnicalAnalysisResultDTO
+from src.modules.research.domain.dtos.technical_analysis_dtos import TechnicalAnalysisResultDTO
 from src.modules.research.domain.exceptions import LLMOutputParseError
 
 # 日志中打印 LLM 原始输出时的最大长度，避免日志过长

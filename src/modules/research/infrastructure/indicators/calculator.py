@@ -4,8 +4,8 @@
 """
 from typing import List, Tuple
 
-from src.modules.research.domain.ports.dto_inputs import DailyBarInput
-from src.modules.research.domain.indicators_snapshot import TechnicalIndicatorsSnapshot
+from src.modules.research.domain.dtos.daily_bar_input import DailyBarInput
+from src.modules.research.domain.dtos.indicators_snapshot import TechnicalIndicatorsSnapshot
 
 
 def _sma(values: List[float], period: int) -> float:

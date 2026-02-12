@@ -14,87 +14,18 @@ from src.shared.infrastructure.db.session import get_db_session
 from src.modules.research.application.financial_auditor_service import (
     FinancialAuditorService,
 )
+from src.modules.research.container import ResearchContainer
 from src.modules.research.domain.exceptions import LLMOutputParseError
 
-# data_engineering：财务数据查询
-from src.modules.data_engineering.domain.ports.repositories.financial_data_repo import (
-    IFinancialDataRepository,
-)
-from src.modules.data_engineering.infrastructure.persistence.repositories.pg_finance_repo import (
-    StockFinanceRepositoryImpl,
-)
-from src.modules.data_engineering.application.queries.get_finance_for_ticker import (
-    GetFinanceForTickerUseCase,
-)
 
-# Research Infrastructure Adapters
-from src.modules.research.infrastructure.adapters.financial_data_adapter import (
-    FinancialDataAdapter,
-)
-from src.modules.research.infrastructure.financial_snapshot.snapshot_builder import (
-    FinancialSnapshotBuilderImpl,
-)
-from src.modules.research.infrastructure.adapters.financial_auditor_agent_adapter import (
-    FinancialAuditorAgentAdapter,
-)
-from src.modules.research.infrastructure.adapters.llm_adapter import LLMAdapter
-from src.modules.llm_platform.application.services.llm_service import LLMService
-
-
-router = APIRouter(prefix="/research", tags=["Research"])
-
-
-# ---------- 依赖注入 ----------
-async def get_financial_repo(
-    db: AsyncSession = Depends(get_db_session),
-) -> IFinancialDataRepository:
-    """获取财务仓储，供 GetFinanceForTickerUseCase 使用。"""
-    return StockFinanceRepositoryImpl(db)
-
-
-async def get_finance_use_case(
-    repo: IFinancialDataRepository = Depends(get_financial_repo),
-) -> GetFinanceForTickerUseCase:
-    return GetFinanceForTickerUseCase(financial_repo=repo)
-
-
-async def get_financial_data_adapter(
-    use_case: GetFinanceForTickerUseCase = Depends(get_finance_use_case),
-) -> FinancialDataAdapter:
-    return FinancialDataAdapter(get_finance_use_case=use_case)
-
-
-def get_snapshot_builder() -> FinancialSnapshotBuilderImpl:
-    return FinancialSnapshotBuilderImpl()
-
-
-def get_llm_service() -> LLMService:
-    return LLMService()
-
-
-def get_llm_adapter(service: LLMService = Depends(get_llm_service)) -> LLMAdapter:
-    return LLMAdapter(llm_service=service)
-
-
-def get_auditor_agent_adapter(
-    llm_adapter: LLMAdapter = Depends(get_llm_adapter),
-) -> FinancialAuditorAgentAdapter:
-    return FinancialAuditorAgentAdapter(llm_port=llm_adapter)
+router = APIRouter()
 
 
 async def get_financial_auditor_service(
-    financial_data_adapter: FinancialDataAdapter = Depends(get_financial_data_adapter),
-    snapshot_builder: FinancialSnapshotBuilderImpl = Depends(get_snapshot_builder),
-    auditor_agent_adapter: FinancialAuditorAgentAdapter = Depends(
-        get_auditor_agent_adapter
-    ),
+    db: AsyncSession = Depends(get_db_session),
 ) -> FinancialAuditorService:
-    """装配财务审计员服务：获取财务数据 Port、快照构建器、审计 Agent Port。"""
-    return FinancialAuditorService(
-        financial_data_port=financial_data_adapter,
-        snapshot_builder=snapshot_builder,
-        auditor_agent_port=auditor_agent_adapter,
-    )
+    """通过 Research 模块 Composition Root 获取财务审计员服务，不直接依赖 data_engineering.infrastructure。"""
+    return ResearchContainer(db).financial_auditor_service()
 
 
 # ---------- 响应模型 ----------

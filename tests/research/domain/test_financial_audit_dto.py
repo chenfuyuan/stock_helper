@@ -5,7 +5,7 @@ financial_score ∈ [0, 100]；signal 为五值之一；confidence ∈ [0, 1]；
 import pytest
 from pydantic import ValidationError
 
-from src.modules.research.domain.financial_dtos import (
+from src.modules.research.domain.dtos.financial_dtos import (
     FinancialAuditResultDTO,
     DimensionAnalysisDTO,
 )

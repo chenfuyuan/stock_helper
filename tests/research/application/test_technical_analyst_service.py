@@ -8,13 +8,13 @@ from datetime import date
 from unittest.mock import AsyncMock, MagicMock
 
 from src.modules.research.application.technical_analyst_service import TechnicalAnalystService
-from src.modules.research.domain.dtos import (
+from src.modules.research.domain.dtos.technical_analysis_dtos import (
     TechnicalAnalysisAgentResult,
     TechnicalAnalysisResultDTO,
     KeyTechnicalLevelsDTO,
 )
-from src.modules.research.domain.indicators_snapshot import TechnicalIndicatorsSnapshot
-from src.modules.research.domain.ports.dto_inputs import DailyBarInput
+from src.modules.research.domain.dtos.indicators_snapshot import TechnicalIndicatorsSnapshot
+from src.modules.research.domain.dtos.daily_bar_input import DailyBarInput
 from src.modules.research.domain.ports.indicator_calculator import IIndicatorCalculator
 from src.modules.research.domain.ports.market_quote import IMarketQuotePort
 from src.modules.research.domain.ports.technical_analyst_agent import ITechnicalAnalystAgentPort

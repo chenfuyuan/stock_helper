@@ -8,12 +8,12 @@ import math
 from datetime import date, datetime
 from typing import Any, List, Optional
 
-from src.modules.research.domain.ports.dto_valuation_inputs import (
+from src.modules.research.domain.dtos.valuation_inputs import (
     StockOverviewInput,
     ValuationDailyInput,
-    ValuationSnapshotDTO,
 )
-from src.modules.research.domain.ports.dto_financial_inputs import FinanceRecordInput
+from src.modules.research.domain.dtos.valuation_snapshot import ValuationSnapshotDTO
+from src.modules.research.domain.dtos.financial_record_input import FinanceRecordInput
 from src.modules.research.domain.ports.valuation_snapshot_builder import (
     IValuationSnapshotBuilder,
 )

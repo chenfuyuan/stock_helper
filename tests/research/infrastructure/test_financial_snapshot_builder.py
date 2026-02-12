@@ -5,9 +5,7 @@ Task 5.4：财务快照构建器测试。
 import pytest
 from datetime import date
 
-from src.modules.research.domain.ports.dto_financial_inputs import (
-    FinanceRecordInput,
-)
+from src.modules.research.domain.dtos.financial_record_input import FinanceRecordInput
 from src.modules.research.infrastructure.financial_snapshot.snapshot_builder import (
     FinancialSnapshotBuilderImpl,
 )

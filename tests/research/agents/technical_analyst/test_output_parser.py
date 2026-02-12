@@ -5,10 +5,10 @@
 """
 import pytest
 
-from src.modules.research.agents.technical_analyst.output_parser import (
+from src.modules.research.infrastructure.agents.technical_analyst.output_parser import (
     parse_technical_analysis_result,
 )
-from src.modules.research.domain.dtos import TechnicalAnalysisResultDTO
+from src.modules.research.domain.dtos.technical_analysis_dtos import TechnicalAnalysisResultDTO
 from src.modules.research.domain.exceptions import LLMOutputParseError
 
 

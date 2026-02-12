@@ -5,10 +5,10 @@ score/signal 不匹配时自动以 score 为准修正 signal。
 """
 import pytest
 
-from src.modules.research.agents.financial_auditor.output_parser import (
+from src.modules.research.infrastructure.agents.financial_auditor.output_parser import (
     parse_financial_audit_result,
 )
-from src.modules.research.domain.financial_dtos import FinancialAuditResultDTO
+from src.modules.research.domain.dtos.financial_dtos import FinancialAuditResultDTO
 from src.modules.research.domain.exceptions import LLMOutputParseError
 
 

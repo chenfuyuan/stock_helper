@@ -3,7 +3,7 @@ from typing import List, Optional
 from sqlalchemy import select, func
 from sqlalchemy.dialects.postgresql import insert
 from src.shared.infrastructure.base_repository import BaseRepository
-from src.modules.data_engineering.domain.model.daily_bar import StockDaily
+from src.modules.data_engineering.domain.model.stock_daily import StockDaily
 from src.modules.data_engineering.domain.ports.repositories.market_quote_repo import IMarketQuoteRepository
 from src.modules.data_engineering.infrastructure.persistence.models.daily_bar_model import StockDailyModel
 

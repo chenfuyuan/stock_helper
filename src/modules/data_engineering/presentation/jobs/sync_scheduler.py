@@ -3,7 +3,7 @@ from loguru import logger
 
 from src.modules.data_engineering.application.factories.sync_factory import SyncUseCaseFactory
 from src.modules.data_engineering.domain.model.enums import SyncJobType
-from src.shared.config import settings
+from src.modules.data_engineering.infrastructure.config import de_config
 
 
 async def sync_history_daily_data_job():
@@ -24,7 +24,7 @@ async def sync_history_daily_data_job():
     try:
         async with SyncUseCaseFactory.create_sync_engine() as engine:
             config = {
-                "batch_size": settings.SYNC_DAILY_HISTORY_BATCH_SIZE,
+                "batch_size": de_config.SYNC_DAILY_HISTORY_BATCH_SIZE,
             }
             
             task = await engine.run_history_sync(
@@ -83,8 +83,8 @@ async def sync_finance_history_job():
     try:
         async with SyncUseCaseFactory.create_sync_engine() as engine:
             config = {
-                "batch_size": settings.SYNC_FINANCE_HISTORY_BATCH_SIZE,
-                "start_date": settings.SYNC_FINANCE_HISTORY_START_DATE,
+                "batch_size": de_config.SYNC_FINANCE_HISTORY_BATCH_SIZE,
+                "start_date": de_config.SYNC_FINANCE_HISTORY_START_DATE,
                 "end_date": datetime.now().strftime("%Y%m%d"),
             }
             

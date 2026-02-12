@@ -5,12 +5,12 @@ Domain 层定义「构建估值快照」契约，具体实现（含预计算逻�
 from abc import ABC, abstractmethod
 from typing import List
 
-from src.modules.research.domain.ports.dto_valuation_inputs import (
+from src.modules.research.domain.dtos.valuation_inputs import (
     StockOverviewInput,
     ValuationDailyInput,
-    ValuationSnapshotDTO,
 )
-from src.modules.research.domain.ports.dto_financial_inputs import FinanceRecordInput
+from src.modules.research.domain.dtos.valuation_snapshot import ValuationSnapshotDTO
+from src.modules.research.domain.dtos.financial_record_input import FinanceRecordInput
 
 
 class IValuationSnapshotBuilder(ABC):

@@ -7,7 +7,7 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
-from src.modules.data_engineering.domain.model.daily_bar import StockDaily
+from src.modules.data_engineering.domain.model.stock_daily import StockDaily
 from src.modules.data_engineering.domain.ports.repositories.market_quote_repo import (
     IMarketQuoteRepository,
 )

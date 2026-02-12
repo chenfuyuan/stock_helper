@@ -9,11 +9,9 @@ from src.shared.domain.exceptions import BadRequestException
 from src.modules.research.application.financial_auditor_service import (
     FinancialAuditorService,
 )
-from src.modules.research.domain.ports.dto_financial_inputs import (
-    FinanceRecordInput,
-    FinancialSnapshotDTO,
-)
-from src.modules.research.domain.financial_dtos import (
+from src.modules.research.domain.dtos.financial_record_input import FinanceRecordInput
+from src.modules.research.domain.dtos.financial_snapshot import FinancialSnapshotDTO
+from src.modules.research.domain.dtos.financial_dtos import (
     FinancialAuditResultDTO,
     DimensionAnalysisDTO,
     FinancialAuditAgentResult,

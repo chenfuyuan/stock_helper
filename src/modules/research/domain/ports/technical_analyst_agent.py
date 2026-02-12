@@ -5,8 +5,8 @@
 """
 from abc import ABC, abstractmethod
 
-from src.modules.research.domain.dtos import TechnicalAnalysisAgentResult
-from src.modules.research.domain.indicators_snapshot import TechnicalIndicatorsSnapshot
+from src.modules.research.domain.dtos.technical_analysis_dtos import TechnicalAnalysisAgentResult
+from src.modules.research.domain.dtos.indicators_snapshot import TechnicalIndicatorsSnapshot
 
 
 class ITechnicalAnalystAgentPort(ABC):

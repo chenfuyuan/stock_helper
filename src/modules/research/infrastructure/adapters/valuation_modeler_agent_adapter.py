@@ -5,11 +5,11 @@
 from pathlib import Path
 from typing import Optional
 
-from src.modules.research.domain.valuation_dtos import ValuationModelAgentResult
-from src.modules.research.agents.valuation_modeler.output_parser import (
+from src.modules.research.domain.dtos.valuation_dtos import ValuationModelAgentResult
+from src.modules.research.infrastructure.agents.valuation_modeler.output_parser import (
     parse_valuation_result,
 )
-from src.modules.research.domain.ports.dto_valuation_inputs import ValuationSnapshotDTO
+from src.modules.research.domain.dtos.valuation_snapshot import ValuationSnapshotDTO
 from src.modules.research.domain.ports.valuation_modeler_agent import (
     IValuationModelerAgentPort,
 )
@@ -21,7 +21,7 @@ from src.modules.research.infrastructure.prompt_loader import (
 )
 
 _VALUATION_MODELER_PROMPTS_DIR = (
-    Path(__file__).resolve().parent.parent.parent / "agents" / "valuation_modeler" / "prompts"
+    Path(__file__).resolve().parent.parent / "agents" / "valuation_modeler" / "prompts"
 )
 
 

@@ -14,7 +14,7 @@ from src.modules.data_engineering.domain.ports.providers.financial_data_provider
 from src.modules.data_engineering.application.commands.sync_daily_history import SyncDailyHistoryUseCase
 from src.modules.data_engineering.application.commands.sync_finance_cmd import SyncFinanceHistoryUseCase
 from src.modules.data_engineering.application.commands.sync_daily_bar_cmd import SyncDailyByDateUseCase
-from src.shared.config import settings
+from src.modules.data_engineering.infrastructure.config import de_config
 
 
 class SyncEngine:
@@ -150,7 +150,7 @@ class SyncEngine:
                 finance_repo=self.finance_repo,
                 data_provider=self.finance_provider,
             )
-            start_date = task.config.get("start_date") or settings.SYNC_FINANCE_HISTORY_START_DATE
+            start_date = task.config.get("start_date") or de_config.SYNC_FINANCE_HISTORY_START_DATE
             end_date = task.config.get("end_date") or ""
             return await use_case.execute(
                 start_date=start_date,
@@ -272,8 +272,8 @@ class SyncEngine:
     def _get_default_batch_size(self, job_type: SyncJobType) -> int:
         """获取默认批大小（从配置读取）"""
         if job_type == SyncJobType.DAILY_HISTORY:
-            return settings.SYNC_DAILY_HISTORY_BATCH_SIZE
+            return de_config.SYNC_DAILY_HISTORY_BATCH_SIZE
         elif job_type == SyncJobType.FINANCE_HISTORY:
-            return settings.SYNC_FINANCE_HISTORY_BATCH_SIZE
+            return de_config.SYNC_FINANCE_HISTORY_BATCH_SIZE
         else:
             return 50  # 默认值

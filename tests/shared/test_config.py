@@ -1,68 +1,53 @@
 """
-单元测试：配置外部化（任务 9.7）
+单元测试：配置外部化与模块化。
+Shared Settings 仅保留全局配置；Tushare/同步配置在 DataEngineeringConfig，LLM/博查在 LLMPlatformConfig。
 """
 import pytest
 import os
 
 from src.shared.config import Settings
+from src.modules.data_engineering.infrastructure.config import DataEngineeringConfig
+from src.modules.llm_platform.infrastructure.config import LLMPlatformConfig
 
 
-def test_sync_config_defaults():
-    """测试同步相关配置的默认值"""
+def test_shared_config_global_only():
+    """Shared Settings 仅含全局配置，不含 TUSHARE_/SYNC_/LLM_/BOCHA_。"""
     settings = Settings()
-    
-    # 验证所有新增配置项的默认值
-    assert settings.SYNC_DAILY_HISTORY_BATCH_SIZE == 50
-    assert settings.SYNC_FINANCE_HISTORY_BATCH_SIZE == 100
-    assert settings.SYNC_FINANCE_HISTORY_START_DATE == "20200101"
-    assert settings.SYNC_INCREMENTAL_MISSING_LIMIT == 300
-    assert settings.SYNC_FAILURE_MAX_RETRIES == 3
-    assert settings.TUSHARE_MIN_INTERVAL == 0.35
+    assert settings.PROJECT_NAME == "Stock Helper"
+    assert settings.API_V1_STR == "/api/v1"
+    assert hasattr(settings, "POSTGRES_SERVER")
+    assert not hasattr(settings, "TUSHARE_MIN_INTERVAL")
+    assert not hasattr(settings, "SYNC_DAILY_HISTORY_BATCH_SIZE")
+    assert not hasattr(settings, "LLM_API_KEY")
 
 
-def test_sync_config_from_environment():
-    """测试通过环境变量覆盖同步配置"""
-    # 设置环境变量
+def test_de_config_defaults():
+    """数据工程模块配置默认值。"""
+    de = DataEngineeringConfig()
+    assert de.SYNC_DAILY_HISTORY_BATCH_SIZE == 50
+    assert de.SYNC_FINANCE_HISTORY_BATCH_SIZE == 100
+    assert de.SYNC_FINANCE_HISTORY_START_DATE == "20200101"
+    assert de.SYNC_INCREMENTAL_MISSING_LIMIT == 300
+    assert de.SYNC_FAILURE_MAX_RETRIES == 3
+    assert de.TUSHARE_MIN_INTERVAL == 0.35
+
+
+def test_de_config_from_environment():
+    """数据工程配置可从环境变量覆盖。"""
     os.environ["SYNC_DAILY_HISTORY_BATCH_SIZE"] = "100"
-    os.environ["SYNC_FINANCE_HISTORY_BATCH_SIZE"] = "200"
-    os.environ["SYNC_FINANCE_HISTORY_START_DATE"] = "20150101"
-    os.environ["SYNC_INCREMENTAL_MISSING_LIMIT"] = "500"
-    os.environ["SYNC_FAILURE_MAX_RETRIES"] = "5"
     os.environ["TUSHARE_MIN_INTERVAL"] = "0.5"
-    
     try:
-        settings = Settings()
-        
-        # 验证环境变量覆盖生效
-        assert settings.SYNC_DAILY_HISTORY_BATCH_SIZE == 100
-        assert settings.SYNC_FINANCE_HISTORY_BATCH_SIZE == 200
-        assert settings.SYNC_FINANCE_HISTORY_START_DATE == "20150101"
-        assert settings.SYNC_INCREMENTAL_MISSING_LIMIT == 500
-        assert settings.SYNC_FAILURE_MAX_RETRIES == 5
-        assert settings.TUSHARE_MIN_INTERVAL == 0.5
+        de = DataEngineeringConfig()
+        assert de.SYNC_DAILY_HISTORY_BATCH_SIZE == 100
+        assert de.TUSHARE_MIN_INTERVAL == 0.5
     finally:
-        # 清理环境变量
-        for key in [
-            "SYNC_DAILY_HISTORY_BATCH_SIZE",
-            "SYNC_FINANCE_HISTORY_BATCH_SIZE",
-            "SYNC_FINANCE_HISTORY_START_DATE",
-            "SYNC_INCREMENTAL_MISSING_LIMIT",
-            "SYNC_FAILURE_MAX_RETRIES",
-            "TUSHARE_MIN_INTERVAL",
-        ]:
-            os.environ.pop(key, None)
-
-
-def test_tushare_min_interval_config():
-    """测试 Tushare 限速配置可配置化"""
-    # 默认值
-    settings = Settings()
-    assert settings.TUSHARE_MIN_INTERVAL == 0.35
-    
-    # 环境变量覆盖
-    os.environ["TUSHARE_MIN_INTERVAL"] = "0.4"
-    try:
-        settings = Settings()
-        assert settings.TUSHARE_MIN_INTERVAL == 0.4
-    finally:
+        os.environ.pop("SYNC_DAILY_HISTORY_BATCH_SIZE", None)
         os.environ.pop("TUSHARE_MIN_INTERVAL", None)
+
+
+def test_llm_config_defaults():
+    """LLM 平台模块配置默认值。"""
+    llm = LLMPlatformConfig()
+    assert llm.LLM_PROVIDER == "openai"
+    assert llm.LLM_MODEL == "gpt-3.5-turbo"
+    assert hasattr(llm, "BOCHA_BASE_URL")

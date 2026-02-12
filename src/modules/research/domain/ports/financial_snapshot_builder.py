@@ -6,10 +6,8 @@ Application 通过此 Port 获取快照，不直接依赖实现。
 from abc import ABC, abstractmethod
 from typing import List
 
-from src.modules.research.domain.ports.dto_financial_inputs import (
-    FinanceRecordInput,
-    FinancialSnapshotDTO,
-)
+from src.modules.research.domain.dtos.financial_record_input import FinanceRecordInput
+from src.modules.research.domain.dtos.financial_snapshot import FinancialSnapshotDTO
 
 
 class IFinancialSnapshotBuilder(ABC):

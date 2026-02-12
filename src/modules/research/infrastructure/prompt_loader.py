@@ -5,12 +5,12 @@ import json
 from pathlib import Path
 from typing import Optional
 
-from src.modules.research.domain.indicators_snapshot import TechnicalIndicatorsSnapshot
+from src.modules.research.domain.dtos.indicators_snapshot import TechnicalIndicatorsSnapshot
 
 
-# 默认资源目录：相对于本文件所在位置定位 technical_analyst/prompts
+# 默认资源目录：agents 已迁入 infrastructure/agents，相对于本文件定位 technical_analyst/prompts
 _DEFAULT_PROMPTS_DIR = (
-    Path(__file__).resolve().parent.parent / "agents" / "technical_analyst" / "prompts"
+    Path(__file__).resolve().parent / "agents" / "technical_analyst" / "prompts"
 )
 
 

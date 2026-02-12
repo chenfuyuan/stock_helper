@@ -1,5 +1,5 @@
 import pytest
-from src.modules.market_data.domain.entities import StockInfo
+from src.modules.data_engineering.domain.model.stock import StockInfo
 from datetime import date
 
 def test_stock_info_creation():

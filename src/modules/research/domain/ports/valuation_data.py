@@ -6,11 +6,11 @@ from abc import ABC, abstractmethod
 from datetime import date
 from typing import List, Optional
 
-from src.modules.research.domain.ports.dto_valuation_inputs import (
+from src.modules.research.domain.dtos.valuation_inputs import (
     StockOverviewInput,
     ValuationDailyInput,
 )
-from src.modules.research.domain.ports.dto_financial_inputs import FinanceRecordInput
+from src.modules.research.domain.dtos.financial_record_input import FinanceRecordInput
 
 
 class IValuationDataPort(ABC):

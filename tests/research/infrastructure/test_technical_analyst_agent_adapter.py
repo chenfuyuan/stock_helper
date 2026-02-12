@@ -6,9 +6,9 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from src.modules.research.domain.dtos import TechnicalAnalysisAgentResult
+from src.modules.research.domain.dtos.technical_analysis_dtos import TechnicalAnalysisAgentResult
 from src.modules.research.domain.exceptions import LLMOutputParseError
-from src.modules.research.domain.indicators_snapshot import TechnicalIndicatorsSnapshot
+from src.modules.research.domain.dtos.indicators_snapshot import TechnicalIndicatorsSnapshot
 from src.modules.research.domain.ports.llm import ILLMPort
 from src.modules.research.infrastructure.adapters.technical_analyst_agent_adapter import (
     TechnicalAnalystAgentAdapter,

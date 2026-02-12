@@ -57,39 +57,11 @@ class Settings(BaseSettings):
             path=f"{values.get('POSTGRES_DB') or ''}",
         ).unicode_string()
 
-    # Tushare 数据接口配置
-    TUSHARE_TOKEN: str = "your_tushare_token_here"
-    
-    # Tushare API 限速配置：最小调用间隔（秒）
-    # 默认 0.35s ≈ 170 次/分钟，低于 Tushare 大部分 API 的 200 次/分钟限制
-    TUSHARE_MIN_INTERVAL: float = 0.35
-
-    # 数据同步引擎配置
-    # 历史日线同步的每批股票数量，影响单次批处理的消息条数和内存占用
-    SYNC_DAILY_HISTORY_BATCH_SIZE: int = 50
-    # 历史财务同步的每批股票数量
-    SYNC_FINANCE_HISTORY_BATCH_SIZE: int = 100
-    # 历史财务同步的起始日期（格式：YYYYMMDD），建议根据具体存储需求调整
-    SYNC_FINANCE_HISTORY_START_DATE: str = "20200101"
-    # 增量财务同步中"缺数补齐"查询的上限条数，用于性能保护
-    SYNC_INCREMENTAL_MISSING_LIMIT: int = 300
-    # 同步失败后的最大重试次数，建议范围 3-10
-    SYNC_FAILURE_MAX_RETRIES: int = 3
-
-    # LLM 平台配置
-    # 默认使用的模型供应商
-    LLM_PROVIDER: str = "openai"  # 可选: openai, anthropic, azure 等
-    LLM_API_KEY: str = "your_llm_api_key_here"
-    LLM_BASE_URL: str = "https://api.openai.com/v1"
-    LLM_MODEL: str = "gpt-3.5-turbo"
-
-    # 博查 AI Web Search 配置
-    BOCHA_API_KEY: str = ""
-    BOCHA_BASE_URL: str = "https://api.bochaai.com"
-
     class Config:
         case_sensitive = True
         env_file = ".env"
+        # .env 中可能包含模块专属配置（TUSHARE_*、SYNC_*、LLM_*、BOCHA_*），由各模块 config 读取；此处忽略多余字段避免校验失败
+        extra = "ignore"
 
 
 settings = Settings()

@@ -5,11 +5,11 @@
 from pathlib import Path
 from typing import Optional
 
-from src.modules.research.domain.financial_dtos import FinancialAuditAgentResult
-from src.modules.research.agents.financial_auditor.output_parser import (
+from src.modules.research.domain.dtos.financial_dtos import FinancialAuditAgentResult
+from src.modules.research.infrastructure.agents.financial_auditor.output_parser import (
     parse_financial_audit_result,
 )
-from src.modules.research.domain.ports.dto_financial_inputs import FinancialSnapshotDTO
+from src.modules.research.domain.dtos.financial_snapshot import FinancialSnapshotDTO
 from src.modules.research.domain.ports.financial_auditor_agent import (
     IFinancialAuditorAgentPort,
 )
@@ -21,7 +21,7 @@ from src.modules.research.infrastructure.prompt_loader import (
 )
 
 _FINANCIAL_AUDITOR_PROMPTS_DIR = (
-    Path(__file__).resolve().parent.parent.parent / "agents" / "financial_auditor" / "prompts"
+    Path(__file__).resolve().parent.parent / "agents" / "financial_auditor" / "prompts"
 )
 
 

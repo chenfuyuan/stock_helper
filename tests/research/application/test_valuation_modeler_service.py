@@ -12,13 +12,13 @@ from src.shared.domain.exceptions import BadRequestException
 from src.modules.research.application.valuation_modeler_service import (
     ValuationModelerService,
 )
-from src.modules.research.domain.ports.dto_valuation_inputs import (
+from src.modules.research.domain.dtos.valuation_inputs import (
     StockOverviewInput,
     ValuationDailyInput,
-    ValuationSnapshotDTO,
 )
-from src.modules.research.domain.ports.dto_financial_inputs import FinanceRecordInput
-from src.modules.research.domain.valuation_dtos import (
+from src.modules.research.domain.dtos.valuation_snapshot import ValuationSnapshotDTO
+from src.modules.research.domain.dtos.financial_record_input import FinanceRecordInput
+from src.modules.research.domain.dtos.valuation_dtos import (
     ValuationResultDTO,
     IntrinsicValueRangeDTO,
     ValuationModelAgentResult,

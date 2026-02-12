@@ -12,81 +12,19 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.shared.infrastructure.db.session import get_db_session
 from src.modules.research.application.technical_analyst_service import TechnicalAnalystService
+from src.modules.research.container import ResearchContainer
 from src.modules.research.domain.exceptions import LLMOutputParseError
 from src.shared.domain.exceptions import BadRequestException
 
-# data_engineering：日线查询
-from src.modules.data_engineering.infrastructure.persistence.repositories.pg_quote_repo import (
-    StockDailyRepositoryImpl,
-)
-from src.modules.data_engineering.domain.ports.repositories.market_quote_repo import IMarketQuoteRepository
-from src.modules.data_engineering.application.queries.get_daily_bars_for_ticker import (
-    GetDailyBarsForTickerUseCase,
-)
-# Research Infrastructure Adapters
-from src.modules.research.infrastructure.adapters.market_quote_adapter import MarketQuoteAdapter
-from src.modules.research.infrastructure.indicators.indicator_calculator_adapter import (
-    IndicatorCalculatorAdapter,
-)
-from src.modules.research.infrastructure.adapters.llm_adapter import LLMAdapter
-from src.modules.research.infrastructure.adapters.technical_analyst_agent_adapter import (
-    TechnicalAnalystAgentAdapter,
-)
-from src.modules.llm_platform.application.services.llm_service import LLMService
 
-
-router = APIRouter(prefix="/research", tags=["Research"])
-
-
-# ---------- 依赖注入 ----------
-async def get_market_quote_repo(
-    db: AsyncSession = Depends(get_db_session),
-) -> IMarketQuoteRepository:
-    """获取日线仓储，供 GetDailyBarsForTickerUseCase 使用。"""
-    return StockDailyRepositoryImpl(db)
-
-
-async def get_daily_bars_use_case(
-    repo: IMarketQuoteRepository = Depends(get_market_quote_repo),
-) -> GetDailyBarsForTickerUseCase:
-    return GetDailyBarsForTickerUseCase(market_quote_repo=repo)
-
-
-async def get_market_quote_adapter(
-    use_case: GetDailyBarsForTickerUseCase = Depends(get_daily_bars_use_case),
-) -> MarketQuoteAdapter:
-    return MarketQuoteAdapter(get_daily_bars_use_case=use_case)
-
-
-def get_indicator_calculator() -> IndicatorCalculatorAdapter:
-    return IndicatorCalculatorAdapter()
-
-
-def get_llm_service() -> LLMService:
-    return LLMService()
-
-
-def get_llm_adapter(service: LLMService = Depends(get_llm_service)) -> LLMAdapter:
-    return LLMAdapter(llm_service=service)
-
-
-def get_analyst_agent_adapter(
-    llm_adapter: LLMAdapter = Depends(get_llm_adapter),
-) -> TechnicalAnalystAgentAdapter:
-    return TechnicalAnalystAgentAdapter(llm_port=llm_adapter)
+router = APIRouter()
 
 
 async def get_technical_analyst_service(
-    market_quote_adapter: MarketQuoteAdapter = Depends(get_market_quote_adapter),
-    indicator_calculator: IndicatorCalculatorAdapter = Depends(get_indicator_calculator),
-    analyst_agent_adapter: TechnicalAnalystAgentAdapter = Depends(get_analyst_agent_adapter),
+    db: AsyncSession = Depends(get_db_session),
 ) -> TechnicalAnalystService:
-    """装配技术分析师服务：获取日线 Port、指标计算 Port、技术分析 Agent Port。"""
-    return TechnicalAnalystService(
-        market_quote_port=market_quote_adapter,
-        indicator_calculator=indicator_calculator,
-        analyst_agent_port=analyst_agent_adapter,
-    )
+    """通过 Research 模块 Composition Root 获取技术分析师服务，不直接依赖 data_engineering.infrastructure。"""
+    return ResearchContainer(db).technical_analyst_service()
 
 
 # ---------- 响应模型（input、technical_indicators、output 由代码塞入，非大模型拼接） ----------

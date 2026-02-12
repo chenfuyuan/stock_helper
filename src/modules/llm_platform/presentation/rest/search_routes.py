@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, Field
 import logging
 
-from src.shared.config import settings
+from src.modules.llm_platform.infrastructure.config import llm_config
 from src.modules.llm_platform.application.services.web_search_service import (
     WebSearchService,
 )
@@ -72,7 +72,7 @@ def get_web_search_service() -> WebSearchService:
     """
     # 从 settings 获取博查配置
     adapter = BochaWebSearchAdapter(
-        api_key=settings.BOCHA_API_KEY, base_url=settings.BOCHA_BASE_URL
+        api_key=llm_config.BOCHA_API_KEY, base_url=llm_config.BOCHA_BASE_URL
     )
     return WebSearchService(provider=adapter)
 

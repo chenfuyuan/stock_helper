@@ -5,7 +5,7 @@ Research 仅依赖此抽象，由 Infrastructure 的 Adapter 调用 data_enginee
 from abc import ABC, abstractmethod
 from typing import List
 
-from src.modules.research.domain.ports.dto_financial_inputs import FinanceRecordInput
+from src.modules.research.domain.dtos.financial_record_input import FinanceRecordInput
 
 
 class IFinancialDataPort(ABC):

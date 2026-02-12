@@ -5,8 +5,8 @@ Application 仅依赖 Domain 的 IIndicatorCalculator，不直接引用本实现
 """
 from typing import List
 
-from src.modules.research.domain.indicators_snapshot import TechnicalIndicatorsSnapshot
-from src.modules.research.domain.ports.dto_inputs import DailyBarInput
+from src.modules.research.domain.dtos.indicators_snapshot import TechnicalIndicatorsSnapshot
+from src.modules.research.domain.dtos.daily_bar_input import DailyBarInput
 from src.modules.research.domain.ports.indicator_calculator import IIndicatorCalculator
 from src.modules.research.infrastructure.indicators.calculator import compute_technical_indicators
 

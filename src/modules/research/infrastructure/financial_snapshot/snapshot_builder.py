@@ -6,10 +6,8 @@
 from datetime import date
 from typing import Any, Callable, Optional
 
-from src.modules.research.domain.ports.dto_financial_inputs import (
-    FinanceRecordInput,
-    FinancialSnapshotDTO,
-)
+from src.modules.research.domain.dtos.financial_record_input import FinanceRecordInput
+from src.modules.research.domain.dtos.financial_snapshot import FinancialSnapshotDTO
 from src.modules.research.domain.ports.financial_snapshot_builder import (
     IFinancialSnapshotBuilder,
 )

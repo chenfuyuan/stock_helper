@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional
-from src.modules.data_engineering.domain.model.daily_bar import StockDaily
+from src.modules.data_engineering.domain.model.stock_daily import StockDaily
 
 class IMarketQuoteProvider(ABC):
     @abstractmethod

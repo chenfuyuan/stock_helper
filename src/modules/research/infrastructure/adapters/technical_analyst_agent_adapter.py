@@ -5,9 +5,9 @@
 from pathlib import Path
 from typing import Optional
 
-from src.modules.research.domain.dtos import TechnicalAnalysisAgentResult
-from src.modules.research.domain.indicators_snapshot import TechnicalIndicatorsSnapshot
-from src.modules.research.agents.technical_analyst.output_parser import (
+from src.modules.research.domain.dtos.technical_analysis_dtos import TechnicalAnalysisAgentResult
+from src.modules.research.domain.dtos.indicators_snapshot import TechnicalIndicatorsSnapshot
+from src.modules.research.infrastructure.agents.technical_analyst.output_parser import (
     parse_technical_analysis_result,
 )
 from src.modules.research.domain.ports.llm import ILLMPort

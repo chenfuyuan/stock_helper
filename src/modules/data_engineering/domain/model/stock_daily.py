@@ -19,11 +19,8 @@ class StockDaily(BaseEntity):
     pct_chg: float = Field(..., description="涨跌幅")
     vol: float = Field(..., description="成交量")
     amount: float = Field(..., description="成交额")
-    
-    # 复权因子
+
     adj_factor: Optional[float] = Field(None, description="复权因子")
-    
-    # 每日指标
     turnover_rate: Optional[float] = Field(None, description="换手率")
     turnover_rate_f: Optional[float] = Field(None, description="换手率(自由流通股)")
     volume_ratio: Optional[float] = Field(None, description="量比")
@@ -39,7 +36,6 @@ class StockDaily(BaseEntity):
     free_share: Optional[float] = Field(None, description="自由流通股本")
     total_mv: Optional[float] = Field(None, description="总市值")
     circ_mv: Optional[float] = Field(None, description="流通市值")
-    
     source: str = Field("tushare", description="数据来源")
 
     model_config = ConfigDict(from_attributes=True)
