@@ -29,6 +29,7 @@
 - **Python 3.10+**（pattern matching、`|` 联合类型等）。
 - **分层**：严格 Presentation / Application / Domain / Infrastructure；新模块须符合该结构；代码路径与 `vision-and-modules` 中的目录映射一致。
 - **工具**：`pydantic` 做 DTO 与校验，`abc` 做 Ports，**依赖注入**必须使用。
+- **文件命名与组织**：文件名 = 主类名 snake_case；`domain/ports/` 仅放 Port 接口；DTO 按用途归入 `domain/dtos/` 或 `application/dtos/`；commands vs queries 按语义分目录。详见 tech-standards § File & Module Naming Conventions / DTO & Port Organization / Module Internal Structure。
 
 ---
 
