@@ -1,0 +1,3 @@
+"""
+Coordinator Domain 层。
+"""

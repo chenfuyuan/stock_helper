@@ -13,3 +13,6 @@ pandas
 tushare
 APScheduler==3.10.4
 openai
+langgraph>=0.2
+pytest
+pytest-asyncio

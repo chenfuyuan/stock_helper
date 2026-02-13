@@ -1,0 +1,3 @@
+"""
+Coordinator Application DTO。
+"""

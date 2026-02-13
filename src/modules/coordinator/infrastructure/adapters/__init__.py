@@ -1,0 +1,3 @@
+"""
+Coordinator Infrastructure Adapters。
+"""
