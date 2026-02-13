@@ -114,15 +114,41 @@ def create_debate_node(debate_gateway: Any) -> Callable[[ResearchGraphState], di
     return debate_node
 
 
+def create_judge_node(judge_gateway: Any) -> Callable[[ResearchGraphState], dict[str, Any]]:
+    """
+    judge 节点工厂：读取 debate_outcome，为空时跳过裁决；
+    否则调用 IJudgeGateway.run_verdict；异常时记录日志并降级（verdict 为空 dict）。
+    """
+
+    async def judge_node(state: ResearchGraphState) -> dict[str, Any]:
+        debate_outcome = state.get("debate_outcome") or {}
+        symbol = state.get("symbol") or ""
+
+        if not debate_outcome:
+            return {"verdict": {}}
+
+        try:
+            verdict = await judge_gateway.run_verdict(symbol=symbol, debate_outcome=debate_outcome)
+            return {"verdict": verdict}
+        except Exception as e:
+            logger.warning("裁决节点执行失败，降级为空结果: %s", e)
+            return {"verdict": {}}
+
+    judge_node.__name__ = "judge_node"
+    return judge_node
+
+
 def build_research_graph(
     gateway: IResearchExpertGateway,
     debate_gateway: Any = None,
+    judge_gateway: Any = None,
 ) -> Any:
     """
     构建并编译研究编排图。
 
-    当 debate_gateway 不为 None 时，新增 debate_node，边为 aggregator_node -> debate_node -> END；
-    为 None 时保持原图 aggregator_node -> END。
+    - debate_gateway 和 judge_gateway 均不为 None：aggregator -> debate_node -> judge_node -> END
+    - 仅 debate_gateway 不为 None：aggregator -> debate_node -> END
+    - debate_gateway 为 None：aggregator -> END（不接入辩论与裁决）
     """
     builder = StateGraph(ResearchGraphState)
 
@@ -138,7 +164,12 @@ def build_research_graph(
     if debate_gateway is not None:
         builder.add_node("debate_node", create_debate_node(debate_gateway))
         builder.add_edge("aggregator_node", "debate_node")
-        builder.add_edge("debate_node", END)
+        if judge_gateway is not None:
+            builder.add_node("judge_node", create_judge_node(judge_gateway))
+            builder.add_edge("debate_node", "judge_node")
+            builder.add_edge("judge_node", END)
+        else:
+            builder.add_edge("debate_node", END)
     else:
         builder.add_edge("aggregator_node", END)
 

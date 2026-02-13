@@ -36,3 +36,4 @@ class ResearchResult(BaseModel):
     overall_status: Literal["completed", "partial", "failed"]
     expert_results: list[ExpertResultItem]
     debate_outcome: dict[str, Any] | None = None  # 辩论结果，skip_debate 或失败时为 None
+    verdict: dict[str, Any] | None = None  # 裁决结果，skip_debate、辩论失败或裁决失败时为 None

@@ -56,6 +56,10 @@ class ResearchOrchestrationResponse(BaseModel):
         None,
         description="辩论结果；skip_debate 或辩论失败时为 null",
     )
+    verdict: dict[str, Any] | None = Field(
+        None,
+        description="裁决结果；skip_debate、辩论失败或裁决失败时为 null",
+    )
 
 
 # ---------- 依赖注入 ----------
@@ -108,6 +112,7 @@ async def post_research(
             overall_status=result.overall_status,
             expert_results=expert_results_dict,
             debate_outcome=result.debate_outcome,
+            verdict=result.verdict,
         )
     except BadRequestException as e:
         raise HTTPException(status_code=400, detail=e.message)

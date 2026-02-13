@@ -26,3 +26,4 @@ class ResearchGraphState(TypedDict, total=False):
     errors: Annotated[dict[str, str], merge_dicts]
     overall_status: Literal["completed", "partial", "failed"]
     debate_outcome: dict[str, Any]  # 由 debate_node 写入
+    verdict: dict[str, Any]  # 由 judge_node 写入
