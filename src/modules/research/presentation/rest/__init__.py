@@ -6,6 +6,7 @@ from . import (
     financial_auditor_routes,
     valuation_modeler_routes,
     macro_intelligence_routes,
+    catalyst_detective_routes,
 )
 
 router = APIRouter(prefix="/research", tags=["Research"])
@@ -13,3 +14,4 @@ router.include_router(technical_analyst_routes.router)
 router.include_router(financial_auditor_routes.router)
 router.include_router(valuation_modeler_routes.router)
 router.include_router(macro_intelligence_routes.router)
+router.include_router(catalyst_detective_routes.router)

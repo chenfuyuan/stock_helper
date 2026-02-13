@@ -1,5 +1,5 @@
 """Research 模块领域异常。"""
-from src.shared.domain.exceptions import AppException
+from src.shared.domain.exceptions import AppException, BadRequestException
 
 
 class LLMOutputParseError(AppException):
@@ -12,3 +12,22 @@ class LLMOutputParseError(AppException):
             status_code=422,
             details=details or {},
         )
+
+
+class StockNotFoundError(AppException):
+    """请求的股票代码不存在。"""
+
+    def __init__(self, symbol: str):
+        super().__init__(
+            message=f"该标的不存在: {symbol}",
+            code="STOCK_NOT_FOUND",
+            status_code=404,
+            details={"symbol": symbol},
+        )
+
+
+class CatalystSearchError(BadRequestException):
+    """催化剂搜索全部失败时抛出。"""
+
+    def __init__(self, message: str = "催化剂搜索全部失败"):
+        super().__init__(message=message)

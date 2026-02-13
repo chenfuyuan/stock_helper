@@ -242,3 +242,41 @@ def fill_macro_intelligence_user_prompt(template: str, macro_context) -> str:
         industry_context=macro_context.industry_context,
         all_source_urls=macro_context.all_source_urls,
     )
+
+
+# 催化剂侦探 Prompt 填充
+
+
+def load_catalyst_detective_system_prompt(prompts_dir: Path) -> str:
+    """加载催化剂侦探 System Prompt。"""
+    path = prompts_dir / "system.md"
+    if not path.exists():
+        return ""
+    return path.read_text(encoding="utf-8").strip()
+
+
+def load_catalyst_detective_user_template(prompts_dir: Path) -> str:
+    """加载催化剂侦探 User Prompt 模板（含占位符）。"""
+    path = prompts_dir / "user.md"
+    if not path.exists():
+        return ""
+    return path.read_text(encoding="utf-8").strip()
+
+
+def fill_catalyst_detective_user_prompt(template: str, catalyst_context) -> str:
+    """
+    用催化剂上下文 DTO 填充 User Prompt 占位符。catalyst_context 为 CatalystContextDTO。
+
+    该 DTO 的 9 个字段与 user.md 模板中的占位符一一对应。
+    """
+    return template.format(
+        stock_name=catalyst_context.stock_name,
+        third_code=catalyst_context.third_code,
+        industry=catalyst_context.industry,
+        current_date=catalyst_context.current_date,
+        company_events_context=catalyst_context.company_events_context,
+        industry_catalyst_context=catalyst_context.industry_catalyst_context,
+        market_sentiment_context=catalyst_context.market_sentiment_context,
+        earnings_context=catalyst_context.earnings_context,
+        all_source_urls=catalyst_context.all_source_urls,
+    )

@@ -35,6 +35,7 @@
 - **一个文件一个职责**：不同用途的 DTO（原始输入 vs 聚合快照 vs 输出结果）不混写在同一文件；UseCase 与其返回的 DTO 在文件较小时可共存，但当 DTO 被多处 import 时须拆为独立文件。
 - **公共类型别名**：跨文件复用的 `TypeAlias`（如 `PlaceholderValue`）提取到 `domain/types.py` 或 `domain/dtos/common.py`，禁止多处重复定义。
 - **commands vs queries**：`application/commands/` 放写操作（含副作用）；`application/queries/` 放只读查询。归属依据是操作语义，不是文件创建时间。
+- **移动优先于重写**：需要移动或重命名文件时，优先使用命令行移动（如 `mv`、`git mv`），再在目标路径上做增量修改；避免「删除原文件 + 整文件重写」的做法，以保留 Git 历史与 diff 可读性。
 
 ---
 

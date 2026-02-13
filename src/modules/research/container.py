@@ -39,6 +39,10 @@ from src.modules.research.infrastructure.valuation_snapshot.snapshot_builder imp
 from src.modules.research.infrastructure.macro_context.context_builder import (
     MacroContextBuilderImpl,
 )
+from src.modules.research.application.catalyst_detective_service import CatalystDetectiveService
+from src.modules.research.infrastructure.adapters.catalyst_data_adapter import CatalystDataAdapter
+from src.modules.research.infrastructure.catalyst_context.context_builder import CatalystContextBuilderImpl
+from src.modules.research.infrastructure.adapters.catalyst_detective_agent_adapter import CatalystDetectiveAgentAdapter
 
 
 class ResearchContainer:
@@ -133,6 +137,30 @@ class ResearchContainer:
         # 5. 组装宏观情报员服务
         return MacroIntelligenceService(
             macro_data_port=macro_data_adapter,
+            context_builder=context_builder,
+            agent_port=agent_adapter,
+        )
+
+    def catalyst_detective_service(self) -> CatalystDetectiveService:
+        """
+        组装催化剂侦探服务：催化剂数据 Port、上下文构建器、侦探 Agent。
+        """
+        # 1. 催化剂数据 Adapter
+        data_adapter = CatalystDataAdapter(
+            stock_info_use_case=self._de_container.get_stock_basic_info_use_case(),
+            web_search_service=self._llm_container.web_search_service(),
+        )
+
+        # 2. 上下文构建器
+        context_builder = CatalystContextBuilderImpl()
+
+        # 3. Agent Adapter
+        llm_adapter = LLMAdapter(llm_service=self._llm_container.llm_service())
+        agent_adapter = CatalystDetectiveAgentAdapter(llm_port=llm_adapter)
+
+        # 4. 组装服务
+        return CatalystDetectiveService(
+            data_port=data_adapter,
             context_builder=context_builder,
             agent_port=agent_adapter,
         )
