@@ -59,9 +59,9 @@ class ResearchContainer:
         return DataEngineeringContainer(self._session)
 
     def _get_llm_container(self):
-        """延迟导入避免循环依赖。"""
+        """延迟导入避免循环依赖。传入 session 以启用 LLM 调用审计与外部 API 调用日志。"""
         from src.modules.llm_platform.container import LLMPlatformContainer
-        return LLMPlatformContainer()
+        return LLMPlatformContainer(self._session)
 
     def technical_analyst_service(self) -> TechnicalAnalystService:
         """组装技术分析师服务：日线 Port、指标计算、技术分析 Agent。"""

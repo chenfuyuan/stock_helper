@@ -46,6 +46,7 @@ class FinancialAuditResultDTO(BaseModel):
     risk_warning: str = Field(
         ..., description="评估被证伪时的关键条件描述"
     )
+    narrative_report: str = Field("", description="面向人类的中文叙述性报告：核心结论、论据、风险、置信度")
 
 
 class FinancialAuditAgentResult(BaseModel):

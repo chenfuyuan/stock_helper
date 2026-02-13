@@ -2,6 +2,7 @@
 LangGraph 研究编排图构建。
 
 包含：通用专家节点工厂、5 个专家节点、Send 路由函数、聚合节点、debate 节点、图编译。
+当提供 session_repo 时，专家节点、debate、judge 均用 persist_node_execution 包装以持久化节点执行。
 """
 import logging
 from collections.abc import Callable
@@ -12,7 +13,9 @@ from langgraph.types import Send
 
 from src.modules.coordinator.domain.model.enums import ExpertType
 from src.modules.coordinator.domain.ports.research_expert_gateway import IResearchExpertGateway
+from src.modules.coordinator.domain.ports.research_session_repository import IResearchSessionRepository
 from src.modules.coordinator.infrastructure.orchestration.graph_state import ResearchGraphState
+from src.modules.coordinator.infrastructure.orchestration.node_persistence_wrapper import persist_node_execution
 
 logger = logging.getLogger(__name__)
 
@@ -142,6 +145,7 @@ def build_research_graph(
     gateway: IResearchExpertGateway,
     debate_gateway: Any = None,
     judge_gateway: Any = None,
+    session_repo: IResearchSessionRepository | None = None,
 ) -> Any:
     """
     构建并编译研究编排图。
@@ -149,23 +153,34 @@ def build_research_graph(
     - debate_gateway 和 judge_gateway 均不为 None：aggregator -> debate_node -> judge_node -> END
     - 仅 debate_gateway 不为 None：aggregator -> debate_node -> END
     - debate_gateway 为 None：aggregator -> END（不接入辩论与裁决）
+    - session_repo 不为 None 时，专家节点、debate、judge 均用 persist_node_execution 包装以持久化节点执行。
     """
     builder = StateGraph(ResearchGraphState)
+
+    def _wrap_if_persist(fn: Callable, node_type: str) -> Callable:
+        if session_repo is not None:
+            return persist_node_execution(fn, node_type, session_repo)
+        return fn
 
     # 注册 5 个专家节点
     for expert_type in ExpertType:
         node_name = EXPERT_NODE_NAMES[expert_type]
         node_fn = create_expert_node(expert_type, gateway)
+        node_fn = _wrap_if_persist(node_fn, expert_type.value)
         builder.add_node(node_name, node_fn)
 
     # 聚合节点
     builder.add_node("aggregator_node", create_aggregator_node())
 
     if debate_gateway is not None:
-        builder.add_node("debate_node", create_debate_node(debate_gateway))
+        debate_fn = create_debate_node(debate_gateway)
+        debate_fn = _wrap_if_persist(debate_fn, "debate")
+        builder.add_node("debate_node", debate_fn)
         builder.add_edge("aggregator_node", "debate_node")
         if judge_gateway is not None:
-            builder.add_node("judge_node", create_judge_node(judge_gateway))
+            judge_fn = create_judge_node(judge_gateway)
+            judge_fn = _wrap_if_persist(judge_fn, "judge")
+            builder.add_node("judge_node", judge_fn)
             builder.add_edge("debate_node", "judge_node")
             builder.add_edge("judge_node", END)
         else:

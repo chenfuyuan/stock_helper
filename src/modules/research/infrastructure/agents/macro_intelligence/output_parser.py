@@ -120,6 +120,7 @@ def parse_macro_intelligence_result(raw: str) -> MacroIntelligenceResultDTO:
             message="LLM 返回 JSON 根节点须为对象", details={}
         )
 
+    data.setdefault("narrative_report", "")
     # 4. 用 Pydantic 校验并反序列化
     try:
         dto = MacroIntelligenceResultDTO.model_validate(data)

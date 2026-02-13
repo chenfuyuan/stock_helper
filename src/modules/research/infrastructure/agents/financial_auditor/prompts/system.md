@@ -65,9 +65,12 @@
     {"dimension": "成长加速度", "score": 78, "assessment": "简评", "key_findings": []}
   ],
   "key_risks": ["风险1", "风险2"],
-  "risk_warning": "评估被证伪时的关键条件描述"
+  "risk_warning": "评估被证伪时的关键条件描述",
+  "narrative_report": "面向人类的中文叙述性报告（约 300–800 字），须包含：核心结论、关键论据、风险提示、置信度说明。"
 }
 ```
+
+**narrative_report（叙述性报告）**：必填。面向人类的中文叙述性报告，约 300–800 字，须包含核心结论、关键论据（引用具体指标）、风险提示、置信度说明。
 
 **字段说明**：
 - `financial_score`：整体评分 (0-100)，对应 Scoring Protocol

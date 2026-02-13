@@ -84,6 +84,7 @@ def parse_bear_argument(raw: str) -> BearArgument:
     normalized["risk_triggers"] = _normalize_string_list(
         normalized.get("risk_triggers")
     )
+    normalized.setdefault("narrative_report", "")
 
     try:
         return BearArgument.model_validate(normalized)

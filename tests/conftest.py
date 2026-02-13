@@ -5,7 +5,6 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 
 from src.shared.config import settings
-from src.main import app
 from src.shared.infrastructure.db.base import Base
 
 # Use an in-memory SQLite for testing or a separate Postgres DB
@@ -51,5 +50,6 @@ async def db_session(db_engine):
 
 @pytest.fixture
 async def client(db_session):
+    from src.main import app
     async with AsyncClient(app=app, base_url="http://test") as c:
         yield c

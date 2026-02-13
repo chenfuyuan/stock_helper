@@ -79,6 +79,7 @@ def parse_catalyst_detective_result(raw: str) -> CatalystDetectiveResultDTO:
             message="LLM 返回 JSON 根节点须为对象", details={}
         )
 
+    data.setdefault("narrative_report", "")
     # 4. 用 Pydantic 校验并反序列化
     try:
         dto = CatalystDetectiveResultDTO.model_validate(data)

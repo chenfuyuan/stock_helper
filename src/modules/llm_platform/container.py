@@ -38,7 +38,16 @@ class LLMPlatformContainer:
         return registry
 
     def llm_service(self) -> LLMService:
-        """获取 LLM 门面服务，内部使用全局 LLMRegistry 单例。"""
+        """
+        获取 LLM 门面服务，内部使用全局 LLMRegistry 单例。
+        若构造时提供了 session，则注入 PgLLMCallLogRepository 以记录调用审计日志。
+        """
+        if self._session is not None:
+            from src.modules.llm_platform.infrastructure.persistence.repositories.llm_call_log_repository import (
+                PgLLMCallLogRepository,
+            )
+            call_log_repo = PgLLMCallLogRepository(self._session)
+            return LLMService(call_log_repository=call_log_repo)
         return LLMService()
 
     def config_service(self) -> ConfigService:
@@ -53,15 +62,16 @@ class LLMPlatformContainer:
     def web_search_service(self) -> WebSearchService:
         """
         获取 Web 搜索服务，内部构造博查搜索适配器。
-        
-        从 llm_config 读取博查 API Key 和 Base URL，构造 BochaWebSearchAdapter，
-        然后包装为 WebSearchService 返回。
-        
-        Returns:
-            WebSearchService: 装配好的 Web 搜索服务实例
+        若构造时提供了 session，则注入 PgExternalAPICallLogRepository 以记录外部 API 调用日志。
         """
         adapter = BochaWebSearchAdapter(
             api_key=llm_config.BOCHA_API_KEY,
             base_url=llm_config.BOCHA_BASE_URL,
         )
+        if self._session is not None:
+            from src.shared.infrastructure.persistence.external_api_call_log_repository import (
+                PgExternalAPICallLogRepository,
+            )
+            api_call_log_repo = PgExternalAPICallLogRepository(self._session)
+            return WebSearchService(provider=adapter, api_call_log_repository=api_call_log_repo)
         return WebSearchService(provider=adapter)

@@ -28,6 +28,7 @@ class TechnicalAnalysisResultDTO(BaseModel):
     summary_reasoning: str = Field(..., description="简练分析逻辑，须引用输入指标")
     key_technical_levels: KeyTechnicalLevelsDTO = Field(..., description="关键支撑/阻力")
     risk_warning: str = Field(..., description="观点被证伪时的关键点位描述")
+    narrative_report: str = Field("", description="面向人类的中文叙述性报告：核心结论、论据、风险、置信度")
 
 
 class TechnicalAnalysisAgentResult(BaseModel):

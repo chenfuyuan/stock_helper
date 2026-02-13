@@ -40,6 +40,7 @@ class CatalystDetectiveResultDTO(BaseModel):
     positive_catalysts: List[CatalystEvent]
     negative_catalysts: List[CatalystEvent]
     information_sources: List[str]
+    narrative_report: str = ""  # 面向人类的中文叙述性报告：核心结论、论据、风险、置信度
 
 
 class CatalystDetectiveAgentResult(BaseModel):

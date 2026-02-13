@@ -60,6 +60,7 @@ class ResearchOrchestrationResponse(BaseModel):
         None,
         description="裁决结果；skip_debate、辩论失败或裁决失败时为 null",
     )
+    session_id: str = Field("", description="研究会话 ID，用于历史查询与审计关联；未启用持久化时为空")
 
 
 # ---------- 依赖注入 ----------
@@ -113,6 +114,7 @@ async def post_research(
             expert_results=expert_results_dict,
             debate_outcome=result.debate_outcome,
             verdict=result.verdict,
+            session_id=result.session_id,
         )
     except BadRequestException as e:
         raise HTTPException(status_code=400, detail=e.message)

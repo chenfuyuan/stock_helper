@@ -78,8 +78,11 @@
   ],
   "key_opportunities": ["机会1", "机会2"],
   "key_risks": ["风险1", "风险2"],
-  "information_sources": ["https://example.com/article1", "https://example.com/article2"]
+  "information_sources": ["https://example.com/article1", "https://example.com/article2"],
+  "narrative_report": "面向人类的中文叙述性报告（约 300–800 字），须包含：核心结论、关键论据、风险提示、置信度说明。"
 }
+
+**narrative_report（叙述性报告）**：必填。面向人类的中文叙述性报告，约 300–800 字，须包含核心结论、关键论据、风险提示、置信度说明。
 
 **字段说明**：
 - `macro_environment`：综合判定，必须为 `Favorable (有利)` | `Neutral (中性)` | `Unfavorable (不利)` 之一

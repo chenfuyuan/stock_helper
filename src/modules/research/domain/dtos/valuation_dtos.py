@@ -48,6 +48,7 @@ class ValuationResultDTO(BaseModel):
     reasoning_summary: str = Field(
         ..., description="专业精炼总结，须明确指出是机会还是陷阱"
     )
+    narrative_report: str = Field("", description="面向人类的中文叙述性报告：核心结论、论据、风险、置信度")
 
 
 class ValuationModelAgentResult(BaseModel):

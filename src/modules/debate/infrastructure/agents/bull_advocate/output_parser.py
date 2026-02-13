@@ -86,6 +86,7 @@ def parse_bull_argument(raw: str) -> BullArgument:
     normalized["price_catalysts"] = _normalize_string_list(
         normalized.get("price_catalysts")
     )
+    normalized.setdefault("narrative_report", "")
 
     try:
         return BullArgument.model_validate(normalized)

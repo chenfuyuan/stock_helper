@@ -43,6 +43,7 @@
 - **summary_reasoning**: 字符串。综合分析摘要，必须引用具体数值（如 "RSI 达 75"、"价格站稳 VWAP"）。
 - **key_technical_levels**: 对象，包含 `support` (float) 和 `resistance` (float)。必须是单一数值。
 - **risk_warning**: 字符串。说明观点失效的条件（如："若跌破布林中轨 {bb_middle} 则看多观点失效"）。
+- **narrative_report**: 字符串。面向人类的中文叙述性报告（约 300–800 字），须包含核心结论、关键论据、风险提示、置信度说明。
 
 **JSON 输出示例**（仅供参考结构，请填入实际分析结果）：
-{{"signal": "NEUTRAL", "confidence": 0.6, "summary_reasoning": "价格位于 MA20 (105.2) 之上但受阻于布林上轨...", "key_technical_levels": {{"support": 100.0, "resistance": 110.0}}, "risk_warning": "..."}}
+{{"signal": "NEUTRAL", "confidence": 0.6, "summary_reasoning": "价格位于 MA20 (105.2) 之上但受阻于布林上轨...", "key_technical_levels": {{"support": 100.0, "resistance": 110.0}}, "risk_warning": "...", "narrative_report": "【核心结论】...【关键论据】...【风险提示】...【置信度】..."}}

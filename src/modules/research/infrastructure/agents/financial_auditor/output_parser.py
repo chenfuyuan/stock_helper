@@ -112,6 +112,7 @@ def parse_financial_audit_result(raw: str) -> FinancialAuditResultDTO:
             message="LLM 返回 JSON 根节点须为对象", details={}
         )
 
+    data.setdefault("narrative_report", "")
     try:
         dto = FinancialAuditResultDTO.model_validate(data)
     except ValidationError as e:

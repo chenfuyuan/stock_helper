@@ -45,6 +45,7 @@ def parse_resolution_result(raw: str) -> ResolutionResult:
     if not isinstance(data, dict):
         raise LLMOutputParseError(message="LLM 返回 JSON 根节点须为对象", details={})
 
+    data.setdefault("narrative_report", "")
     try:
         return ResolutionResult.model_validate(data)
     except ValidationError as e:

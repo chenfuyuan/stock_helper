@@ -12,6 +12,10 @@ from src.modules.data_engineering.infrastructure.persistence.models.stock_model 
 from src.modules.data_engineering.infrastructure.persistence.models.daily_bar_model import StockDailyModel  # noqa
 from src.modules.data_engineering.infrastructure.persistence.models.finance_model import StockFinanceModel  # noqa
 from src.modules.llm_platform.infrastructure.persistence.models.llm_config_model import LLMConfigModel  # noqa
+from src.modules.coordinator.infrastructure.persistence.research_session_model import ResearchSessionModel  # noqa
+from src.modules.coordinator.infrastructure.persistence.node_execution_model import NodeExecutionModel  # noqa
+from src.modules.llm_platform.infrastructure.persistence.models.llm_call_log_model import LLMCallLogModel  # noqa
+from src.shared.infrastructure.persistence.external_api_call_log_model import ExternalAPICallLogModel  # noqa
 
 # Alembic 配置对象，提供对 .ini 文件的访问
 config = context.config

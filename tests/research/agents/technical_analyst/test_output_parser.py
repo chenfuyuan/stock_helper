@@ -75,3 +75,30 @@ def test_parse_empty_string_raises():
     """空字符串时抛出明确错误。"""
     with pytest.raises(LLMOutputParseError):
         parse_technical_analysis_result("")
+
+
+def test_parse_narrative_report_present():
+    """任务 12.7：JSON 含 narrative_report 时解析为 DTO 对应字段。"""
+    raw = '''{
+        "signal": "NEUTRAL",
+        "confidence": 0.6,
+        "summary_reasoning": "震荡",
+        "key_technical_levels": {"support": 9.0, "resistance": 11.0},
+        "risk_warning": "无",
+        "narrative_report": "技术面中性，支撑 9 元、阻力 11 元，置信度 0.6。"
+    }'''
+    result = parse_technical_analysis_result(raw)
+    assert result.narrative_report == "技术面中性，支撑 9 元、阻力 11 元，置信度 0.6。"
+
+
+def test_parse_narrative_report_missing_defaults_to_empty():
+    """任务 12.7：JSON 缺失 narrative_report 时解析为默认空字符串。"""
+    raw = '''{
+        "signal": "BULLISH",
+        "confidence": 0.8,
+        "summary_reasoning": "多头",
+        "key_technical_levels": {"support": 10.0, "resistance": 12.0},
+        "risk_warning": ""
+    }'''
+    result = parse_technical_analysis_result(raw)
+    assert result.narrative_report == ""

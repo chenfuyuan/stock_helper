@@ -18,3 +18,4 @@ class VerdictResult(BaseModel):
     time_horizon: str = Field(..., description="持有周期建议")
     risk_warnings: list[str] = Field(default_factory=list, description="关键风控约束")
     reasoning: str = Field("", description="裁决理由摘要；LLM 未返回时使用空字符串")
+    narrative_report: str = Field("", description="面向人类的中文叙述性报告：核心结论、论据、风险、置信度")

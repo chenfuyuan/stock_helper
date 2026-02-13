@@ -59,6 +59,7 @@ def parse_verdict_result(raw: str) -> VerdictResult:
         )
         raise LLMOutputParseError(message="LLM 返回 JSON 根节点须为对象", details={})
 
+    data.setdefault("narrative_report", "")
     try:
         return VerdictResult.model_validate(data)
     except ValidationError as e:

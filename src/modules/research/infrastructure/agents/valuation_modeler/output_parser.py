@@ -102,6 +102,7 @@ def parse_valuation_result(raw: str) -> ValuationResultDTO:
             message="LLM 返回 JSON 根节点须为对象", details={}
         )
 
+    data.setdefault("narrative_report", "")
     try:
         dto = ValuationResultDTO.model_validate(data)
     except ValidationError as e:

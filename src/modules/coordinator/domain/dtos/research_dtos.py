@@ -37,3 +37,4 @@ class ResearchResult(BaseModel):
     expert_results: list[ExpertResultItem]
     debate_outcome: dict[str, Any] | None = None  # 辩论结果，skip_debate 或失败时为 None
     verdict: dict[str, Any] | None = None  # 裁决结果，skip_debate、辩论失败或裁决失败时为 None
+    session_id: str = ""  # 研究会话 ID，用于历史查询与审计关联；未启用持久化时为空

@@ -45,6 +45,7 @@ class MacroIntelligenceResultDTO(BaseModel):
     key_opportunities: List[str] = Field(..., description="宏观层面的机会列表")
     key_risks: List[str] = Field(..., description="宏观层面的风险列表")
     information_sources: List[str] = Field(..., description="引用的信息来源 URL 列表，用于溯源审计")
+    narrative_report: str = Field("", description="面向人类的中文叙述性报告：核心结论、论据、风险、置信度")
 
     @field_validator("dimension_analyses")
     @classmethod
