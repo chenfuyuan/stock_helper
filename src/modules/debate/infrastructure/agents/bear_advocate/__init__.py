@@ -1,0 +1,1 @@
+"""Bear Advocate Agent。"""

@@ -1,7 +1,7 @@
 """
 LangGraph 研究编排图构建。
 
-包含：通用专家节点工厂、5 个专家节点、Send 路由函数、聚合节点、图编译。
+包含：通用专家节点工厂、5 个专家节点、Send 路由函数、聚合节点、debate 节点、图编译。
 """
 import logging
 from collections.abc import Callable
@@ -89,14 +89,40 @@ def create_aggregator_node() -> Callable[[ResearchGraphState], dict[str, Any]]:
     return aggregator_node
 
 
+def create_debate_node(debate_gateway: Any) -> Callable[[ResearchGraphState], dict[str, Any]]:
+    """
+    debate 节点工厂：读取 results/overall_status，全部失败时跳过辩论；
+    否则调用 IDebateGateway.run_debate；异常时记录日志并降级（debate_outcome 为空 dict）。
+    """
+
+    async def debate_node(state: ResearchGraphState) -> dict[str, Any]:
+        overall_status = state.get("overall_status") or "failed"
+        results = state.get("results") or {}
+        symbol = state.get("symbol") or ""
+
+        if overall_status == "failed" or not results:
+            return {"debate_outcome": {}}
+
+        try:
+            outcome = await debate_gateway.run_debate(symbol=symbol, expert_results=results)
+            return {"debate_outcome": outcome}
+        except Exception as e:
+            logger.warning("辩论节点执行失败，降级为空结果: %s", e)
+            return {"debate_outcome": {}}
+
+    debate_node.__name__ = "debate_node"
+    return debate_node
+
+
 def build_research_graph(
     gateway: IResearchExpertGateway,
+    debate_gateway: Any = None,
 ) -> Any:
     """
     构建并编译研究编排图。
 
-    Returns:
-        CompiledGraph: 可 invoke 的编译后图
+    当 debate_gateway 不为 None 时，新增 debate_node，边为 aggregator_node -> debate_node -> END；
+    为 None 时保持原图 aggregator_node -> END。
     """
     builder = StateGraph(ResearchGraphState)
 
@@ -109,14 +135,18 @@ def build_research_graph(
     # 聚合节点
     builder.add_node("aggregator_node", create_aggregator_node())
 
+    if debate_gateway is not None:
+        builder.add_node("debate_node", create_debate_node(debate_gateway))
+        builder.add_edge("aggregator_node", "debate_node")
+        builder.add_edge("debate_node", END)
+    else:
+        builder.add_edge("aggregator_node", END)
+
     # START -> 路由函数（返回 Send 列表，动态 fan-out 到选中的专家节点）
     builder.add_conditional_edges(START, route_to_experts)
 
     # 各专家节点 -> 聚合节点
     for node_name in EXPERT_NODE_NAMES.values():
         builder.add_edge(node_name, "aggregator_node")
-
-    # 聚合节点 -> END
-    builder.add_edge("aggregator_node", END)
 
     return builder.compile()

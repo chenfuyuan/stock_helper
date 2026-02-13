@@ -23,6 +23,7 @@ class ResearchOrchestrationService:
         symbol: str,
         experts: list[str],
         options: dict[str, dict] | None = None,
+        skip_debate: bool = False,
     ) -> ResearchResult:
         """
         执行研究编排。
@@ -61,6 +62,7 @@ class ResearchOrchestrationService:
             symbol=symbol.strip(),
             experts=expert_types,
             options=options or {},
+            skip_debate=skip_debate,
         )
         result = await self._orchestration_port.run(request)
 

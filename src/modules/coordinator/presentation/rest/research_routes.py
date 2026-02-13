@@ -32,6 +32,7 @@ class ResearchOrchestrationRequest(BaseModel):
         default_factory=dict,
         description="各专家可选参数",
     )
+    skip_debate: bool = Field(False, description="为 true 时跳过辩论阶段")
 
 
 class ExpertResultApiItem(BaseModel):
@@ -50,6 +51,10 @@ class ResearchOrchestrationResponse(BaseModel):
     expert_results: dict[str, ExpertResultApiItem] = Field(
         ...,
         description="按专家名分组的结果",
+    )
+    debate_outcome: dict[str, Any] | None = Field(
+        None,
+        description="辩论结果；skip_debate 或辩论失败时为 null",
     )
 
 
@@ -80,6 +85,7 @@ async def post_research(
             symbol=body.symbol,
             experts=body.experts,
             options=body.options or {},
+            skip_debate=body.skip_debate,
         )
         # 转为 API 响应格式：expert_results 按专家名分组的 dict
         expert_results_dict: dict[str, ExpertResultApiItem] = {}
@@ -101,6 +107,7 @@ async def post_research(
             symbol=result.symbol,
             overall_status=result.overall_status,
             expert_results=expert_results_dict,
+            debate_outcome=result.debate_outcome,
         )
     except BadRequestException as e:
         raise HTTPException(status_code=400, detail=e.message)

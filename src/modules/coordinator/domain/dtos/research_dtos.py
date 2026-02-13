@@ -17,6 +17,7 @@ class ResearchRequest(BaseModel):
     symbol: str
     experts: list[ExpertType]
     options: dict[str, dict[str, Any]] = {}
+    skip_debate: bool = False
 
 
 class ExpertResultItem(BaseModel):
@@ -34,3 +35,4 @@ class ResearchResult(BaseModel):
     symbol: str
     overall_status: Literal["completed", "partial", "failed"]
     expert_results: list[ExpertResultItem]
+    debate_outcome: dict[str, Any] | None = None  # 辩论结果，skip_debate 或失败时为 None

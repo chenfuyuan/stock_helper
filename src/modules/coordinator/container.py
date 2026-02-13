@@ -1,7 +1,7 @@
 """
 Coordinator 模块 Composition Root。
 
-组装 ResearchGatewayAdapter → LangGraphResearchOrchestrator → ResearchOrchestrationService。
+组装 ResearchGatewayAdapter、DebateGatewayAdapter → LangGraphResearchOrchestrator → ResearchOrchestrationService。
 """
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -10,6 +10,9 @@ from src.modules.coordinator.application.research_orchestration_service import (
 )
 from src.modules.coordinator.infrastructure.adapters.research_gateway_adapter import (
     ResearchGatewayAdapter,
+)
+from src.modules.coordinator.infrastructure.adapters.debate_gateway_adapter import (
+    DebateGatewayAdapter,
 )
 from src.modules.coordinator.infrastructure.orchestration.langgraph_orchestrator import (
     LangGraphResearchOrchestrator,
@@ -25,11 +28,12 @@ class CoordinatorContainer:
 
     def research_orchestration_service(self) -> ResearchOrchestrationService:
         """
-        组装研究编排服务：Gateway Adapter → LangGraph 编排器 → Application Service。
+        组装研究编排服务：Gateway Adapters → LangGraph 编排器 → Application Service。
 
-        Gateway 使用 AsyncSessionLocal 为每次专家调用创建独立会话，避免 LangGraph
-        并行执行时多专家共享同一会话导致的 SQLAlchemy 并发错误。
+        Research Gateway 使用 AsyncSessionLocal 为每次专家调用创建独立会话；
+        Debate Gateway 传入编排器，当 skip_debate=False 时执行辩论节点。
         """
         gateway = ResearchGatewayAdapter(AsyncSessionLocal)
-        orchestrator = LangGraphResearchOrchestrator(gateway)
+        debate_gateway = DebateGatewayAdapter(AsyncSessionLocal)
+        orchestrator = LangGraphResearchOrchestrator(gateway, debate_gateway=debate_gateway)
         return ResearchOrchestrationService(orchestrator)
