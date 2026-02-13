@@ -10,10 +10,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.llm_platform.application.services.llm_service import LLMService
 from src.modules.llm_platform.application.services.config_service import ConfigService
+from src.modules.llm_platform.application.services.web_search_service import WebSearchService
 from src.modules.llm_platform.infrastructure.registry import LLMRegistry
 from src.modules.llm_platform.infrastructure.persistence.repositories.pg_config_repo import (
     PgLLMConfigRepository,
 )
+from src.modules.llm_platform.infrastructure.adapters.bocha_web_search import (
+    BochaWebSearchAdapter,
+)
+from src.modules.llm_platform.infrastructure.config import llm_config
 
 
 class LLMPlatformContainer:
@@ -44,3 +49,19 @@ class LLMPlatformContainer:
         registry = LLMRegistry()
         registry.set_repository(repo)
         return ConfigService(repo=repo, registry=registry)
+
+    def web_search_service(self) -> WebSearchService:
+        """
+        获取 Web 搜索服务，内部构造博查搜索适配器。
+        
+        从 llm_config 读取博查 API Key 和 Base URL，构造 BochaWebSearchAdapter，
+        然后包装为 WebSearchService 返回。
+        
+        Returns:
+            WebSearchService: 装配好的 Web 搜索服务实例
+        """
+        adapter = BochaWebSearchAdapter(
+            api_key=llm_config.BOCHA_API_KEY,
+            base_url=llm_config.BOCHA_BASE_URL,
+        )
+        return WebSearchService(provider=adapter)

@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.modules.research.application.technical_analyst_service import TechnicalAnalystService
 from src.modules.research.application.financial_auditor_service import FinancialAuditorService
 from src.modules.research.application.valuation_modeler_service import ValuationModelerService
+from src.modules.research.application.macro_intelligence_service import MacroIntelligenceService
 from src.modules.research.infrastructure.adapters.market_quote_adapter import MarketQuoteAdapter
 from src.modules.research.infrastructure.adapters.financial_data_adapter import FinancialDataAdapter
 from src.modules.research.infrastructure.adapters.valuation_data_adapter import ValuationDataAdapter
@@ -22,6 +23,10 @@ from src.modules.research.infrastructure.adapters.financial_auditor_agent_adapte
 from src.modules.research.infrastructure.adapters.valuation_modeler_agent_adapter import (
     ValuationModelerAgentAdapter,
 )
+from src.modules.research.infrastructure.adapters.macro_data_adapter import MacroDataAdapter
+from src.modules.research.infrastructure.adapters.macro_intelligence_agent_adapter import (
+    MacroIntelligenceAgentAdapter,
+)
 from src.modules.research.infrastructure.indicators.indicator_calculator_adapter import (
     IndicatorCalculatorAdapter,
 )
@@ -30,6 +35,9 @@ from src.modules.research.infrastructure.financial_snapshot.snapshot_builder imp
 )
 from src.modules.research.infrastructure.valuation_snapshot.snapshot_builder import (
     ValuationSnapshotBuilderImpl,
+)
+from src.modules.research.infrastructure.macro_context.context_builder import (
+    MacroContextBuilderImpl,
 )
 
 
@@ -93,4 +101,38 @@ class ResearchContainer:
             valuation_data_port=valuation_data_adapter,
             snapshot_builder=snapshot_builder,
             modeler_agent_port=modeler_agent,
+        )
+
+    def macro_intelligence_service(self) -> MacroIntelligenceService:
+        """
+        组装宏观情报员服务：宏观数据 Port、宏观上下文构建器、宏观分析 Agent。
+        
+        依赖：
+        - MacroDataAdapter：注入 GetStockBasicInfoUseCase（从 data_engineering）+ WebSearchService（从 llm_platform）
+        - MacroContextBuilderImpl：将搜索结果按维度归类并格式化为上下文
+        - MacroIntelligenceAgentAdapter：注入 LLMAdapter（包装 llm_platform 的 LLMService）
+        
+        Returns:
+            MacroIntelligenceService: 装配好的宏观情报员服务实例
+        """
+        # 1. 宏观数据 Adapter（获取股票信息 + 执行宏观搜索）
+        macro_data_adapter = MacroDataAdapter(
+            stock_info_usecase=self._de_container.get_stock_basic_info_use_case(),
+            web_search_service=self._llm_container.web_search_service(),
+        )
+        
+        # 2. 宏观上下文构建器（将搜索结果转为 Prompt 上下文）
+        context_builder = MacroContextBuilderImpl()
+        
+        # 3. LLM Adapter（包装 llm_platform 的 LLMService）
+        llm_adapter = LLMAdapter(llm_service=self._llm_container.llm_service())
+        
+        # 4. 宏观分析 Agent Adapter（加载 Prompt + 调用 LLM + 解析）
+        agent_adapter = MacroIntelligenceAgentAdapter(llm_port=llm_adapter)
+        
+        # 5. 组装宏观情报员服务
+        return MacroIntelligenceService(
+            macro_data_port=macro_data_adapter,
+            context_builder=context_builder,
+            agent_port=agent_adapter,
         )

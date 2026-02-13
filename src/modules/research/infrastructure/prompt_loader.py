@@ -192,3 +192,53 @@ def fill_valuation_modeler_user_prompt(template: str, snapshot) -> str:
         graham_intrinsic_val=snapshot.graham_intrinsic_val,
         graham_safety_margin=snapshot.graham_safety_margin,
     )
+
+
+# 宏观情报员 Prompt 填充
+
+
+def load_macro_intelligence_system_prompt(prompts_dir: Path) -> str:
+    """加载宏观情报员 System Prompt。"""
+    path = prompts_dir / "system.md"
+    if not path.exists():
+        return ""
+    return path.read_text(encoding="utf-8").strip()
+
+
+def load_macro_intelligence_user_template(prompts_dir: Path) -> str:
+    """加载宏观情报员 User Prompt 模板（含占位符）。"""
+    path = prompts_dir / "user.md"
+    if not path.exists():
+        return ""
+    return path.read_text(encoding="utf-8").strip()
+
+
+def fill_macro_intelligence_user_prompt(template: str, macro_context) -> str:
+    """
+    用宏观上下文 DTO 填充 User Prompt 占位符。macro_context 为 MacroContextDTO。
+    
+    该 DTO 的 9 个字段与 user.md 模板中的占位符一一对应：
+    - stock_name、third_code、industry、current_date（基础信息）
+    - monetary_context、policy_context、economic_context、industry_context（四维搜索情报）
+    - all_source_urls（来源 URL 列表）
+    
+    使用 str.format() 填充 {占位符} 单花括号占位符（Python 标准格式化）。
+    
+    Args:
+        template: User Prompt 模板字符串（含 {占位符}）
+        macro_context: MacroContextDTO 实例（包含 9 个字段）
+        
+    Returns:
+        str: 填充后的 User Prompt
+    """
+    return template.format(
+        stock_name=macro_context.stock_name,
+        third_code=macro_context.third_code,
+        industry=macro_context.industry,
+        current_date=macro_context.current_date,
+        monetary_context=macro_context.monetary_context,
+        policy_context=macro_context.policy_context,
+        economic_context=macro_context.economic_context,
+        industry_context=macro_context.industry_context,
+        all_source_urls=macro_context.all_source_urls,
+    )
