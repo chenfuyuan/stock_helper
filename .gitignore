@@ -57,3 +57,5 @@ Thumbs.db
 # Cursor / Antigravity (OpenSpec tooling - local or team-shared; uncomment to ignore)
 .cursor/
 .agent/
+.windsurf/
+.kilocode/
