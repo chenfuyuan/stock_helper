@@ -39,7 +39,7 @@ class IntrinsicValueRangeResponse(BaseModel):
 class ValuationModelApiResponse(BaseModel):
     """估值建模接口响应：解析结果 + input、valuation_indicators、output。"""
 
-    valuation_verdict: Literal["Undervalued (低估)", "Fair (合理)", "Overvalued (高估)"]
+    valuation_verdict: Literal["Undervalued", "Fair", "Overvalued"]
     confidence_score: float = Field(..., ge=0.0, le=1.0, description="置信度 0~1")
     estimated_intrinsic_value_range: IntrinsicValueRangeResponse
     key_evidence: list[str] = Field(..., min_length=1, description="证据列表")

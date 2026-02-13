@@ -2,6 +2,8 @@ import logging
 from datetime import date
 from typing import List, Optional
 
+from sqlalchemy.exc import SQLAlchemyError
+
 from src.modules.research.domain.ports.catalyst_data import ICatalystDataPort
 from src.modules.research.domain.dtos.catalyst_inputs import (
     CatalystStockOverview,
@@ -43,16 +45,19 @@ class CatalystDataAdapter(ICatalystDataPort):
                 return None
 
             info = result.info
-             # Handle None for industry, default to "Unknown"
-            industry_val = info.industry if info.industry else "Unknown"
-            
+            industry_val = info.industry if info.industry else "未知行业"
+
             return CatalystStockOverview(
                 stock_name=info.name,
                 industry=industry_val,
                 third_code=info.third_code,
             )
-        except Exception as e:
-            logger.error(f"Failed to get stock overview for {symbol}: {e}")
+        except SQLAlchemyError as e:
+            logger.error(
+                "获取股票概览时发生数据库/查询错误：symbol=%s，错误=%s",
+                symbol,
+                e,
+            )
             return None
 
     async def search_catalyst_context(

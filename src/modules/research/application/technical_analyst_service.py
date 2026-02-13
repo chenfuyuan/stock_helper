@@ -10,6 +10,9 @@ from src.modules.research.domain.ports.indicator_calculator import IIndicatorCal
 from src.modules.research.domain.ports.market_quote import IMarketQuotePort
 from src.modules.research.domain.ports.technical_analyst_agent import ITechnicalAnalystAgentPort
 
+# 计算 MACD(26)、布林带(20) 等核心指标所需的最低 K 线数量（约 6 周交易日）
+MIN_BARS_REQUIRED = 30
+
 
 class TechnicalAnalystService:
     """
@@ -50,6 +53,13 @@ class TechnicalAnalystService:
                 message=(
                     f"该标的 {ticker} 在区间 {start_date.isoformat()} ~ {analysis_date.isoformat()} 内无日线数据，"
                     "技术指标无法计算。请先通过 POST /api/v1/stocks/sync/daily 同步该标的日线后再进行分析。"
+                )
+            )
+        if len(bars) < MIN_BARS_REQUIRED:
+            raise BadRequestException(
+                message=(
+                    f"K 线数量不足：当前 {len(bars)} 根，至少需要 {MIN_BARS_REQUIRED} 根才能计算技术指标。"
+                    f"请扩大日期范围或先同步更多日线数据。"
                 )
             )
         snapshot = self._indicator_calculator.compute(bars)

@@ -352,3 +352,76 @@ def test_snapshot_basic_fields_from_overview():
     assert snapshot.current_price == 10.5
     assert snapshot.total_mv == 20.0  # 200000 万元 = 20 亿元
     assert snapshot.industry == "银行"
+
+
+# --- 财务指标合理性校验（financial-data-sanity）---
+
+def test_gross_margin_out_of_bounds_replaced_with_na():
+    """毛利率超出合理范围（如 44969179.57%）时被替换为 N/A。"""
+    overview = _make_overview(third_code="000001.SZ")
+    finances = [
+        _make_finance_record(
+            date(2024, 9, 30),
+            third_code="000001.SZ",
+            gross_margin=44969179.57,
+            roe_waa=15.0,
+        )
+    ]
+    builder = ValuationSnapshotBuilderImpl()
+    snapshot = builder.build(overview, [], finances)
+    assert snapshot.gros_profit_margin == "N/A"
+    assert snapshot.roe == 15.0
+    # 默认 netprofit_margin=20、debt_to_assets=60 在合理范围内，应原样填入
+    assert snapshot.net_profit_margin == 20.0
+    assert snapshot.debt_to_assets == 60.0
+
+
+def test_roe_within_bounds_passes():
+    """ROE 在合理范围内（-500～500）时正常通过。"""
+    overview = _make_overview(third_code="000002.SZ")
+    finances = [
+        _make_finance_record(
+            date(2024, 9, 30),
+            third_code="000002.SZ",
+            gross_margin=35.0,
+            roe_waa=25.5,
+        )
+    ]
+    builder = ValuationSnapshotBuilderImpl()
+    snapshot = builder.build(overview, [], finances)
+    assert snapshot.roe == 25.5
+    assert snapshot.gros_profit_margin == 35.0
+
+
+def test_gross_margin_trend_na_when_base_value_abnormal():
+    """毛利率趋势在两期任一期基础值异常（超出 GROSS_MARGIN_BOUNDS）时返回 N/A。"""
+    overview = _make_overview()
+    # 最新期正常，上一期异常（>100%）
+    finances = [
+        _make_finance_record(date(2024, 9, 30), gross_margin=38.0),
+        _make_finance_record(date(2024, 6, 30), gross_margin=150.0),
+    ]
+    builder = ValuationSnapshotBuilderImpl()
+    snapshot = builder.build(overview, [], finances)
+    assert snapshot.gross_margin_trend == "N/A"
+
+
+def test_financial_metrics_unchanged_when_all_normal():
+    """所有财务指标在合理范围内时行为不变，数值原样填入。"""
+    overview = _make_overview(third_code="000003.SZ")
+    finances = [
+        _make_finance_record(
+            date(2024, 9, 30),
+            third_code="000003.SZ",
+            gross_margin=42.5,
+            roe_waa=12.0,
+        )
+    ]
+    builder = ValuationSnapshotBuilderImpl()
+    snapshot = builder.build(overview, [], finances)
+    assert snapshot.gros_profit_margin == 42.5
+    assert snapshot.roe == 12.0
+    # _make_finance_record 默认 netprofit_margin=20、debt_to_assets=60，均在合理范围内
+    assert snapshot.net_profit_margin == 20.0
+    assert snapshot.debt_to_assets == 60.0
+    assert snapshot.gross_margin_trend == "N/A"  # 仅 1 期无趋势

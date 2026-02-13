@@ -30,19 +30,6 @@ class ResearchGatewayAdapter(IResearchExpertGateway):
         """
         self._session_factory = session_factory
 
-    def _normalize_catalyst_result(self, agent_result: Any) -> dict[str, Any]:
-        """
-        将 CatalystDetectiveService 返回的 CatalystDetectiveAgentResult 归一化为 dict[str, Any]。
-
-        使 Coordinator 拿到的所有专家结果类型一致，便于图节点统一处理。
-        """
-        return {
-            "result": agent_result.result.model_dump(),
-            "raw_llm_output": agent_result.raw_llm_output,
-            "user_prompt": agent_result.user_prompt,
-            "catalyst_context": agent_result.catalyst_context.model_dump(),
-        }
-
     def _parse_analysis_date(self, value: Any) -> date:
         """将 options 中的 analysis_date（str 或 date）解析为 date。"""
         if value is None:
@@ -79,7 +66,7 @@ class ResearchGatewayAdapter(IResearchExpertGateway):
 
                 case ExpertType.FINANCIAL_AUDITOR:
                     expert_opts = opts.get("financial_auditor", {})
-                    limit = expert_opts.get("limit", 5)
+                    limit = expert_opts.get("limit", 8)
                     svc = research.financial_auditor_service()
                     return await svc.run(symbol=symbol, limit=int(limit))
 
@@ -93,5 +80,4 @@ class ResearchGatewayAdapter(IResearchExpertGateway):
 
                 case ExpertType.CATALYST_DETECTIVE:
                     svc = research.catalyst_detective_service()
-                    agent_result = await svc.run(symbol=symbol)
-                    return self._normalize_catalyst_result(agent_result)
+                    return await svc.run(symbol=symbol)

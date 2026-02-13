@@ -32,13 +32,18 @@ def load_user_prompt_template(prompts_dir: Optional[Path] = None) -> str:
     return path.read_text(encoding="utf-8").strip()
 
 
+def _indicator_str(value: Optional[float]) -> str:
+    """指标值为 None 时填入 N/A，否则转为字符串供模板使用。"""
+    return "N/A" if value is None else str(value)
+
+
 def fill_user_prompt(
     template: str,
     ticker: str,
     analysis_date: str,
     snapshot: TechnicalIndicatorsSnapshot,
 ) -> str:
-    """用本次调用的 ticker、analysis_date、指标快照填充 User Prompt 占位符。"""
+    """用本次调用的 ticker、analysis_date、指标快照填充 User Prompt 占位符。快照中为 None 的指标值转为 N/A。"""
     support_str = json.dumps(snapshot.calculated_support_levels) if snapshot.calculated_support_levels else "[]"
     resistance_str = json.dumps(snapshot.calculated_resistance_levels) if snapshot.calculated_resistance_levels else "[]"
     patterns_str = json.dumps(snapshot.detected_patterns, ensure_ascii=False) if snapshot.detected_patterns else "[]"
@@ -51,20 +56,20 @@ def fill_user_prompt(
         ma20=snapshot.ma20,
         ma60=snapshot.ma60,
         ma200=snapshot.ma200,
-        vwap_value=snapshot.vwap_value,
+        vwap_value=_indicator_str(snapshot.vwap_value),
         price_vs_vwap_status=snapshot.price_vs_vwap_status,
-        rsi_value=snapshot.rsi_value,
-        macd_dif=snapshot.macd_dif,
-        macd_dea=snapshot.macd_dea,
-        macd_histogram=snapshot.macd_histogram,
-        kdj_k=snapshot.kdj_k,
-        kdj_d=snapshot.kdj_d,
-        bb_upper=snapshot.bb_upper,
-        bb_lower=snapshot.bb_lower,
-        bb_middle=snapshot.bb_middle,
-        bb_bandwidth=snapshot.bb_bandwidth,
-        atr_value=snapshot.atr_value,
-        volume_ratio=snapshot.volume_ratio,
+        rsi_value=_indicator_str(snapshot.rsi_value),
+        macd_dif=_indicator_str(snapshot.macd_dif),
+        macd_dea=_indicator_str(snapshot.macd_dea),
+        macd_histogram=_indicator_str(snapshot.macd_histogram),
+        kdj_k=_indicator_str(snapshot.kdj_k),
+        kdj_d=_indicator_str(snapshot.kdj_d),
+        bb_upper=_indicator_str(snapshot.bb_upper),
+        bb_lower=_indicator_str(snapshot.bb_lower),
+        bb_middle=_indicator_str(snapshot.bb_middle),
+        bb_bandwidth=_indicator_str(snapshot.bb_bandwidth),
+        atr_value=_indicator_str(snapshot.atr_value),
+        volume_ratio=_indicator_str(snapshot.volume_ratio),
         obv_trend=snapshot.obv_trend,
         calculated_support_levels=support_str,
         calculated_resistance_levels=resistance_str,
@@ -122,6 +127,7 @@ def fill_financial_auditor_user_prompt(template: str, snapshot) -> str:
         roic=snapshot.roic,
         eps=snapshot.eps,
         eps_deducted=snapshot.eps_deducted,
+        bps=snapshot.bps,
         ocfps=snapshot.ocfps,
         fcff_ps=snapshot.fcff_ps,
         quality_ratio=snapshot.quality_ratio,

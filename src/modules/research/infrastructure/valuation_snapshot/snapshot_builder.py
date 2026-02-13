@@ -3,10 +3,12 @@
 将三类原始数据（股票概览、历史估值日线、财务指标）转为 ValuationSnapshotDTO。
 实现预计算逻辑：历史分位点、PEG、Graham Number、安全边际、毛利率趋势。
 所有数值计算在代码中完成，LLM 仅做定性解读。
+财务指标超出合理范围时替换为 N/A 并记录 WARNING，避免脏数据传入 LLM。
 """
+import logging
 import math
 from datetime import date, datetime
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Tuple
 
 from src.modules.research.domain.dtos.valuation_inputs import (
     StockOverviewInput,
@@ -14,12 +16,45 @@ from src.modules.research.domain.dtos.valuation_inputs import (
 )
 from src.modules.research.domain.dtos.valuation_snapshot import ValuationSnapshotDTO
 from src.modules.research.domain.dtos.financial_record_input import FinanceRecordInput
+from src.modules.research.domain.dtos.types import PlaceholderValue
 from src.modules.research.domain.ports.valuation_snapshot_builder import (
     IValuationSnapshotBuilder,
 )
 
+logger = logging.getLogger(__name__)
+
 NA = "N/A"
 MIN_HISTORICAL_DATA_FOR_PERCENTILE = 60  # 最少 60 个交易日才计算分位点
+
+# 财务指标合理性边界（百分比等），超出则替换为 N/A 并记录 WARNING
+GROSS_MARGIN_BOUNDS: Tuple[float, float] = (-100, 100)
+ROE_BOUNDS: Tuple[float, float] = (-500, 500)
+NET_MARGIN_BOUNDS: Tuple[float, float] = (-1000, 1000)
+DEBT_RATIO_BOUNDS: Tuple[float, float] = (0, 300)
+
+
+def _validate_financial_metric(
+    value: Optional[float],
+    bounds: Tuple[float, float],
+    metric_name: str,
+    stock_code: str,
+) -> PlaceholderValue:
+    """
+    校验财务指标是否在合理范围内。
+    在范围内返回原值；超出范围返回 N/A 并记录 WARNING（含字段名、原始值、stock_code）。
+    """
+    if value is None:
+        return NA
+    low, high = bounds
+    if low <= value <= high:
+        return value
+    logger.warning(
+        "财务指标超出合理范围，已替换为 N/A：字段=%s，原始值=%s，stock_code=%s",
+        metric_name,
+        value,
+        stock_code,
+    )
+    return NA
 
 
 def _calculate_percentile(
@@ -95,7 +130,7 @@ def _calculate_gross_margin_trend(records: List[FinanceRecordInput]) -> str:
     """
     计算毛利率同比趋势描述。
     比较最新期与上一期 gross_margin，输出描述性字符串。
-    仅 1 期数据时返回 N/A。
+    仅 1 期数据时返回 N/A。两期毛利率任一期超出 GROSS_MARGIN_BOUNDS 时返回 N/A，避免荒谬趋势描述。
     """
     if len(records) < 2:
         return NA
@@ -105,6 +140,10 @@ def _calculate_gross_margin_trend(records: List[FinanceRecordInput]) -> str:
     previous = records[1].gross_margin
 
     if latest is None or previous is None:
+        return NA
+
+    low, high = GROSS_MARGIN_BOUNDS
+    if not (low <= latest <= high) or not (low <= previous <= high):
         return NA
 
     if previous == 0:
@@ -211,24 +250,29 @@ class ValuationSnapshotBuilderImpl(IValuationSnapshotBuilder):
         pb_percentile = _calculate_percentile(historical_pb_values, overview.pb)
         ps_percentile = _calculate_percentile(historical_ps_values, overview.ps_ttm)
 
-        # 基本面质量体检（来自财务数据）
+        # 基本面质量体检（来自财务数据，经合理性校验后填入）
         latest_finance = sorted_finances[0] if sorted_finances else None
         if latest_finance:
-            roe = latest_finance.roe_waa if latest_finance.roe_waa is not None else NA
-            gros_profit_margin = (
-                latest_finance.gross_margin
-                if latest_finance.gross_margin is not None
-                else NA
+            roe = _validate_financial_metric(
+                latest_finance.roe_waa, ROE_BOUNDS, "roe_waa", stock_code
             )
-            net_profit_margin = (
-                latest_finance.netprofit_margin
-                if latest_finance.netprofit_margin is not None
-                else NA
+            gros_profit_margin = _validate_financial_metric(
+                latest_finance.gross_margin,
+                GROSS_MARGIN_BOUNDS,
+                "gross_margin",
+                stock_code,
             )
-            debt_to_assets = (
-                latest_finance.debt_to_assets
-                if latest_finance.debt_to_assets is not None
-                else NA
+            net_profit_margin = _validate_financial_metric(
+                latest_finance.netprofit_margin,
+                NET_MARGIN_BOUNDS,
+                "netprofit_margin",
+                stock_code,
+            )
+            debt_to_assets = _validate_financial_metric(
+                latest_finance.debt_to_assets,
+                DEBT_RATIO_BOUNDS,
+                "debt_to_assets",
+                stock_code,
             )
             eps = latest_finance.eps
             bps = latest_finance.bps

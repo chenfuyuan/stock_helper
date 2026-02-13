@@ -16,6 +16,16 @@ from src.modules.research.domain.exceptions import LLMOutputParseError
 
 _RAW_LOG_MAX_LEN = 2000
 
+# LLM 可能返回英文或「英文 (中文)」格式，归一化为英文枚举以通过契约校验
+_VERDICT_NORMALIZE_MAP: dict[str, str] = {
+    "Undervalued": "Undervalued",
+    "Undervalued (低估)": "Undervalued",
+    "Fair": "Fair",
+    "Fair (合理)": "Fair",
+    "Overvalued": "Overvalued",
+    "Overvalued (高估)": "Overvalued",
+}
+
 
 def _raw_for_log(raw: str) -> str:
     """返回用于日志的原始内容，过长时截断。"""
@@ -75,8 +85,8 @@ def parse_valuation_result(raw: str) -> ValuationResultDTO:
     text = raw.strip()
     # 移除 reasoning model 的 <think>...</think> 标签
     text = _strip_thinking_tags(text)
-    # 剥离 ```json ... ``` 或 ``` ... ```
-    match = re.search(r"^```(?:json)?\s*\n?(.*?)\n?```\s*$", text, re.DOTALL)
+    # 剥离 ```json ... ``` 或 ``` ... ```（贪婪匹配到最后一对反引号，避免字段内含 ``` 时被截断）
+    match = re.search(r"^```(?:json)?\s*\n?(.*)\n?```\s*$", text, re.DOTALL)
     if match:
         text = match.group(1).strip()
 
@@ -103,6 +113,12 @@ def parse_valuation_result(raw: str) -> ValuationResultDTO:
         )
 
     data.setdefault("narrative_report", "")
+    # 归一化 valuation_verdict：接受英文或「英文 (中文)」，统一为英文以通过契约
+    raw_verdict = data.get("valuation_verdict")
+    if isinstance(raw_verdict, str) and raw_verdict.strip():
+        normalized = _VERDICT_NORMALIZE_MAP.get(raw_verdict.strip())
+        if normalized is not None:
+            data["valuation_verdict"] = normalized
     try:
         dto = ValuationResultDTO.model_validate(data)
     except ValidationError as e:

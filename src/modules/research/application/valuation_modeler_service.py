@@ -2,6 +2,7 @@
 估值建模师 Application 接口。
 对外暴露独立入口：入参 symbol，出参为包含解析结果与 input/output 的完整响应（由代码塞入，非大模型拼接）。
 """
+import logging
 from datetime import date, timedelta
 from typing import Any
 
@@ -15,6 +16,8 @@ from src.modules.research.domain.ports.valuation_modeler_agent import (
 )
 
 DEFAULT_HISTORICAL_YEARS = 3  # 默认获取 3 年历史估值日线
+
+logger = logging.getLogger(__name__)
 
 
 class ValuationModelerService:
@@ -56,6 +59,13 @@ class ValuationModelerService:
         historical_valuations = await self._valuation_data.get_valuation_dailies(
             ticker=symbol, start_date=start_date, end_date=end_date
         )
+        if not historical_valuations:
+            logger.warning(
+                "估值建模师：历史估值日线为空，symbol=%s，时间范围=%s ~ %s，将继续使用财务数据构建快照。",
+                symbol,
+                start_date.isoformat(),
+                end_date.isoformat(),
+            )
 
         # 获取财务数据（校验非空）
         finance_records = await self._valuation_data.get_finance_for_valuation(
@@ -78,7 +88,7 @@ class ValuationModelerService:
             symbol=symbol, snapshot=snapshot
         )
 
-        # 组装完整响应
+        # 组装完整响应（含 narrative_report，供 coordinator 持久化 NodeExecution 与展示）
         result_dto = agent_result.result
         return {
             "valuation_verdict": result_dto.valuation_verdict,
@@ -87,6 +97,7 @@ class ValuationModelerService:
             "key_evidence": result_dto.key_evidence,
             "risk_factors": result_dto.risk_factors,
             "reasoning_summary": result_dto.reasoning_summary,
+            "narrative_report": result_dto.narrative_report,
             "input": agent_result.user_prompt,
             "valuation_indicators": snapshot.model_dump(),
             "output": agent_result.raw_llm_output,

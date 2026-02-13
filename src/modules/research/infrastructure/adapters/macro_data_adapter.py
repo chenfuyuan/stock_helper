@@ -78,7 +78,13 @@ class MacroDataAdapter(IMacroDataPort):
             if basic_info is None:
                 logger.warning(f"标的不存在：symbol={symbol}")
                 return None
-            
+
+            if basic_info.daily is None:
+                logger.warning(
+                    "股票日线数据为空，无法构建宏观概览：symbol=%s", symbol
+                )
+                return None
+
             # 转为 MacroStockOverview
             overview = MacroStockOverview(
                 stock_name=basic_info.info.name,

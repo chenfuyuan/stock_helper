@@ -65,6 +65,28 @@ async def test_empty_finance_records_raises_bad_request():
 
 
 @pytest.mark.asyncio
+async def test_limit_out_of_range_raises_bad_request():
+    """limit 不在 1～20 时抛出 BadRequestException。"""
+    mock_data = AsyncMock()
+    mock_builder = _MockSnapshotBuilder()
+    mock_agent = AsyncMock()
+    svc = FinancialAuditorService(
+        financial_data_port=mock_data,
+        snapshot_builder=mock_builder,
+        auditor_agent_port=mock_agent,
+    )
+
+    with pytest.raises(BadRequestException) as exc_info:
+        await svc.run(symbol="000001.SZ", limit=0)
+    assert "limit" in exc_info.value.message.lower() or "1" in exc_info.value.message
+
+    with pytest.raises(BadRequestException):
+        await svc.run(symbol="000001.SZ", limit=21)
+
+    mock_data.get_finance_records.assert_not_called()
+
+
+@pytest.mark.asyncio
 async def test_full_flow_returns_audit_result_with_all_fields():
     """E2E：mock 三个 Port，完整编排返回包含 financial_score、signal、dimension_analyses 等字段。"""
     from datetime import date

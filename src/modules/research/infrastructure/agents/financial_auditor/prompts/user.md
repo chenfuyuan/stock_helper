@@ -14,12 +14,13 @@
 
 ## B. 每股含金量 (Per Share Quality)
 - **EPS (Basic)**: {eps}
-- **EPS (Deducted)**: {eps_deducted} (DB: profit_dedt / share 或直接提供总额对比)
+- **Deducted Net Profit (扣非净利润总额)**: {eps_deducted} (注意：此为总额，非每股值；用于与 EPS 方向对比，不可直接数值比较)
 - **OCFPS (Operating Cash Flow)**: {ocfps}
 - **FCFF PS (Free Cash Flow)**: {fcff_ps} (每股企业自由现金流)
 - **Quality Check**: OCFPS / EPS = {quality_ratio} (Target > 1.0)
 
 ## C. 资产负债与流动性 (Balance Sheet)
+- **BPS (Book Value Per Share)**: {bps} (每股净资产)
 - **Current Ratio**: {current_ratio} (流动比率)
 - **Quick Ratio**: {quick_ratio} (速动比率)
 - **Debt-to-Assets**: {debt_to_assets}% (资产负债率)
@@ -32,7 +33,7 @@
 - **Asset Turnover**: {assets_turn} (总资产周转率)
 
 # 2. 历史趋势序列 (Time-Series Analysis)
-*(Index 0 = Current, Index 4 = Oldest. Used for Trend & Divergence Detection)*
+*(Index 0 = Current, Index N = Oldest（默认 8 期，覆盖约 2 年季度数据）. Used for Trend & Divergence Detection)*
 
 ```json
 {{

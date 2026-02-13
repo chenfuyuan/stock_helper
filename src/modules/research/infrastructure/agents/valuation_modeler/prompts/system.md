@@ -26,7 +26,7 @@
 
 # JSON Output Schema (输出结构)
 {
-  "valuation_verdict": "Undervalued (低估) | Fair (合理) | Overvalued (高估)",
+  "valuation_verdict": "Undervalued | Fair | Overvalued",  // 仅英文枚举，中文用于 narrative_report 展示
   "confidence_score": 0.0-1.0,  // 基于证据的一致性打分（如：PEG和历史分位都显示低估，则置信度高）
   "estimated_intrinsic_value_range": {
     "lower_bound": "基于保守模型（如 Graham 或 历史低位PE）推导的价格",

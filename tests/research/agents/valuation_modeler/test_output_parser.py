@@ -13,7 +13,7 @@ from src.modules.research.domain.exceptions import LLMOutputParseError
 
 
 def _make_valid_json(
-    valuation_verdict: str = "Undervalued (低估)",
+    valuation_verdict: str = "Undervalued",
     confidence_score: float = 0.85,
 ) -> str:
     return f'''{{
@@ -40,7 +40,7 @@ def test_parse_valid_json_returns_dto_with_correct_fields():
     raw = _make_valid_json()
     result = parse_valuation_result(raw)
     assert isinstance(result, ValuationResultDTO)
-    assert result.valuation_verdict == "Undervalued (低估)"
+    assert result.valuation_verdict == "Undervalued"
     assert result.confidence_score == 0.85
     assert len(result.key_evidence) >= 1
     assert len(result.risk_factors) >= 1
@@ -50,11 +50,18 @@ def test_parse_valid_json_returns_dto_with_correct_fields():
 def test_parse_valid_json_stripped_from_markdown_code_block():
     """Markdown 代码块包裹的 JSON 可正确剥离并解析。"""
     raw = f"""```json
-{_make_valid_json(valuation_verdict="Fair (合理)", confidence_score=0.6)}
+{_make_valid_json(valuation_verdict="Fair", confidence_score=0.6)}
 ```"""
     result = parse_valuation_result(raw)
-    assert result.valuation_verdict == "Fair (合理)"
+    assert result.valuation_verdict == "Fair"
     assert result.confidence_score == 0.6
+
+
+def test_parse_legacy_verdict_with_chinese_normalizes_to_english():
+    """LLM 返回「英文 (中文)」格式时归一化为英文枚举。"""
+    raw = _make_valid_json(valuation_verdict="Overvalued (高估)", confidence_score=0.9)
+    result = parse_valuation_result(raw)
+    assert result.valuation_verdict == "Overvalued"
 
 
 def test_parse_with_thinking_tags_strips_before_parsing():
@@ -66,7 +73,7 @@ def test_parse_with_thinking_tags_strips_before_parsing():
 {_make_valid_json()}"""
     result = parse_valuation_result(raw)
     assert isinstance(result, ValuationResultDTO)
-    assert result.valuation_verdict == "Undervalued (低估)"
+    assert result.valuation_verdict == "Undervalued"
 
 
 def test_parse_invalid_json_raises():
@@ -79,7 +86,7 @@ def test_parse_invalid_json_raises():
 
 def test_parse_missing_required_field_raises():
     """缺少必填字段时解析失败。"""
-    raw = '{"valuation_verdict": "Undervalued (低估)", "confidence_score": 0.8}'
+    raw = '{"valuation_verdict": "Undervalued", "confidence_score": 0.8}'
     with pytest.raises(LLMOutputParseError):
         parse_valuation_result(raw)
 
@@ -102,7 +109,7 @@ def test_parse_confidence_out_of_range_raises():
 
 def test_parse_empty_key_evidence_raises():
     """key_evidence 为空列表时解析失败（要求非空）。"""
-    raw = '''{"valuation_verdict": "Fair (合理)", "confidence_score": 0.7,
+    raw = '''{"valuation_verdict": "Fair", "confidence_score": 0.7,
     "estimated_intrinsic_value_range": {"lower_bound": "20", "upper_bound": "25"},
     "key_evidence": [], "risk_factors": ["test"], "reasoning_summary": "test"}'''
     with pytest.raises(LLMOutputParseError):
@@ -113,3 +120,17 @@ def test_parse_empty_string_raises():
     """空字符串时抛出明确错误。"""
     with pytest.raises(LLMOutputParseError):
         parse_valuation_result("")
+
+
+def test_parse_narrative_report_present():
+    """JSON 含 narrative_report 时解析为 DTO 对应字段。"""
+    raw = _make_valid_json()[:-1] + ', "narrative_report": "估值偏低，PE 分位 15%，置信度 0.85。"}'
+    result = parse_valuation_result(raw)
+    assert result.narrative_report == "估值偏低，PE 分位 15%，置信度 0.85。"
+
+
+def test_parse_narrative_report_missing_defaults_to_empty():
+    """JSON 缺失 narrative_report 时解析为默认空字符串。"""
+    raw = _make_valid_json()
+    result = parse_valuation_result(raw)
+    assert result.narrative_report == ""

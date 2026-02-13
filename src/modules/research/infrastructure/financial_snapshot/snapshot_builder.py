@@ -140,6 +140,7 @@ class FinancialSnapshotBuilderImpl(IFinancialSnapshotBuilder):
             roic=latest.roic if latest.roic is not None else NA,
             eps=latest.eps if latest.eps is not None else NA,
             eps_deducted=eps_deducted,
+            bps=latest.bps if latest.bps is not None else NA,
             ocfps=latest.ocfps if latest.ocfps is not None else NA,
             fcff_ps=latest.fcff_ps if latest.fcff_ps is not None else NA,
             quality_ratio=quality_ratio,

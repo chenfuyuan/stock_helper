@@ -1,3 +1,4 @@
+import json
 import logging
 from typing import List, Literal, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -11,11 +12,7 @@ from src.modules.research.domain.dtos.catalyst_dtos import (
     CatalystEvent,
     CatalystDimensionAnalysis,
 )
-from src.modules.research.domain.exceptions import (
-    StockNotFoundError,
-    CatalystSearchError,
-    LLMOutputParseError,
-)
+from src.modules.research.domain.exceptions import LLMOutputParseError
 from src.shared.domain.exceptions import BadRequestException
 
 logger = logging.getLogger(__name__)
@@ -59,41 +56,29 @@ async def get_catalyst_detective_analysis(
     service: CatalystDetectiveService = Depends(get_catalyst_detective_service)
 ):
     try:
-        result_wrapper = await service.run(symbol)
-        
-        dto = result_wrapper.result
-        context = result_wrapper.catalyst_context
-        
-        # Serialize context for debug view
-        indicators_json = context.model_dump_json() # Use pydantic dump
-        
+        result_dict = await service.run(symbol)
+        dto = result_dict["result"]
+        context = result_dict["catalyst_context"]
+        indicators_json = json.dumps(context, ensure_ascii=False)
+
         return CatalystDetectiveApiResponse(
-            stock_name=context.stock_name,
+            stock_name=context["stock_name"],
             symbol=symbol,
-            catalyst_assessment=dto.catalyst_assessment,
-            confidence_score=dto.confidence_score,
-            catalyst_summary=dto.catalyst_summary,
-            dimension_analyses=dto.dimension_analyses,
-            positive_catalysts=dto.positive_catalysts,
-            negative_catalysts=dto.negative_catalysts,
-            information_sources=dto.information_sources,
-            
-            input=result_wrapper.user_prompt,
-            output=result_wrapper.raw_llm_output,
+            catalyst_assessment=dto["catalyst_assessment"],
+            confidence_score=dto["confidence_score"],
+            catalyst_summary=dto["catalyst_summary"],
+            dimension_analyses=[CatalystDimensionAnalysis(**x) for x in dto["dimension_analyses"]],
+            positive_catalysts=[CatalystEvent(**x) for x in dto["positive_catalysts"]],
+            negative_catalysts=[CatalystEvent(**x) for x in dto["negative_catalysts"]],
+            information_sources=dto["information_sources"],
+            input=result_dict["user_prompt"],
+            output=result_dict["raw_llm_output"],
             catalyst_indicators=indicators_json,
         )
 
     except BadRequestException as e:
-        # CatalystSearchError now inherits BadRequestException unless I changed it
-        # Actually I changed it to inherit BadRequestException.
-        # But wait, CatalystSearchError message might be specific.
-        # If it is CatalystSearchError, I might want 400.
-        # BadRequestException defaults to 400.
-        logger.warning(f"Bad request for {symbol}: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
-    except StockNotFoundError as e:
-        logger.warning(f"Stock not found: {symbol}")
-        raise HTTPException(status_code=404, detail=str(e))
+        logger.warning("催化剂侦探请求错误：symbol=%s，错误=%s", symbol, e)
+        raise HTTPException(status_code=400, detail=e.message)
     except LLMOutputParseError as e:
         logger.error(f"LLM parse error for {symbol}: {e}")
         raise HTTPException(status_code=422, detail="AI response parsing failed")

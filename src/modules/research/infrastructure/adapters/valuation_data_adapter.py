@@ -6,6 +6,7 @@
 - GetFinanceForTickerUseCase（获取财务指标）
 不直接依赖 data_engineering 的 repository 或 domain。
 """
+import logging
 from datetime import date
 from typing import List, Optional, Any
 
@@ -27,17 +28,25 @@ from src.modules.research.domain.dtos.valuation_inputs import (
 from src.modules.research.domain.dtos.financial_record_input import FinanceRecordInput
 from src.modules.research.domain.ports.valuation_data import IValuationDataPort
 
+logger = logging.getLogger(__name__)
+
 
 def _to_stock_overview(
     basic_info_result: Any,
-) -> StockOverviewInput:
+) -> Optional[StockOverviewInput]:
     """
     将 GetStockBasicInfoUseCase 的返回结果（包含 StockInfo + StockDaily）
     转为 Research 的 StockOverviewInput。
+    若 daily 为 None（标的存在但无日线数据），返回 None 并记录 WARNING。
     """
     info = basic_info_result.info
     daily = basic_info_result.daily
-
+    if daily is None:
+        logger.warning(
+            "股票日线数据为空，无法构建估值概览：symbol=%s",
+            getattr(info, "name", "unknown"),
+        )
+        return None
     return StockOverviewInput(
         stock_name=info.name,
         industry=info.industry or "未知行业",
@@ -115,7 +124,8 @@ class ValuationDataAdapter(IValuationDataPort):
         basic_info = await self._get_stock_basic_info.execute(symbol=symbol)
         if basic_info is None:
             return None
-        return _to_stock_overview(basic_info)
+        overview = _to_stock_overview(basic_info)
+        return overview
 
     async def get_valuation_dailies(
         self, ticker: str, start_date: date, end_date: date

@@ -1,16 +1,21 @@
 """
 估值建模师输出契约 DTO。
-与 Spec 输出契约一致：valuation_verdict、confidence_score、estimated_intrinsic_value_range、
-key_evidence、risk_factors、reasoning_summary。
+与 Spec 输出契约一致：valuation_verdict（英文枚举）、confidence_score、estimated_intrinsic_value_range、
+key_evidence、risk_factors、reasoning_summary。中文仅用于展示层。
 """
 from typing import Literal
 
 from pydantic import BaseModel, Field
 
 
-ValuationVerdict = Literal[
-    "Undervalued (低估)", "Fair (合理)", "Overvalued (高估)"
-]
+ValuationVerdict = Literal["Undervalued", "Fair", "Overvalued"]
+
+# 展示层用：英文 verdict → 中文标签（API 返回英文，前端/报告按需映射）
+VERDICT_DISPLAY_LABELS: dict[str, str] = {
+    "Undervalued": "低估",
+    "Fair": "合理",
+    "Overvalued": "高估",
+}
 
 
 class IntrinsicValueRangeDTO(BaseModel):
@@ -31,7 +36,7 @@ class ValuationResultDTO(BaseModel):
 
     valuation_verdict: ValuationVerdict = Field(
         ...,
-        description="估值判断：Undervalued (低估) / Fair (合理) / Overvalued (高估)",
+        description="估值判断枚举：Undervalued / Fair / Overvalued，展示时可用 VERDICT_DISPLAY_LABELS 映射为中文",
     )
     confidence_score: float = Field(
         ..., ge=0.0, le=1.0, description="置信度 0~1，基于证据一致性"

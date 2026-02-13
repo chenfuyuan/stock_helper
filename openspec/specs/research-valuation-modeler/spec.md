@@ -196,7 +196,7 @@ Research 模块 SHALL 为估值建模师暴露 HTTP REST 接口（路由路径�
 
 估值建模师的产出 SHALL 为固定结构的 JSON（或等价的 DTO），包含：
 
-- `valuation_verdict`（枚举：Undervalued (低估) / Fair (合理) / Overvalued (高估)）
+- `valuation_verdict`（枚举：Undervalued / Fair / Overvalued；契约统一英文，展示层可用 `VERDICT_DISPLAY_LABELS` 映射为中文）
 - `confidence_score`（float，0.0–1.0），基于证据一致性打分
 - `estimated_intrinsic_value_range`（嵌套对象，含 `lower_bound: str` 和 `upper_bound: str`），基于不同模型推导的价格区间描述
 - `key_evidence`（list[str]），须引用输入数据中的具体数值

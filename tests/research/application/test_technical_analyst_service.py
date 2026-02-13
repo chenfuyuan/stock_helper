@@ -7,7 +7,10 @@ import pytest
 from datetime import date
 from unittest.mock import AsyncMock, MagicMock
 
-from src.modules.research.application.technical_analyst_service import TechnicalAnalystService
+from src.modules.research.application.technical_analyst_service import (
+    TechnicalAnalystService,
+    MIN_BARS_REQUIRED,
+)
 from src.modules.research.domain.dtos.technical_analysis_dtos import (
     TechnicalAnalysisAgentResult,
     TechnicalAnalysisResultDTO,
@@ -39,16 +42,19 @@ def _make_agent_result() -> TechnicalAnalysisAgentResult:
 
 
 def _make_bars():
-    """返回非空日线列表，避免触发「无日线数据」校验。"""
+    """返回不少于 MIN_BARS_REQUIRED 的日线列表，避免触发「K 线数量不足」校验。"""
+    from datetime import timedelta
+    base = date(2024, 1, 1)
     return [
         DailyBarInput(
-            trade_date=date(2024, 1, 1),
+            trade_date=base + timedelta(days=i),
             open=10.0,
             high=11.0,
             low=9.0,
-            close=10.5,
+            close=10.5 + i * 0.01,
             vol=1e6,
-        ),
+        )
+        for i in range(MIN_BARS_REQUIRED)
     ]
 
 
@@ -131,6 +137,30 @@ async def test_technical_analyst_rejects_missing_ticker():
         await service.run(ticker="", analysis_date=date(2024, 1, 15))
 
     assert "ticker" in exc_info.value.message.lower() or "必填" in exc_info.value.message
+
+
+@pytest.mark.asyncio
+async def test_technical_analyst_raises_when_bars_less_than_min_required():
+    """K 线数量 < MIN_BARS_REQUIRED 时抛出 BadRequestException，message 含实际数量与门槛。"""
+    from src.shared.domain.exceptions import BadRequestException
+
+    mock_market = AsyncMock(spec=IMarketQuotePort)
+    mock_market.get_daily_bars.return_value = _make_bars()[: (MIN_BARS_REQUIRED - 1)]
+    mock_indicator = MagicMock(spec=IIndicatorCalculator)
+    mock_agent = AsyncMock(spec=ITechnicalAnalystAgentPort)
+    service = TechnicalAnalystService(
+        market_quote_port=mock_market,
+        indicator_calculator=mock_indicator,
+        analyst_agent_port=mock_agent,
+    )
+
+    with pytest.raises(BadRequestException) as exc_info:
+        await service.run(ticker="000001.SZ", analysis_date=date(2024, 1, 15))
+
+    msg = exc_info.value.message
+    assert str(MIN_BARS_REQUIRED - 1) in msg or str(MIN_BARS_REQUIRED) in msg
+    assert "30" in msg or str(MIN_BARS_REQUIRED) in msg
+    mock_agent.analyze.assert_not_called()
 
 
 @pytest.mark.asyncio

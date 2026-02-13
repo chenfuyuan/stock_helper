@@ -104,24 +104,16 @@ async def test_macro_intelligence_dispatch(adapter, mock_research_container):
 
 @pytest.mark.asyncio
 async def test_catalyst_detective_dispatch(adapter, mock_research_container):
-    """Catalyst detective：仅 symbol，返回值被归一化为 dict。"""
-    from src.modules.research.domain.dtos.catalyst_context import CatalystContextDTO
-    from src.modules.research.domain.dtos.catalyst_dtos import (
-        CatalystDetectiveAgentResult,
-        CatalystDetectiveResultDTO,
-    )
-
-    agent_result = CatalystDetectiveAgentResult(
-        result=MagicMock(spec=CatalystDetectiveResultDTO),
-        raw_llm_output="raw",
-        user_prompt="prompt",
-        catalyst_context=MagicMock(spec=CatalystContextDTO),
-    )
-    agent_result.result.model_dump = MagicMock(return_value={"catalyst_assessment": "Neutral"})
-    agent_result.catalyst_context.model_dump = MagicMock(return_value={})
-
+    """Catalyst detective：仅 symbol，Service 直接返回 dict，无需 Adapter 再归一化。"""
     svc = mock_research_container.catalyst_detective_service()
-    svc.run = AsyncMock(return_value=agent_result)
+    svc.run = AsyncMock(
+        return_value={
+            "result": {"catalyst_assessment": "Neutral (中性)"},
+            "raw_llm_output": "raw",
+            "user_prompt": "prompt",
+            "catalyst_context": {},
+        }
+    )
 
     result = await adapter.run_expert(
         ExpertType.CATALYST_DETECTIVE,

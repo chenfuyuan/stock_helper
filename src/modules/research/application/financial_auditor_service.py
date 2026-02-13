@@ -30,13 +30,17 @@ class FinancialAuditorService:
         self._snapshot_builder = snapshot_builder
         self._auditor_agent = auditor_agent_port
 
-    async def run(self, symbol: str, limit: int = 5) -> dict[str, Any]:
+    async def run(self, symbol: str, limit: int = 8) -> dict[str, Any]:
         """
         执行财务审计，返回包含解析结果与 input、financial_indicators、output 的字典（代码侧塞入）。
         解析失败由 Agent 实现层抛出 LLMOutputParseError。
         """
         if not symbol or not str(symbol).strip():
             raise BadRequestException(message="symbol 为必填")
+        if limit < 1 or limit > 20:
+            raise BadRequestException(
+                message=f"limit 须在 1～20 之间，当前为 {limit}。"
+            )
 
         records = await self._financial_data.get_finance_records(
             ticker=symbol, limit=limit

@@ -94,7 +94,8 @@ class StockDailyRepositoryImpl(BaseRepository[StockDailyModel], IMarketQuoteRepo
         
         if not r:
             return None
-            
+
+        # 与 get_valuation_dailies 一致：返回完整估值字段，供估值概览使用
         return StockDaily(
             third_code=r.third_code,
             trade_date=r.trade_date,
@@ -108,6 +109,21 @@ class StockDailyRepositoryImpl(BaseRepository[StockDailyModel], IMarketQuoteRepo
             vol=r.vol or 0.0,
             amount=r.amount or 0.0,
             adj_factor=r.adj_factor,
+            turnover_rate=r.turnover_rate,
+            turnover_rate_f=r.turnover_rate_f,
+            volume_ratio=r.volume_ratio,
+            pe=r.pe,
+            pe_ttm=r.pe_ttm,
+            pb=r.pb,
+            ps=r.ps,
+            ps_ttm=r.ps_ttm,
+            dv_ratio=r.dv_ratio,
+            dv_ttm=r.dv_ttm,
+            total_share=r.total_share,
+            float_share=r.float_share,
+            free_share=r.free_share,
+            total_mv=r.total_mv,
+            circ_mv=r.circ_mv,
             source=r.source or "tushare",
         )
 

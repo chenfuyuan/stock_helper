@@ -129,6 +129,63 @@ async def test_empty_finance_records_raises_bad_request():
 
 
 @pytest.mark.asyncio
+async def test_empty_historical_valuations_logs_warning_and_continues():
+    """历史估值日线为空时记录 WARNING 日志并继续执行（不抛异常）。"""
+    mock_data = AsyncMock()
+    mock_data.get_stock_overview.return_value = StockOverviewInput(
+        stock_name="平安银行",
+        industry="银行",
+        third_code="000001.SZ",
+        current_price=10.5,
+        total_mv=200000.0,
+        pe_ttm=5.2,
+        pb=0.65,
+        ps_ttm=1.2,
+        dv_ratio=3.5,
+    )
+    mock_data.get_valuation_dailies.return_value = []  # 空历史估值日线
+    mock_data.get_finance_for_valuation.return_value = [
+        FinanceRecordInput(
+            end_date=date(2024, 9, 30),
+            ann_date=date(2024, 9, 30),
+            third_code="000001.SZ",
+            eps=2.0,
+            bps=16.0,
+            gross_margin=36.0,
+            roe_waa=18.0,
+            netprofit_margin=20.0,
+            debt_to_assets=60.0,
+            profit_dedt=1200.0,
+        ),
+    ]
+    mock_builder = _MockSnapshotBuilder()
+    mock_agent = AsyncMock()
+    mock_agent.analyze.return_value = ValuationModelAgentResult(
+        result=ValuationResultDTO(
+            valuation_verdict="Fair",
+            confidence_score=0.5,
+            estimated_intrinsic_value_range=IntrinsicValueRangeDTO(
+                lower_bound="", upper_bound="",
+            ),
+            key_evidence=["无历史估值日线，仅基于财务数据"],
+            risk_factors=["数据有限"],
+            reasoning_summary="",
+        ),
+        raw_llm_output="{}",
+        user_prompt="",
+    )
+    svc = ValuationModelerService(
+        valuation_data_port=mock_data,
+        snapshot_builder=mock_builder,
+        modeler_agent_port=mock_agent,
+    )
+    result = await svc.run(symbol="000001.SZ")
+    assert "valuation_verdict" in result
+    mock_data.get_valuation_dailies.assert_called_once()
+    mock_agent.analyze.assert_called_once()
+
+
+@pytest.mark.asyncio
 async def test_full_flow_returns_valuation_result_with_all_fields():
     """E2E：mock 三个 Port，完整编排返回包含 valuation_verdict、input、valuation_indicators、output 等字段。"""
     mock_data = AsyncMock()
@@ -178,7 +235,7 @@ async def test_full_flow_returns_valuation_result_with_all_fields():
     mock_agent = AsyncMock()
     mock_agent.analyze.return_value = ValuationModelAgentResult(
         result=ValuationResultDTO(
-            valuation_verdict="Undervalued (低估)",
+            valuation_verdict="Undervalued",
             confidence_score=0.85,
             estimated_intrinsic_value_range=IntrinsicValueRangeDTO(
                 lower_bound="基于 Graham 模型推导的 26.8 元",
@@ -187,8 +244,9 @@ async def test_full_flow_returns_valuation_result_with_all_fields():
             key_evidence=["PE 处于历史 15% 分位", "PEG 仅为 0.24"],
             risk_factors=["毛利率同比上升但仍需观察"],
             reasoning_summary="综合三模型显示低估，具有投资价值。",
+            narrative_report="【核心结论】当前估值偏低。【关键论据】PE 分位 15%，PEG 0.24。【风险】毛利率需观察。【置信度】0.85。",
         ),
-        raw_llm_output='{"valuation_verdict":"Undervalued (低估)"}',
+        raw_llm_output='{"valuation_verdict":"Undervalued"}',
         user_prompt="test user prompt",
     )
 
@@ -206,7 +264,7 @@ async def test_full_flow_returns_valuation_result_with_all_fields():
 
     # 断言完整响应结构
     assert "valuation_verdict" in result
-    assert result["valuation_verdict"] == "Undervalued (低估)"
+    assert result["valuation_verdict"] == "Undervalued"
     assert "confidence_score" in result
     assert result["confidence_score"] == 0.85
     assert "estimated_intrinsic_value_range" in result
@@ -214,6 +272,8 @@ async def test_full_flow_returns_valuation_result_with_all_fields():
     assert len(result["key_evidence"]) >= 1
     assert "risk_factors" in result
     assert "reasoning_summary" in result
+    assert "narrative_report" in result
+    assert result["narrative_report"] == "【核心结论】当前估值偏低。【关键论据】PE 分位 15%，PEG 0.24。【风险】毛利率需观察。【置信度】0.85。"
     assert "input" in result
     assert "output" in result
     assert "valuation_indicators" in result
