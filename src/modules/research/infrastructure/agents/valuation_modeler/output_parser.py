@@ -2,10 +2,9 @@
 估值建模师 Agent 的 LLM 输出解析。
 将本 Agent 返回的 JSON 字符串解析为 ValuationResultDTO，内聚于该 Agent。
 非法 JSON 或缺字段时记录日志（含 LLM 原始输出，便于排查）并抛出 LLMOutputParseError。
-支持 ```json 包裹与 <think> 标签剥离。
+支持 ```json 包裹、<think> 标签剥离；解析失败时尝试提取首尾 { } 间内容再解析。
 """
 import json
-import re
 from typing import Any, Union
 
 from loguru import logger
@@ -13,6 +12,9 @@ from pydantic import ValidationError
 
 from src.modules.research.domain.dtos.valuation_dtos import ValuationResultDTO
 from src.modules.research.domain.exceptions import LLMOutputParseError
+from src.modules.research.infrastructure.llm_output_utils import (
+    normalize_llm_json_like_text,
+)
 
 _RAW_LOG_MAX_LEN = 2000
 
@@ -37,15 +39,45 @@ def _raw_for_log(raw: str) -> str:
     return s[:_RAW_LOG_MAX_LEN] + f"...[已截断，总长 {len(s)} 字符]"
 
 
-def _strip_thinking_tags(text: str) -> str:
+def _extract_json_object_fallback(text: str) -> str | None:
     """
-    移除 reasoning model 输出的 <think>...</think> 标签及其内容。
-    部分思考模型（如 DeepSeek R1）会在响应前输出推理过程，需剥离后才能解析 JSON。
+    当 json.loads 失败时，尝试提取首尾成对的 { } 之间的内容再解析。
+    适用于 LLM 在 JSON 前后加了说明文字的情况；若内容中字符串含未转义 " 则可能仍失败。
     """
-    if "<think>" in text:
-        logger.debug("检测到 <think> 标签，正在剥离 reasoning model 的思考过程")
-        return re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL).strip()
-    return text
+    start = text.find("{")
+    if start == -1:
+        return None
+    depth = 0
+    in_string = False
+    escape = False
+    quote_char = None
+    i = start
+    while i < len(text):
+        c = text[i]
+        if escape:
+            escape = False
+            i += 1
+            continue
+        if c == "\\" and in_string:
+            escape = True
+            i += 1
+            continue
+        if not in_string:
+            if c == "{":
+                depth += 1
+            elif c == "}":
+                depth -= 1
+                if depth == 0:
+                    return text[start : i + 1]
+            elif c in ('"', "'"):
+                in_string = True
+                quote_char = c
+            i += 1
+            continue
+        if c == quote_char:
+            in_string = False
+        i += 1
+    return None
 
 
 def _format_validation_errors(errors: list[dict[str, Any]]) -> str:
@@ -82,26 +114,38 @@ def parse_valuation_result(raw: str) -> ValuationResultDTO:
             message="LLM 返回内容为空", details={"raw_length": 0}
         )
 
-    text = raw.strip()
-    # 移除 reasoning model 的 <think>...</think> 标签
-    text = _strip_thinking_tags(text)
-    # 剥离 ```json ... ``` 或 ``` ... ```（贪婪匹配到最后一对反引号，避免字段内含 ``` 时被截断）
-    match = re.search(r"^```(?:json)?\s*\n?(.*)\n?```\s*$", text, re.DOTALL)
-    if match:
-        text = match.group(1).strip()
-
-    try:
-        data: Union[dict, list] = json.loads(text)
-    except json.JSONDecodeError as e:
+    text = normalize_llm_json_like_text(raw)
+    if not text:
         logger.warning(
-            "解析估值建模结果：非合法 JSON，msg={}，LLM 原始输出：{}",
-            e.msg,
+            "解析估值建模结果：预处理后为空，raw={}", _raw_for_log(raw or "")
+        )
+        raise LLMOutputParseError(
+            message="LLM 返回内容为空", details={"raw_length": len(raw or "")}
+        )
+
+    data: Union[dict, list] | None = None
+    last_error: json.JSONDecodeError | None = None
+    try:
+        data = json.loads(text)
+    except json.JSONDecodeError as e:
+        last_error = e
+        extracted = _extract_json_object_fallback(text)
+        if extracted and extracted != text:
+            try:
+                data = json.loads(extracted)
+            except json.JSONDecodeError:
+                pass
+    if data is None and last_error is not None:
+        logger.warning(
+            "解析估值建模结果：非合法 JSON，msg={}，position={}，LLM 原始输出：{}",
+            last_error.msg,
+            last_error.pos,
             _raw_for_log(raw),
         )
         raise LLMOutputParseError(
             message="LLM 返回内容不是合法 JSON",
-            details={"json_error": e.msg, "position": e.pos},
-        ) from e
+            details={"json_error": last_error.msg, "position": last_error.pos},
+        ) from last_error
 
     if not isinstance(data, dict):
         logger.warning(

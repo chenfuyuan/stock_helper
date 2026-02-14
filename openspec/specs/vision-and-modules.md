@@ -77,10 +77,10 @@
 
 | Bounded Context | 代码路径 |
 |-----------------|----------|
-| Coordinator | `src/modules/coordinator/`（待建） |
-| Research | `src/modules/research/`（待建） |
-| Debate | `src/modules/debate/`（待建） |
-| Judge | `src/modules/judge/`（待建） |
+| Coordinator | `src/modules/coordinator/` |
+| Research | `src/modules/research/` |
+| Debate | `src/modules/debate/` |
+| Judge | `src/modules/judge/` |
 | data_engineering | `src/modules/data_engineering/` |
 | llm_platform | `src/modules/llm_platform/` |
 | 共享内核 | `src/shared/`（config、db、logging、公共 Port 定义等） |

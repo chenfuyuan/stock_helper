@@ -18,6 +18,12 @@ from src.modules.llm_platform.infrastructure.persistence.repositories.pg_config_
 from src.modules.llm_platform.infrastructure.adapters.bocha_web_search import (
     BochaWebSearchAdapter,
 )
+from src.modules.llm_platform.infrastructure.adapters.caching_web_search_provider import (
+    CachingWebSearchProvider,
+)
+from src.modules.llm_platform.infrastructure.persistence.repositories.web_search_cache_repository import (
+    PgWebSearchCacheRepository,
+)
 from src.modules.llm_platform.infrastructure.config import llm_config
 
 
@@ -62,6 +68,7 @@ class LLMPlatformContainer:
     def web_search_service(self) -> WebSearchService:
         """
         获取 Web 搜索服务，内部构造博查搜索适配器。
+        有 session 时用 CachingWebSearchProvider 包装以启用搜索结果缓存；无 session 时不启用缓存。
         若构造时提供了 session，则注入 PgExternalAPICallLogRepository 以记录外部 API 调用日志。
         """
         adapter = BochaWebSearchAdapter(
@@ -69,6 +76,8 @@ class LLMPlatformContainer:
             base_url=llm_config.BOCHA_BASE_URL,
         )
         if self._session is not None:
+            cache_repo = PgWebSearchCacheRepository(self._session)
+            adapter = CachingWebSearchProvider(inner=adapter, cache_repo=cache_repo)
             from src.shared.infrastructure.persistence.external_api_call_log_repository import (
                 PgExternalAPICallLogRepository,
             )

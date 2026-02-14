@@ -1,3 +1,11 @@
+# Spec: dependency-injection-root
+
+模块级依赖注入根（Composition Root）：每个 Bounded Context 在 `container.py` 中定义 Container 类统一装配依赖，路由文件精简为仅含路由定义 + 单行 Depends，main.py 不直接使用 Infrastructure，routes.py 仅做模块级 router 聚合。
+
+**测试约定**：每个 `#### Scenario:` 在变更**交付时**须对应至少一个自动化测试用例（单元或集成）；实现顺序可先实现再补测，以完整测试通过为需求完成标准。
+
+---
+
 ## ADDED Requirements
 
 ### Requirement: 模块级 Composition Root

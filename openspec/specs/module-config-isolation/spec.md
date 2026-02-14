@@ -1,3 +1,11 @@
+# Spec: module-config-isolation
+
+模块配置隔离：全局 `Settings` 瘦身为仅含全局配置，data_engineering 和 llm_platform 各自在 `infrastructure/config.py` 中定义独立的 `BaseSettings` 子类管理模块专属配置（Tushare、同步引擎、LLM、Bocha 等），共用 `.env` 文件，跨模块不可见。
+
+**测试约定**：每个 `#### Scenario:` 在变更**交付时**须对应至少一个自动化测试用例（单元或集成）；实现顺序可先实现再补测，以完整测试通过为需求完成标准。
+
+---
+
 ## ADDED Requirements
 
 ### Requirement: 全局配置瘦身

@@ -7,6 +7,11 @@ from sqlalchemy.orm import sessionmaker
 from src.shared.config import settings
 from src.shared.infrastructure.db.base import Base
 
+# 注册 ORM 模型以便 create_all 创建表（集成测试用）
+from src.modules.llm_platform.infrastructure.persistence.models.web_search_cache_model import (  # noqa: F401
+    WebSearchCacheModel,
+)
+
 # Use an in-memory SQLite for testing or a separate Postgres DB
 # For this skeleton, we assume the environment provides a test DB URL
 # or we mock it. But integration tests usually need a real DB.

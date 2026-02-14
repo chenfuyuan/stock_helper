@@ -1,3 +1,11 @@
+# Spec: file-naming-srp-cleanup
+
+文件命名与单一职责清理：DTO 从 `domain/ports/` 迁出到 `domain/dtos/`、混合 DTO 文件按职责拆分、文件名与主类名 snake_case 对齐、公共类型别名去重、Query/Command 目录归属修正、agents 目录归入 infrastructure。
+
+**测试约定**：每个 `#### Scenario:` 在变更**交付时**须对应至少一个自动化测试用例（单元或集成）；实现顺序可先实现再补测，以完整测试通过为需求完成标准。
+
+---
+
 ## ADDED Requirements
 
 ### Requirement: DTO 从 ports 目录迁出

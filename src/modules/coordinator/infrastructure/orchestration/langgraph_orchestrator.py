@@ -1,9 +1,12 @@
 """
 LangGraphResearchOrchestrator：实现 IResearchOrchestrationPort，基于 LangGraph 执行研究编排。
 """
+import logging
 from datetime import datetime
 from typing import Any
 from uuid import uuid4
+
+logger = logging.getLogger(__name__)
 
 from src.shared.infrastructure.execution_context import current_execution_ctx, ExecutionContext
 from src.modules.coordinator.domain.dtos.research_dtos import (
@@ -150,6 +153,17 @@ class LangGraphResearchOrchestrator(IResearchOrchestrationPort):
                 session_id=str(session.id) if session else "",
                 retry_count=request.retry_count,
             )
+        except Exception:
+            # 研究节点或图执行异常时将会话置为失败，避免长期处于 running
+            completed_at = datetime.utcnow()
+            duration_ms = int((completed_at - started_at).total_seconds() * 1000)
+            if session is not None and self._session_repo is not None:
+                session.fail(completed_at, duration_ms)
+                try:
+                    await self._session_repo.update_session(session)
+                except Exception as update_err:
+                    logger.warning("研究异常后会话状态更新失败: %s", update_err)
+            raise
         finally:
             if token is not None:
                 current_execution_ctx.reset(token)

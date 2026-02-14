@@ -39,6 +39,24 @@ def _strip_thinking_tags(text: str) -> str:
     return text
 
 
+def _strip_markdown_code_block(text: str) -> str:
+    """
+    剥离 Markdown 代码块（```json 或 ``` 包裹的内容）。
+    不要求闭合 ``` 紧贴行尾，允许末尾有空白或多余字符，按「首个开块到最后一个闭块」取内容。
+    """
+    stripped = text.strip()
+    if not stripped.startswith("```"):
+        return stripped
+    first_backtick = stripped.find("```")
+    last_backtick = stripped.rfind("```")
+    if last_backtick <= first_backtick:
+        return stripped
+    content = stripped[first_backtick + 3 : last_backtick].strip()
+    if content.lower().startswith("json"):
+        content = content[4:].lstrip("\r\n\t ")
+    return content.strip()
+
+
 def _format_validation_errors(errors: list[dict[str, Any]]) -> str:
     """
     将 Pydantic 校验错误格式化为可读摘要，便于定位问题。
@@ -74,10 +92,8 @@ def parse_technical_analysis_result(raw: str) -> TechnicalAnalysisResultDTO:
     text = raw.strip()
     # 移除 reasoning model 的 <think>...</think> 标签
     text = _strip_thinking_tags(text)
-    # 剥离 ```json ... ``` 或 ``` ... ```
-    match = re.search(r"^```(?:json)?\s*\n?(.*?)\n?```\s*$", text, re.DOTALL)
-    if match:
-        text = match.group(1).strip()
+    # 剥离 ```json ... ``` 或 ``` ... ```（允许末尾有额外字符）
+    text = _strip_markdown_code_block(text)
 
     try:
         data: Union[dict, list] = json.loads(text)
