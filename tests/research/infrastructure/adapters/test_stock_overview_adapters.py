@@ -2,6 +2,7 @@
 Adapter 空值防护测试（research-input-robustness 1.5）。
 覆盖 daily=None、daily 正常、industry=None 三个场景，对 valuation / macro / catalyst 三个适配器。
 """
+
 from datetime import date
 from unittest.mock import AsyncMock
 
@@ -12,19 +13,25 @@ from src.modules.data_engineering.application.queries.get_stock_basic_info impor
 )
 from src.modules.data_engineering.domain.model.stock import StockInfo
 from src.modules.data_engineering.domain.model.stock_daily import StockDaily
-from src.modules.research.infrastructure.adapters.valuation_data_adapter import (
-    ValuationDataAdapter,
+from src.modules.research.infrastructure.adapters.catalyst_data_adapter import (
+    CatalystDataAdapter,
 )
 from src.modules.research.infrastructure.adapters.macro_data_adapter import (
     MacroDataAdapter,
 )
-from src.modules.research.infrastructure.adapters.catalyst_data_adapter import (
-    CatalystDataAdapter,
+from src.modules.research.infrastructure.adapters.valuation_data_adapter import (
+    ValuationDataAdapter,
 )
-from src.modules.research.infrastructure.search_utils.result_filter import SearchResultFilter
+from src.modules.research.infrastructure.search_utils.result_filter import (
+    SearchResultFilter,
+)
 
 
-def _make_info(name: str = "平安银行", industry: str | None = "银行", third_code: str = "000001.SZ") -> StockInfo:
+def _make_info(
+    name: str = "平安银行",
+    industry: str | None = "银行",
+    third_code: str = "000001.SZ",
+) -> StockInfo:
     return StockInfo(
         third_code=third_code,
         symbol="000001",

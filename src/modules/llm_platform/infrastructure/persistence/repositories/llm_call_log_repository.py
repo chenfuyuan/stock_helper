@@ -1,15 +1,19 @@
 """
 LLM 调用日志 PostgreSQL 仓储实现。
 """
-from datetime import datetime
-from uuid import UUID, uuid4
+
+from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.llm_platform.domain.dtos.llm_call_log_dtos import LLMCallLog
-from src.modules.llm_platform.domain.ports.llm_call_log_repository import ILLMCallLogRepository
-from src.modules.llm_platform.infrastructure.persistence.models.llm_call_log_model import LLMCallLogModel
+from src.modules.llm_platform.domain.ports.llm_call_log_repository import (
+    ILLMCallLogRepository,
+)
+from src.modules.llm_platform.infrastructure.persistence.models.llm_call_log_model import (
+    LLMCallLogModel,
+)
 
 
 def _dto_to_model(d: LLMCallLog) -> LLMCallLogModel:

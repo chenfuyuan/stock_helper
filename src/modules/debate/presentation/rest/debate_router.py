@@ -1,15 +1,23 @@
 """
 Debate REST 路由：POST /api/v1/debate/run。
 """
+
 import logging
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from src.modules.debate.application.dtos.debate_outcome_dto import DebateOutcomeDTO
-from src.modules.debate.application.services.debate_service import DebateService
+from src.modules.debate.application.dtos.debate_outcome_dto import (
+    DebateOutcomeDTO,
+)
+from src.modules.debate.application.services.debate_service import (
+    DebateService,
+)
 from src.modules.debate.container import DebateContainer
-from src.modules.debate.domain.dtos.debate_input import DebateInput, ExpertSummary
+from src.modules.debate.domain.dtos.debate_input import (
+    DebateInput,
+    ExpertSummary,
+)
 from src.modules.debate.domain.exceptions import LLMOutputParseError
 from src.modules.debate.presentation.rest.debate_schemas import (
     DebateRunRequest,
@@ -22,7 +30,9 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["debate"])
 
 
-def _expert_results_to_debate_input(symbol: str, expert_results: dict[str, Any]) -> DebateInput:
+def _expert_results_to_debate_input(
+    symbol: str, expert_results: dict[str, Any]
+) -> DebateInput:
     """
     将 REST 请求中的 expert_results（dict[str, dict]）转为 DebateInput。
     仅当 value 为 dict 且包含可映射字段时构造 ExpertSummary，否则跳过该专家。
@@ -32,9 +42,15 @@ def _expert_results_to_debate_input(symbol: str, expert_results: dict[str, Any])
         if not isinstance(data, dict):
             continue
         # 使用与 DebateGatewayAdapter 一致的归一化：若请求方已给 signal/confidence/reasoning/risk_warning 则直接用
-        signal = data.get("signal") or data.get("valuation_verdict") or data.get("macro_environment")
+        signal = (
+            data.get("signal")
+            or data.get("valuation_verdict")
+            or data.get("macro_environment")
+        )
         if isinstance(signal, dict):
-            signal = str(signal.get("result", {}).get("catalyst_assessment", ""))
+            signal = str(
+                signal.get("result", {}).get("catalyst_assessment", "")
+            )
         if signal is None:
             signal = ""
         else:
@@ -96,7 +112,9 @@ async def post_debate_run(
     if not body.symbol or not str(body.symbol).strip():
         raise HTTPException(status_code=400, detail="symbol 为必填")
     if not body.expert_results:
-        raise HTTPException(status_code=400, detail="expert_results 为必填且不能为空")
+        raise HTTPException(
+            status_code=400, detail="expert_results 为必填且不能为空"
+        )
     try:
         debate_input = _expert_results_to_debate_input(
             symbol=body.symbol.strip(),

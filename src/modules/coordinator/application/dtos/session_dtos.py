@@ -1,9 +1,9 @@
 """
 历史会话查询响应 DTO：会话摘要、会话详情、LLM 调用项、外部 API 调用项。
 """
+
 from datetime import datetime
 from typing import Any
-from uuid import UUID
 
 from pydantic import BaseModel, Field
 
@@ -13,7 +13,9 @@ class SessionSummaryDTO(BaseModel):
 
     id: str = Field(..., description="会话 ID")
     symbol: str = Field(..., description="股票代码")
-    status: str = Field(..., description="running / completed / partial / failed")
+    status: str = Field(
+        ..., description="running / completed / partial / failed"
+    )
     created_at: datetime = Field(..., description="创建时间")
     completed_at: datetime | None = Field(None, description="完成时间")
     duration_ms: int | None = Field(None, description="总耗时（毫秒）")
@@ -39,9 +41,15 @@ class SessionDetailDTO(BaseModel):
 
     id: str = Field(..., description="会话 ID")
     symbol: str = Field(..., description="股票代码")
-    status: str = Field(..., description="running / completed / partial / failed")
-    selected_experts: list[str] = Field(default_factory=list, description="选中的专家列表")
-    options: dict[str, Any] = Field(default_factory=dict, description="执行选项")
+    status: str = Field(
+        ..., description="running / completed / partial / failed"
+    )
+    selected_experts: list[str] = Field(
+        default_factory=list, description="选中的专家列表"
+    )
+    options: dict[str, Any] = Field(
+        default_factory=dict, description="执行选项"
+    )
     trigger_source: str = Field("api", description="触发来源")
     created_at: datetime = Field(..., description="创建时间")
     completed_at: datetime | None = Field(None, description="完成时间")
@@ -61,7 +69,9 @@ class LLMCallItemDTO(BaseModel):
     model_name: str = Field(..., description="模型名称")
     vendor: str = Field(..., description="供应商")
     prompt_tokens: int | None = Field(None, description="prompt token 数")
-    completion_tokens: int | None = Field(None, description="completion token 数")
+    completion_tokens: int | None = Field(
+        None, description="completion token 数"
+    )
     total_tokens: int | None = Field(None, description="总 token 数")
     latency_ms: int = Field(..., description="调用耗时（毫秒）")
     status: str = Field(..., description="success / failed")

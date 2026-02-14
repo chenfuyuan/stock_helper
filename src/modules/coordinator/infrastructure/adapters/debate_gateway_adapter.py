@@ -2,18 +2,31 @@
 DebateGatewayAdapter：实现 IDebateGateway，将会话隔离、per-expert 字段映射、过滤调试字段，
 调用 DebateContainer → DebateService，返回 dict。
 """
+
 from typing import Any
 
-from src.modules.debate.container import DebateContainer
-from src.modules.debate.domain.dtos.debate_input import DebateInput, ExpertSummary
 from src.modules.coordinator.domain.ports.debate_gateway import IDebateGateway
-
+from src.modules.debate.container import DebateContainer
+from src.modules.debate.domain.dtos.debate_input import (
+    DebateInput,
+    ExpertSummary,
+)
 
 # 专家类型到 (signal_key, confidence_key, reasoning_key, risk_key) 的映射；
 # risk 可能为 list，需 join 为字符串
 _EXPERT_FIELD_MAP = {
-    "technical_analyst": ("signal", "confidence", "summary_reasoning", "risk_warning"),
-    "financial_auditor": ("signal", "confidence", "summary_reasoning", "risk_warning"),
+    "technical_analyst": (
+        "signal",
+        "confidence",
+        "summary_reasoning",
+        "risk_warning",
+    ),
+    "financial_auditor": (
+        "signal",
+        "confidence",
+        "summary_reasoning",
+        "risk_warning",
+    ),
     "valuation_modeler": (
         "valuation_verdict",
         "confidence_score",
@@ -64,7 +77,9 @@ def _to_float(val: Any) -> float:
         return 0.0
 
 
-def _expert_result_to_summary(expert_key: str, data: Any) -> ExpertSummary | None:
+def _expert_result_to_summary(
+    expert_key: str, data: Any
+) -> ExpertSummary | None:
     """
     将单专家结果 dict 转为 ExpertSummary。
     仅当 data 为 dict 且能提取出至少 signal 或 reasoning 时返回，否则返回 None。

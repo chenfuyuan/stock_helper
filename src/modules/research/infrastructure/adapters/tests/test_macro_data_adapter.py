@@ -3,13 +3,22 @@ MacroDataAdapter 单元测试。
 
 mock WebSearchService，断言搜索使用配置中的 count/freshness、结果经过过滤后返回。
 """
-import pytest
-from unittest.mock import AsyncMock, Mock
-from datetime import date
 
-from src.modules.llm_platform.domain.web_search_dtos import WebSearchRequest, WebSearchResponse, WebSearchResultItem
-from src.modules.research.infrastructure.adapters.macro_data_adapter import MacroDataAdapter
-from src.modules.research.infrastructure.search_utils.result_filter import SearchResultFilter
+from unittest.mock import AsyncMock, Mock
+
+import pytest
+
+from src.modules.llm_platform.domain.web_search_dtos import (
+    WebSearchRequest,
+    WebSearchResponse,
+    WebSearchResultItem,
+)
+from src.modules.research.infrastructure.adapters.macro_data_adapter import (
+    MacroDataAdapter,
+)
+from src.modules.research.infrastructure.search_utils.result_filter import (
+    SearchResultFilter,
+)
 
 
 class TestMacroDataAdapter:
@@ -37,7 +46,9 @@ class TestMacroDataAdapter:
         return SearchResultFilter()
 
     @pytest.fixture
-    def adapter(self, mock_stock_info_usecase, mock_web_search_service, result_filter):
+    def adapter(
+        self, mock_stock_info_usecase, mock_web_search_service, result_filter
+    ):
         """MacroDataAdapter 实例"""
         return MacroDataAdapter(
             stock_info_usecase=mock_stock_info_usecase,
@@ -45,7 +56,9 @@ class TestMacroDataAdapter:
             result_filter=result_filter,
         )
 
-    async def test_search_macro_context_uses_config_parameters(self, adapter, mock_web_search_service):
+    async def test_search_macro_context_uses_config_parameters(
+        self, adapter, mock_web_search_service
+    ):
         """测试搜索使用配置中的 count/freshness 参数"""
         # 模拟搜索响应
         mock_items = [
@@ -70,7 +83,9 @@ class TestMacroDataAdapter:
         mock_web_search_service.search.return_value = mock_response
 
         # 执行搜索
-        results = await adapter.search_macro_context(industry="银行", stock_name="平安银行")
+        results = await adapter.search_macro_context(
+            industry="银行", stock_name="平安银行"
+        )
 
         # 验证搜索调用次数（4 个维度）
         assert mock_web_search_service.search.call_count == 4
@@ -83,7 +98,13 @@ class TestMacroDataAdapter:
             # 验证 count 在 4-10 范围内
             assert 4 <= request.count <= 10
             # 验证 freshness 是合法值
-            assert request.freshness in ["oneDay", "oneWeek", "oneMonth", "oneYear", "noLimit"]
+            assert request.freshness in [
+                "oneDay",
+                "oneWeek",
+                "oneMonth",
+                "oneYear",
+                "noLimit",
+            ]
             # 验证启用了摘要
             assert request.summary is True
 
@@ -92,10 +113,12 @@ class TestMacroDataAdapter:
 
         # 验证每个结果都有维度主题
         for result in results:
-            assert hasattr(result, 'dimension_topic')
-            assert hasattr(result, 'items')
+            assert hasattr(result, "dimension_topic")
+            assert hasattr(result, "items")
 
-    async def test_search_macro_context_filters_results(self, adapter, mock_web_search_service):
+    async def test_search_macro_context_filters_results(
+        self, adapter, mock_web_search_service
+    ):
         """测试搜索结果经过过滤后返回"""
         # 模拟包含噪音的搜索响应
         mock_items = [
@@ -136,7 +159,9 @@ class TestMacroDataAdapter:
         mock_web_search_service.search.return_value = mock_response
 
         # 执行搜索
-        results = await adapter.search_macro_context(industry="银行", stock_name="平安银行")
+        results = await adapter.search_macro_context(
+            industry="银行", stock_name="平安银行"
+        )
 
         # 验证过滤后的结果
         # 应该只有 2 个有效条目（有效新闻1 和有效新闻2，后者因 URL 重复被去重）
@@ -146,21 +171,27 @@ class TestMacroDataAdapter:
             assert len(result.items) == 1  # 每个维度过滤后只有 1 个有效条目
             assert result.items[0].title == "有效新闻1"  # 保留第一个有效条目
 
-    async def test_search_macro_context_handles_search_errors(self, adapter, mock_web_search_service):
+    async def test_search_macro_context_handles_search_errors(
+        self, adapter, mock_web_search_service
+    ):
         """测试搜索错误处理"""
         # 模拟搜索服务抛出异常
         mock_web_search_service.search.side_effect = Exception("搜索服务错误")
 
         # 执行搜索
-        results = await adapter.search_macro_context(industry="银行", stock_name="平安银行")
+        results = await adapter.search_macro_context(
+            industry="银行", stock_name="平安银行"
+        )
 
         # 验证错误处理：所有维度返回空结果
         assert len(results) == 4
         for result in results:
             assert len(result.items) == 0
-            assert hasattr(result, 'dimension_topic')
+            assert hasattr(result, "dimension_topic")
 
-    async def test_get_stock_overview_success(self, adapter, mock_stock_info_usecase):
+    async def test_get_stock_overview_success(
+        self, adapter, mock_stock_info_usecase
+    ):
         """测试获取股票概览成功"""
         # 执行获取
         overview = await adapter.get_stock_overview("000001.SZ")
@@ -174,7 +205,9 @@ class TestMacroDataAdapter:
         assert overview.industry == "银行"
         assert overview.third_code == "000001.SZ"
 
-    async def test_get_stock_overview_not_found(self, adapter, mock_stock_info_usecase):
+    async def test_get_stock_overview_not_found(
+        self, adapter, mock_stock_info_usecase
+    ):
         """测试股票不存在"""
         # 模拟返回 None
         mock_stock_info_usecase.execute.return_value = None

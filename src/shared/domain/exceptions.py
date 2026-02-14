@@ -84,4 +84,3 @@ class LLMJsonParseError(AppException):
             status_code=500,
             details=details,
         )
-

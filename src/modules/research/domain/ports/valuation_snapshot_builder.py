@@ -2,15 +2,20 @@
 构建估值快照的 Port。
 Domain 层定义「构建估值快照」契约，具体实现（含预计算逻辑）在 Infrastructure 层。
 """
+
 from abc import ABC, abstractmethod
 from typing import List
 
+from src.modules.research.domain.dtos.financial_record_input import (
+    FinanceRecordInput,
+)
 from src.modules.research.domain.dtos.valuation_inputs import (
     StockOverviewInput,
     ValuationDailyInput,
 )
-from src.modules.research.domain.dtos.valuation_snapshot import ValuationSnapshotDTO
-from src.modules.research.domain.dtos.financial_record_input import FinanceRecordInput
+from src.modules.research.domain.dtos.valuation_snapshot import (
+    ValuationSnapshotDTO,
+)
 
 
 class IValuationSnapshotBuilder(ABC):

@@ -3,9 +3,12 @@ Web 搜索缓存仓储 Port。
 
 定义搜索结果缓存的持久化契约，仅依赖 Domain 层 DTO，不依赖 Infrastructure。
 """
+
 from abc import ABC, abstractmethod
 
-from src.modules.llm_platform.domain.dtos.web_search_cache_entry import WebSearchCacheEntry
+from src.modules.llm_platform.domain.dtos.web_search_cache_entry import (
+    WebSearchCacheEntry,
+)
 
 
 class IWebSearchCacheRepository(ABC):
@@ -26,7 +29,6 @@ class IWebSearchCacheRepository(ABC):
         Returns:
             未过期则返回 WebSearchCacheEntry，过期或不存在返回 None。
         """
-        pass
 
     @abstractmethod
     async def put(self, entry: WebSearchCacheEntry) -> None:
@@ -36,7 +38,6 @@ class IWebSearchCacheRepository(ABC):
         Args:
             entry: 缓存条目（含 cache_key、request_params、response_data、created_at、expires_at）。
         """
-        pass
 
     @abstractmethod
     async def cleanup_expired(self) -> int:
@@ -46,4 +47,3 @@ class IWebSearchCacheRepository(ABC):
         Returns:
             删除的条数。
         """
-        pass

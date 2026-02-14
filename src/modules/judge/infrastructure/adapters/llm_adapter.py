@@ -3,10 +3,13 @@ Judge 模块的 LLM Port 实现。
 
 内部委托 llm_platform 的 LLMService.generate()，不直接依赖 llm_platform 的 router/registry。
 """
+
 from typing import Optional
 
 from src.modules.judge.domain.ports.llm_port import ILLMPort
-from src.modules.llm_platform.application.services.llm_service import LLMService
+from src.modules.llm_platform.application.services.llm_service import (
+    LLMService,
+)
 
 
 class LLMAdapter(ILLMPort):

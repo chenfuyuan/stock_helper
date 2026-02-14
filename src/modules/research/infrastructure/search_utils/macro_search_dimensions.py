@@ -3,7 +3,10 @@
 
 定义四个宏观维度的搜索配置，遵循聚焦查询规范（核心领域关键词 ≤ 3）。
 """
-from src.modules.research.domain.dtos.search_dimension_config import SearchDimensionConfig
+
+from src.modules.research.domain.dtos.search_dimension_config import (
+    SearchDimensionConfig,
+)
 
 # 宏观情报员四维度搜索配置
 MACRO_SEARCH_DIMENSIONS = [

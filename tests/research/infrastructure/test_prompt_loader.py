@@ -2,7 +2,10 @@
 技术分析师 Prompt 填充测试。
 覆盖 fill_user_prompt 将 snapshot 中 None 指标转为 N/A 的场景（research-input-robustness 2.5）。
 """
-from src.modules.research.domain.dtos.indicators_snapshot import TechnicalIndicatorsSnapshot
+
+from src.modules.research.domain.dtos.indicators_snapshot import (
+    TechnicalIndicatorsSnapshot,
+)
 from src.modules.research.infrastructure.prompt_loader import fill_user_prompt
 
 
@@ -53,7 +56,11 @@ def test_fill_user_prompt_none_indicators_become_na():
     )
     assert "N/A" in result
     assert "RSI: N/A" in result or "rsi_value" not in result or "N/A" in result
-    assert "MACD DIF: N/A" in result or "macd_dif" not in result or "N/A" in result
+    assert (
+        "MACD DIF: N/A" in result
+        or "macd_dif" not in result
+        or "N/A" in result
+    )
     assert "VWAP: N/A" in result
     assert "ATR: N/A" in result
     assert "Volume ratio: N/A" in result

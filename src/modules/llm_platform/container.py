@@ -4,16 +4,19 @@ LLM 平台模块 Composition Root。
 统一封装 LLM 服务、注册表、配置服务等的组装逻辑，
 供 Research 等模块通过本 Container 获取 LLM 能力，main 启动时通过本 Container 初始化注册表。
 """
+
 from typing import Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.modules.llm_platform.application.services.llm_service import LLMService
-from src.modules.llm_platform.application.services.config_service import ConfigService
-from src.modules.llm_platform.application.services.web_search_service import WebSearchService
-from src.modules.llm_platform.infrastructure.registry import LLMRegistry
-from src.modules.llm_platform.infrastructure.persistence.repositories.pg_config_repo import (
-    PgLLMConfigRepository,
+from src.modules.llm_platform.application.services.config_service import (
+    ConfigService,
+)
+from src.modules.llm_platform.application.services.llm_service import (
+    LLMService,
+)
+from src.modules.llm_platform.application.services.web_search_service import (
+    WebSearchService,
 )
 from src.modules.llm_platform.infrastructure.adapters.bocha_web_search import (
     BochaWebSearchAdapter,
@@ -21,10 +24,14 @@ from src.modules.llm_platform.infrastructure.adapters.bocha_web_search import (
 from src.modules.llm_platform.infrastructure.adapters.caching_web_search_provider import (
     CachingWebSearchProvider,
 )
+from src.modules.llm_platform.infrastructure.config import llm_config
+from src.modules.llm_platform.infrastructure.persistence.repositories.pg_config_repo import (
+    PgLLMConfigRepository,
+)
 from src.modules.llm_platform.infrastructure.persistence.repositories.web_search_cache_repository import (
     PgWebSearchCacheRepository,
 )
-from src.modules.llm_platform.infrastructure.config import llm_config
+from src.modules.llm_platform.infrastructure.registry import LLMRegistry
 
 
 class LLMPlatformContainer:
@@ -52,6 +59,7 @@ class LLMPlatformContainer:
             from src.modules.llm_platform.infrastructure.persistence.repositories.llm_call_log_repository import (
                 PgLLMCallLogRepository,
             )
+
             call_log_repo = PgLLMCallLogRepository(self._session)
             return LLMService(call_log_repository=call_log_repo)
         return LLMService()
@@ -59,7 +67,9 @@ class LLMPlatformContainer:
     def config_service(self) -> ConfigService:
         """获取配置管理服务（需在构造时传入 session）。"""
         if self._session is None:
-            raise RuntimeError("LLMPlatformContainer 需要 session 才能提供 config_service")
+            raise RuntimeError(
+                "LLMPlatformContainer 需要 session 才能提供 config_service"
+            )
         repo = PgLLMConfigRepository(self._session)
         registry = LLMRegistry()
         registry.set_repository(repo)
@@ -77,10 +87,15 @@ class LLMPlatformContainer:
         )
         if self._session is not None:
             cache_repo = PgWebSearchCacheRepository(self._session)
-            adapter = CachingWebSearchProvider(inner=adapter, cache_repo=cache_repo)
+            adapter = CachingWebSearchProvider(
+                inner=adapter, cache_repo=cache_repo
+            )
             from src.shared.infrastructure.persistence.external_api_call_log_repository import (
                 PgExternalAPICallLogRepository,
             )
+
             api_call_log_repo = PgExternalAPICallLogRepository(self._session)
-            return WebSearchService(provider=adapter, api_call_log_repository=api_call_log_repo)
+            return WebSearchService(
+                provider=adapter, api_call_log_repository=api_call_log_repo
+            )
         return WebSearchService(provider=adapter)

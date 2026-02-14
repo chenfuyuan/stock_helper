@@ -35,6 +35,7 @@ _RAW_LOG_MAX_LEN = 2000
 # 内部预处理函数
 # ---------------------------------------------------------------------------
 
+
 def _raw_for_log(raw: str) -> str:
     """返回用于日志的原始内容，过长时截断。"""
     if not raw:
@@ -170,6 +171,7 @@ def _extract_json_object_fallback(text: str) -> str | None:
 # 公开 API
 # ---------------------------------------------------------------------------
 
+
 def parse_llm_json_output(
     raw: str,
     dto_type: type[T],
@@ -200,7 +202,9 @@ def parse_llm_json_output(
 
     # 1. 空值检查
     if not raw or not raw.strip():
-        logger.warning("{}LLM 返回为空，raw_length={}", prefix, len(raw) if raw else 0)
+        logger.warning(
+            "{}LLM 返回为空，raw_length={}", prefix, len(raw) if raw else 0
+        )
         raise LLMJsonParseError(
             message="LLM 返回内容为空",
             details={"raw_length": len(raw) if raw else 0},
@@ -233,11 +237,15 @@ def parse_llm_json_output(
                 pass
 
     if data is None:
-        error_msg = last_json_error.msg if last_json_error else "未知 JSON 错误"
+        error_msg = (
+            last_json_error.msg if last_json_error else "未知 JSON 错误"
+        )
         error_pos = last_json_error.pos if last_json_error else None
         logger.warning(
             "{}LLM 返回非合法 JSON，error={}，LLM 原始输出：{}",
-            prefix, error_msg, _raw_for_log(raw),
+            prefix,
+            error_msg,
+            _raw_for_log(raw),
         )
         raise LLMJsonParseError(
             message="LLM 返回内容不是合法 JSON",
@@ -252,7 +260,8 @@ def parse_llm_json_output(
     if not isinstance(data, dict):
         logger.warning(
             "{}LLM 返回 JSON 根节点非对象，LLM 原始输出：{}",
-            prefix, _raw_for_log(raw),
+            prefix,
+            _raw_for_log(raw),
         )
         raise LLMJsonParseError(
             message="LLM 返回 JSON 根节点须为对象",
@@ -267,7 +276,9 @@ def parse_llm_json_output(
             except Exception as e:
                 logger.warning(
                     "{}归一化钩子执行异常：{}，原始 dict 摘要：{}",
-                    prefix, e, str(data)[:500],
+                    prefix,
+                    e,
+                    str(data)[:500],
                 )
                 raise LLMJsonParseError(
                     message=f"归一化钩子执行异常：{e}",
@@ -287,7 +298,9 @@ def parse_llm_json_output(
         )
         logger.warning(
             "{}Pydantic 校验失败：{} | LLM 原始输出：{}",
-            prefix, errors_summary, _raw_for_log(raw),
+            prefix,
+            errors_summary,
+            _raw_for_log(raw),
         )
         raise LLMJsonParseError(
             message=f"LLM 返回格式不符合契约：{errors_summary}",
@@ -356,7 +369,10 @@ async def generate_and_parse(
             # 构造含错误信息的修正 prompt
             logger.warning(
                 "{}第 {} 次尝试解析失败，剩余重试 {} 次。错误：{}",
-                prefix, attempt + 1, remaining, e.message,
+                prefix,
+                attempt + 1,
+                remaining,
+                e.message,
             )
             current_prompt = (
                 f"{prompt}\n\n"

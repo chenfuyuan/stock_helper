@@ -1,16 +1,17 @@
 """
 研究编排 REST 接口：POST /research。
 """
+
 import logging
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
-
-from src.shared.domain.exceptions import BadRequestException
-from src.shared.infrastructure.db.session import get_db_session
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.modules.coordinator.domain.dtos.research_dtos import (
+    ResearchResult,
+)
 from src.modules.coordinator.application.research_orchestration_service import (
     ResearchOrchestrationService,
 )
@@ -20,6 +21,8 @@ from src.modules.coordinator.domain.exceptions import (
     SessionNotFoundError,
     SessionNotRetryableError,
 )
+from src.shared.domain.exceptions import BadRequestException
+from src.shared.infrastructure.db.session import get_db_session
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +34,10 @@ class ResearchOrchestrationRequest(BaseModel):
     """研究编排请求体。"""
 
     symbol: str = Field(..., description="股票代码")
-    experts: list[str] = Field(..., description="专家类型列表，如 ['technical_analyst', 'macro_intelligence']")
+    experts: list[str] = Field(
+        ...,
+        description="专家类型列表，如 ['technical_analyst', 'macro_intelligence']",
+    )
     options: dict[str, dict[str, Any]] = Field(
         default_factory=dict,
         description="各专家可选参数",
@@ -51,7 +57,9 @@ class ResearchOrchestrationResponse(BaseModel):
     """研究编排响应体。"""
 
     symbol: str
-    overall_status: str = Field(..., description="completed / partial / failed")
+    overall_status: str = Field(
+        ..., description="completed / partial / failed"
+    )
     expert_results: dict[str, ExpertResultApiItem] = Field(
         ...,
         description="按专家名分组的结果",
@@ -64,8 +72,13 @@ class ResearchOrchestrationResponse(BaseModel):
         None,
         description="裁决结果；skip_debate、辩论失败或裁决失败时为 null",
     )
-    session_id: str = Field("", description="研究会话 ID，用于历史查询与审计关联；未启用持久化时为空")
-    retry_count: int = Field(0, description="重试计数，首次执行为 0，每次重试递增 1")
+    session_id: str = Field(
+        "",
+        description="研究会话 ID，用于历史查询与审计关联；未启用持久化时为空",
+    )
+    retry_count: int = Field(
+        0, description="重试计数，首次执行为 0，每次重试递增 1"
+    )
 
 
 # ---------- 依赖注入 ----------
@@ -85,7 +98,9 @@ async def get_research_orchestration_service(
 )
 async def post_research(
     body: ResearchOrchestrationRequest,
-    service: ResearchOrchestrationService = Depends(get_research_orchestration_service),
+    service: ResearchOrchestrationService = Depends(
+        get_research_orchestration_service
+    ),
 ) -> ResearchOrchestrationResponse:
     """
     执行研究编排：symbol + experts + options → 并行调用 Research 专家 → 汇总返回。
@@ -128,7 +143,9 @@ async def post_research(
         raise HTTPException(status_code=500, detail=e.message)
     except Exception as e:
         logger.exception("研究编排执行异常: %s", str(e))
-        raise HTTPException(status_code=500, detail="研究编排执行失败，请稍后重试")
+        raise HTTPException(
+            status_code=500, detail="研究编排执行失败，请稍后重试"
+        )
 
 
 # ---------- 重试请求模型 ----------
@@ -175,7 +192,9 @@ def _build_response(result: "ResearchResult") -> ResearchOrchestrationResponse:
 async def post_research_retry(
     session_id: str,
     body: RetryResearchRequest | None = None,
-    service: ResearchOrchestrationService = Depends(get_research_orchestration_service),
+    service: ResearchOrchestrationService = Depends(
+        get_research_orchestration_service
+    ),
 ) -> ResearchOrchestrationResponse:
     """
     重试研究编排：仅重新执行失败的专家，复用已成功的结果。
@@ -185,7 +204,9 @@ async def post_research_retry(
     try:
         sid = UUID(session_id)
     except ValueError:
-        raise HTTPException(status_code=400, detail="session_id 格式无效，必须为 UUID")
+        raise HTTPException(
+            status_code=400, detail="session_id 格式无效，必须为 UUID"
+        )
 
     skip_debate = body.skip_debate if body else False
 
@@ -203,4 +224,6 @@ async def post_research_retry(
         raise HTTPException(status_code=500, detail=e.message)
     except Exception as e:
         logger.exception("研究重试执行异常: %s", str(e))
-        raise HTTPException(status_code=500, detail="研究重试执行失败，请稍后重试")
+        raise HTTPException(
+            status_code=500, detail="研究重试执行失败，请稍后重试"
+        )

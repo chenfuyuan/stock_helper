@@ -2,16 +2,17 @@
 财务审计员 Application 接口。
 对外暴露独立入口：入参 symbol，出参为包含解析结果与 input/output 的完整响应（由代码塞入，非大模型拼接）。
 """
+
 from typing import Any
 
-from src.shared.domain.exceptions import BadRequestException
+from src.modules.research.domain.ports.financial_auditor_agent import (
+    IFinancialAuditorAgentPort,
+)
 from src.modules.research.domain.ports.financial_data import IFinancialDataPort
 from src.modules.research.domain.ports.financial_snapshot_builder import (
     IFinancialSnapshotBuilder,
 )
-from src.modules.research.domain.ports.financial_auditor_agent import (
-    IFinancialAuditorAgentPort,
-)
+from src.shared.domain.exceptions import BadRequestException
 
 
 class FinancialAuditorService:
@@ -53,7 +54,9 @@ class FinancialAuditorService:
             )
 
         snapshot = self._snapshot_builder.build(records)
-        agent_result = await self._auditor_agent.audit(symbol=symbol, snapshot=snapshot)
+        agent_result = await self._auditor_agent.audit(
+            symbol=symbol, snapshot=snapshot
+        )
 
         result_dto = agent_result.result
         return {
@@ -61,7 +64,9 @@ class FinancialAuditorService:
             "signal": result_dto.signal,
             "confidence": result_dto.confidence,
             "summary_reasoning": result_dto.summary_reasoning,
-            "dimension_analyses": [d.model_dump() for d in result_dto.dimension_analyses],
+            "dimension_analyses": [
+                d.model_dump() for d in result_dto.dimension_analyses
+            ],
             "key_risks": result_dto.key_risks,
             "risk_warning": result_dto.risk_warning,
             "narrative_report": result_dto.narrative_report,

@@ -1,6 +1,7 @@
 """
 Judge REST 请求/响应 Schema。
 """
+
 from typing import Any
 
 from pydantic import BaseModel, Field

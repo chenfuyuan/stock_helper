@@ -1,4 +1,5 @@
 """Bear Advocate output_parser 单元测试：合法 JSON 解析成功、非法 JSON 抛 LLMOutputParseError。"""
+
 import pytest
 
 from src.modules.debate.domain.dtos.bull_bear_argument import BearArgument
@@ -10,14 +11,14 @@ from src.modules.debate.infrastructure.agents.bear_advocate.output_parser import
 
 def test_parse_valid_json_returns_bear_argument():
     """合法 JSON 解析为 BearArgument，字段正确。"""
-    raw = '''{
+    raw = """{
         "direction": "BEARISH",
         "confidence": 0.7,
         "core_thesis": "估值偏高且宏观承压",
         "supporting_arguments": ["PE 分位高", "流动性收紧"],
         "acknowledged_strengths": ["业绩稳定"],
         "risk_triggers": ["政策收紧"]
-    }'''
+    }"""
     result = parse_bear_argument(raw)
     assert isinstance(result, BearArgument)
     assert result.direction == "BEARISH"

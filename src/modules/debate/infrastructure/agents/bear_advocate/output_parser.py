@@ -24,7 +24,9 @@ def _normalize_supporting_arguments(val: Any) -> list[str]:
         elif isinstance(item, dict):
             arg = item.get("argument") or item.get("evidence") or ""
             dim = item.get("dimension", "")
-            result.append(f"{dim}: {arg}".strip() if dim and arg else (arg or dim))
+            result.append(
+                f"{dim}: {arg}".strip() if dim and arg else (arg or dim)
+            )
         else:
             result.append(str(item))
     return result
@@ -47,9 +49,7 @@ def _normalize_bear_fields(data: dict) -> dict:
     data["acknowledged_strengths"] = _normalize_string_list(
         data.get("acknowledged_strengths")
     )
-    data["risk_triggers"] = _normalize_string_list(
-        data.get("risk_triggers")
-    )
+    data["risk_triggers"] = _normalize_string_list(data.get("risk_triggers"))
     data.setdefault("narrative_report", "")
     return data
 
@@ -73,5 +73,6 @@ def parse_bear_argument(raw: str) -> BearArgument:
         )
     except LLMJsonParseError as e:
         raise LLMOutputParseError(
-            message=e.message, details=e.details,
+            message=e.message,
+            details=e.details,
         ) from e

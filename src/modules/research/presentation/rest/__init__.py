@@ -2,11 +2,11 @@
 from fastapi import APIRouter
 
 from . import (
-    technical_analyst_routes,
-    financial_auditor_routes,
-    valuation_modeler_routes,
-    macro_intelligence_routes,
     catalyst_detective_routes,
+    financial_auditor_routes,
+    macro_intelligence_routes,
+    technical_analyst_routes,
+    valuation_modeler_routes,
 )
 
 router = APIRouter(prefix="/research", tags=["Research"])

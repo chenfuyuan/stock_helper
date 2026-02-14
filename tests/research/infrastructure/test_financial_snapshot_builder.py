@@ -2,10 +2,12 @@
 Task 5.4：财务快照构建器测试。
 传入已知多期数据断言快照各字段正确；EPS 为 0 时 quality_ratio 为 N/A；仅 1 期数据时 YoY 为 N/A。
 """
-import pytest
+
 from datetime import date
 
-from src.modules.research.domain.dtos.financial_record_input import FinanceRecordInput
+from src.modules.research.domain.dtos.financial_record_input import (
+    FinanceRecordInput,
+)
 from src.modules.research.infrastructure.financial_snapshot.snapshot_builder import (
     FinancialSnapshotBuilderImpl,
 )

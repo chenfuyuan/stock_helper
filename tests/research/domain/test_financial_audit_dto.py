@@ -2,12 +2,13 @@
 Task 2.4：FinancialAuditResultDTO 校验的测试。
 financial_score ∈ [0, 100]；signal 为五值之一；confidence ∈ [0, 1]；dimension_analyses 含 5 个维度。
 """
+
 import pytest
 from pydantic import ValidationError
 
 from src.modules.research.domain.dtos.financial_dtos import (
-    FinancialAuditResultDTO,
     DimensionAnalysisDTO,
+    FinancialAuditResultDTO,
 )
 
 
@@ -44,7 +45,13 @@ def _make_valid_result(
 
 def test_result_dto_signal_only_allow_five_values():
     """signal 仅允许五值之一。"""
-    for sig in ("STRONG_BULLISH", "BULLISH", "NEUTRAL", "BEARISH", "STRONG_BEARISH"):
+    for sig in (
+        "STRONG_BULLISH",
+        "BULLISH",
+        "NEUTRAL",
+        "BEARISH",
+        "STRONG_BEARISH",
+    ):
         r = _make_valid_result(signal=sig)
         assert r.signal == sig
 

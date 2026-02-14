@@ -2,10 +2,11 @@
 Research 模块内使用的单期财务输入型 DTO。
 Adapter 将 data_engineering 的 FinanceIndicatorDTO 转为 FinanceRecordInput。
 """
+
 from datetime import date
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 class FinanceRecordInput(BaseModel):

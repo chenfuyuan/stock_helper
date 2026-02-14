@@ -3,9 +3,11 @@ SearchResultFilter 单元测试。
 
 覆盖去重、去空标题、去无内容、有效条目保留、排序（有日期降序 + 无日期末尾）。
 """
-import pytest
+
 from src.modules.llm_platform.domain.web_search_dtos import WebSearchResultItem
-from src.modules.research.infrastructure.search_utils.result_filter import SearchResultFilter
+from src.modules.research.infrastructure.search_utils.result_filter import (
+    SearchResultFilter,
+)
 
 
 class TestSearchResultFilter:

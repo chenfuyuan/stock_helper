@@ -2,6 +2,7 @@
 指标计算 Port 的 Infrastructure 实现测试。
 Spec Scenario：通过 Port 获取指标快照；实现可依赖第三方库。
 """
+
 from datetime import date
 
 from src.modules.research.domain.dtos.daily_bar_input import DailyBarInput
@@ -24,8 +25,22 @@ def test_indicator_calculator_adapter_with_bars_returns_snapshot():
     """有日线时通过 Port 实现计算并返回指标快照（实现可依赖第三方库）。"""
     adapter = IndicatorCalculatorAdapter()
     bars = [
-        DailyBarInput(trade_date=date(2024, 1, 1), open=10.0, high=11.0, low=9.0, close=10.5, vol=1e6),
-        DailyBarInput(trade_date=date(2024, 1, 2), open=10.5, high=11.5, low=10.0, close=11.0, vol=1.2e6),
+        DailyBarInput(
+            trade_date=date(2024, 1, 1),
+            open=10.0,
+            high=11.0,
+            low=9.0,
+            close=10.5,
+            vol=1e6,
+        ),
+        DailyBarInput(
+            trade_date=date(2024, 1, 2),
+            open=10.5,
+            high=11.5,
+            low=10.0,
+            close=11.0,
+            vol=1.2e6,
+        ),
     ]
     # 至少 15 根才能算 RSI(14)，这里仅验证返回结构
     snapshot = adapter.compute(bars)
@@ -41,7 +56,8 @@ def test_indicator_calculator_insufficient_data_returns_none_for_indicators():
     # 仅 10 根 K 线：不足 RSI(14+1)、MACD(26)、布林(20)、ATR(14+1)、ADX(14+1)
     bars = [
         DailyBarInput(
-            trade_date=date(2024, 1, 1) + __import__("datetime").timedelta(days=i),
+            trade_date=date(2024, 1, 1)
+            + __import__("datetime").timedelta(days=i),
             open=10.0,
             high=11.0,
             low=9.0,

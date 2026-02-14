@@ -1,18 +1,26 @@
 """
 ResearchOrchestrationService：薄编排服务，校验入参后委托 IResearchOrchestrationPort 执行。
 """
+
 from typing import Any
 from uuid import UUID
 
-from src.modules.coordinator.domain.dtos.research_dtos import ResearchRequest, ResearchResult
+from src.modules.coordinator.domain.dtos.research_dtos import (
+    ResearchRequest,
+    ResearchResult,
+)
 from src.modules.coordinator.domain.exceptions import (
     AllExpertsFailedError,
     SessionNotFoundError,
     SessionNotRetryableError,
 )
 from src.modules.coordinator.domain.model.enums import ExpertType
-from src.modules.coordinator.domain.ports.research_orchestration import IResearchOrchestrationPort
-from src.modules.coordinator.domain.ports.research_session_repository import IResearchSessionRepository
+from src.modules.coordinator.domain.ports.research_orchestration import (
+    IResearchOrchestrationPort,
+)
+from src.modules.coordinator.domain.ports.research_session_repository import (
+    IResearchSessionRepository,
+)
 from src.shared.domain.exceptions import BadRequestException
 
 
@@ -59,7 +67,9 @@ class ResearchOrchestrationService:
 
         # 2. 校验 experts 非空且合法
         if not experts:
-            raise BadRequestException(message="experts 为必填，至少指定一个专家")
+            raise BadRequestException(
+                message="experts 为必填，至少指定一个专家"
+            )
 
         valid_values = {e.value for e in ExpertType}
         expert_types: list[ExpertType] = []
@@ -128,7 +138,9 @@ class ResearchOrchestrationService:
             )
 
         # 3. 查询 NodeExecution 记录，分离成功/失败的专家
-        node_executions = await self._session_repo.get_node_executions_by_session(session_id)
+        node_executions = (
+            await self._session_repo.get_node_executions_by_session(session_id)
+        )
 
         # 仅处理专家类型节点（排除 debate、judge）
         expert_values = {e.value for e in ExpertType}

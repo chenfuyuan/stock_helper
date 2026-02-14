@@ -3,14 +3,19 @@ PostgreSQL 实现的 Web 搜索缓存仓储。
 
 实现 IWebSearchCacheRepository：get 按 key 且未过期查询、put 使用 UPSERT、cleanup_expired 删除过期条目。
 """
+
 import logging
 
-from sqlalchemy import select, delete, func
+from sqlalchemy import delete, func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.modules.llm_platform.domain.dtos.web_search_cache_entry import WebSearchCacheEntry
-from src.modules.llm_platform.domain.ports.web_search_cache_repository import IWebSearchCacheRepository
+from src.modules.llm_platform.domain.dtos.web_search_cache_entry import (
+    WebSearchCacheEntry,
+)
+from src.modules.llm_platform.domain.ports.web_search_cache_repository import (
+    IWebSearchCacheRepository,
+)
 from src.modules.llm_platform.infrastructure.persistence.models.web_search_cache_model import (
     WebSearchCacheModel,
 )
@@ -64,7 +69,9 @@ class PgWebSearchCacheRepository(IWebSearchCacheRepository):
         """
         删除 expires_at <= now() 的条目，返回删除条数。
         """
-        stmt = delete(WebSearchCacheModel).where(WebSearchCacheModel.expires_at <= func.now())
+        stmt = delete(WebSearchCacheModel).where(
+            WebSearchCacheModel.expires_at <= func.now()
+        )
         result = await self._session.execute(stmt)
         await self._session.commit()
         return result.rowcount or 0

@@ -3,6 +3,7 @@
 
 定义单次综合裁决的抽象接口，由 Infrastructure Adapter 实现。
 """
+
 from abc import ABC, abstractmethod
 
 from src.modules.judge.domain.dtos.judge_input import JudgeInput

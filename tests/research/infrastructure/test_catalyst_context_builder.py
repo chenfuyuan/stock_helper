@@ -1,8 +1,9 @@
 from datetime import date
+
 from src.modules.research.domain.dtos.catalyst_inputs import (
-    CatalystStockOverview,
     CatalystSearchResult,
     CatalystSearchResultItem,
+    CatalystStockOverview,
 )
 from src.modules.research.infrastructure.catalyst_context.context_builder import (
     CatalystContextBuilderImpl,
@@ -33,7 +34,9 @@ def test_catalyst_context_builder_normal_case():
             dimension_topic="行业催化与竞争格局",
             items=[
                 CatalystSearchResultItem(
-                    title="Event 2", url="http://test.com/2", snippet="Snippet 2"
+                    title="Event 2",
+                    url="http://test.com/2",
+                    snippet="Snippet 2",
                 )
             ],
         ),
@@ -66,7 +69,9 @@ def test_catalyst_context_builder_normal_case():
 
 def test_catalyst_context_builder_url_deduplication():
     builder = CatalystContextBuilderImpl()
-    overview = CatalystStockOverview(stock_name="S", industry="I", third_code="C")
+    overview = CatalystStockOverview(
+        stock_name="S", industry="I", third_code="C"
+    )
 
     search_results = [
         CatalystSearchResult(

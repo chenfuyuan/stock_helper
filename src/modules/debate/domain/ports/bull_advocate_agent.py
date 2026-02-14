@@ -3,6 +3,7 @@ Bull Advocate Agent Port。
 
 Domain 层仅定义接口，由 Infrastructure 的 BullAdvocateAgentAdapter 实现。
 """
+
 from abc import ABC, abstractmethod
 
 from src.modules.debate.domain.dtos.bull_bear_argument import BullArgument

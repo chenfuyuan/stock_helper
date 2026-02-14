@@ -3,32 +3,32 @@ Web Search 功能测试套件
 
 测试覆盖：
 - 博查适配器单元测试
-- 适配器错误处理测试  
+- 适配器错误处理测试
 - 搜索服务测试
 - 配置测试
 - 端到端路由测试
 """
 
-import pytest
 from unittest.mock import AsyncMock, Mock, patch
-import httpx
-from fastapi.testclient import TestClient
 
-from src.modules.llm_platform.infrastructure.adapters.bocha_web_search import (
-    BochaWebSearchAdapter,
-)
+import httpx
+import pytest
+
 from src.modules.llm_platform.application.services.web_search_service import (
     WebSearchService,
+)
+from src.modules.llm_platform.domain.exceptions import (
+    WebSearchConfigError,
+    WebSearchConnectionError,
+    WebSearchError,
 )
 from src.modules.llm_platform.domain.web_search_dtos import (
     WebSearchRequest,
     WebSearchResponse,
     WebSearchResultItem,
 )
-from src.modules.llm_platform.domain.exceptions import (
-    WebSearchError,
-    WebSearchConnectionError,
-    WebSearchConfigError,
+from src.modules.llm_platform.infrastructure.adapters.bocha_web_search import (
+    BochaWebSearchAdapter,
 )
 
 
@@ -122,7 +122,7 @@ class TestBochaWebSearchAdapter:
             request = WebSearchRequest(
                 query="测试", freshness="oneWeek", summary=False, count=20
             )
-            response = await adapter.search(request)
+            await adapter.search(request)
 
             # 验证请求参数
             call_args = mock_post.call_args
@@ -141,7 +141,9 @@ class TestBochaWebSearchAdapter:
             mock_post = AsyncMock()
             mock_post.return_value.status_code = 500
             mock_post.return_value.text = "Internal Server Error"
-            mock_post.return_value.json = Mock(return_value={"error": "服务器错误"})
+            mock_post.return_value.json = Mock(
+                return_value={"error": "服务器错误"}
+            )
             mock_client.return_value.__aenter__.return_value.post = mock_post
 
             request = WebSearchRequest(query="测试")
@@ -156,7 +158,9 @@ class TestBochaWebSearchAdapter:
         adapter = BochaWebSearchAdapter(api_key="test_key")
 
         with patch("httpx.AsyncClient") as mock_client:
-            mock_post = AsyncMock(side_effect=httpx.TimeoutException("Timeout"))
+            mock_post = AsyncMock(
+                side_effect=httpx.TimeoutException("Timeout")
+            )
             mock_client.return_value.__aenter__.return_value.post = mock_post
 
             request = WebSearchRequest(query="测试")
@@ -221,7 +225,9 @@ class TestWebSearchService:
             query="测试",
             total_matches=5,
             results=[
-                WebSearchResultItem(title="测试", url="http://test.com", snippet="测试")
+                WebSearchResultItem(
+                    title="测试", url="http://test.com", snippet="测试"
+                )
             ],
         )
         mock_provider.search.return_value = mock_response
@@ -229,8 +235,10 @@ class TestWebSearchService:
         service = WebSearchService(provider=mock_provider)
         request = WebSearchRequest(query="测试")
 
-        with patch("src.modules.llm_platform.application.services.web_search_service.logger") as mock_logger: 
-            response = await service.search(request)
+        with patch(
+            "src.modules.llm_platform.application.services.web_search_service.logger"
+        ) as mock_logger:
+            await service.search(request)
 
             # 验证日志记录
             assert mock_logger.info.call_count >= 2  # 搜索前后各一次
@@ -238,8 +246,9 @@ class TestWebSearchService:
     def test_service_only_depends_on_port(self):
         """测试服务仅依赖 Port 抽象（对应 Scenario: 服务仅依赖 Port 抽象）"""
         from inspect import signature
+
         sig = signature(WebSearchService.__init__)
-        
+
         # 验证构造函数仅接受 IWebSearchProvider
         assert "provider" in sig.parameters
 
@@ -257,14 +266,15 @@ class TestConfiguration:
 
     def test_settings_default_values(self):
         """测试配置默认值（对应 Scenario: 未配置 API Key 时应用正常启动）"""
-        from src.shared.config import Settings
         import os
         from unittest import mock
 
+        from src.shared.config import Settings
+
         with mock.patch.dict(os.environ, {"BOCHA_API_KEY": ""}, clear=True):
-             settings = Settings()
-             assert settings.BOCHA_API_KEY == ""
-             assert settings.BOCHA_BASE_URL == "https://api.bochaai.com"
+            settings = Settings()
+            assert settings.BOCHA_API_KEY == ""
+            assert settings.BOCHA_BASE_URL == "https://api.bochaai.com"
 
 
 class TestWebSearchResponse:
@@ -298,7 +308,7 @@ class TestWebSearchResponse:
         assert "[1] Title: 标题1" in context
         assert "Source: 站点1 (2024-01-01)" in context
         assert "Content: AI摘要1" in context
-        
+
         assert "[2] Title: 标题2" in context
         assert "Source: Unknown Source" in context
         assert "Content: 摘要2" in context

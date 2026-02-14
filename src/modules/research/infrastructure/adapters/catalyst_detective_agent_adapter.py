@@ -2,12 +2,16 @@ import logging
 from pathlib import Path
 from typing import Optional
 
+from src.modules.research.domain.dtos.catalyst_context import (
+    CatalystContextDTO,
+)
+from src.modules.research.domain.dtos.catalyst_dtos import (
+    CatalystDetectiveAgentResult,
+)
 from src.modules.research.domain.ports.catalyst_detective_agent import (
     ICatalystDetectiveAgentPort,
 )
 from src.modules.research.domain.ports.llm import ILLMPort
-from src.modules.research.domain.dtos.catalyst_context import CatalystContextDTO
-from src.modules.research.domain.dtos.catalyst_dtos import CatalystDetectiveAgentResult
 from src.modules.research.infrastructure import prompt_loader
 from src.modules.research.infrastructure.agents.catalyst_detective.output_parser import (
     parse_catalyst_detective_result,
@@ -25,14 +29,16 @@ class CatalystDetectiveAgentAdapter(ICatalystDetectiveAgentPort):
         :param prompts_dir: Prompt 文件夹路径，默认相对于 prompt_loader
         """
         self.llm_port = llm_port
-        
+
         # Resolve default prompts directory relative to prompt_loader path structure
         # Expected: src/modules/research/infrastructure/agents/catalyst_detective/prompts
         if prompts_dir:
             self.prompts_dir = prompts_dir
         else:
             base_dir = Path(prompt_loader.__file__).resolve().parent
-            self.prompts_dir = base_dir / "agents" / "catalyst_detective" / "prompts"
+            self.prompts_dir = (
+                base_dir / "agents" / "catalyst_detective" / "prompts"
+            )
 
     async def analyze(
         self, symbol: str, catalyst_context: CatalystContextDTO
@@ -55,7 +61,7 @@ class CatalystDetectiveAgentAdapter(ICatalystDetectiveAgentPort):
             )
             # Maybe raise exception here? But let's let LLM call handle empty prompt or just proceed (likely error later)
             # ILLMPort might handle empty prompt but let's be safe.
-        
+
         # Fill prompts
         user_prompt = prompt_loader.fill_catalyst_detective_user_prompt(
             user_template, catalyst_context

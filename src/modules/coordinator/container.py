@@ -5,19 +5,20 @@ Coordinator 模块 Composition Root。
 → LangGraphResearchOrchestrator → ResearchOrchestrationService。
 并注册 IResearchSessionRepository → PgResearchSessionRepository，注入到编排器以支持执行追踪。
 """
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.coordinator.application.research_orchestration_service import (
     ResearchOrchestrationService,
-)
-from src.modules.coordinator.infrastructure.adapters.research_gateway_adapter import (
-    ResearchGatewayAdapter,
 )
 from src.modules.coordinator.infrastructure.adapters.debate_gateway_adapter import (
     DebateGatewayAdapter,
 )
 from src.modules.coordinator.infrastructure.adapters.judge_gateway_adapter import (
     JudgeGatewayAdapter,
+)
+from src.modules.coordinator.infrastructure.adapters.research_gateway_adapter import (
+    ResearchGatewayAdapter,
 )
 from src.modules.coordinator.infrastructure.orchestration.langgraph_orchestrator import (
     LangGraphResearchOrchestrator,
@@ -52,4 +53,6 @@ class CoordinatorContainer:
             judge_gateway=judge_gateway,
             session_repo=session_repo,
         )
-        return ResearchOrchestrationService(orchestrator, session_repo=session_repo)
+        return ResearchOrchestrationService(
+            orchestrator, session_repo=session_repo
+        )

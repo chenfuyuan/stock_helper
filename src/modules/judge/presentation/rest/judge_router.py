@@ -1,6 +1,7 @@
 """
 Judge REST 路由：POST /api/v1/judge/verdict。
 """
+
 import logging
 from typing import Any
 
@@ -22,13 +23,17 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["judge"])
 
 
-def _debate_outcome_to_judge_input(symbol: str, debate_outcome: dict[str, Any]) -> JudgeInput:
+def _debate_outcome_to_judge_input(
+    symbol: str, debate_outcome: dict[str, Any]
+) -> JudgeInput:
     """将 REST 请求中的 debate_outcome dict 转为 JudgeInput。"""
     bull_case = debate_outcome.get("bull_case") or {}
     bear_case = debate_outcome.get("bear_case") or {}
     risk_matrix = debate_outcome.get("risk_matrix") or []
     risk_factors = [
-        item.get("risk", "") for item in risk_matrix if isinstance(item, dict) and item.get("risk")
+        item.get("risk", "")
+        for item in risk_matrix
+        if isinstance(item, dict) and item.get("risk")
     ]
     return JudgeInput(
         symbol=symbol,
@@ -61,7 +66,9 @@ async def post_judge_verdict(
     if not body.symbol or not str(body.symbol).strip():
         raise HTTPException(status_code=400, detail="symbol 为必填")
     if not body.debate_outcome or not isinstance(body.debate_outcome, dict):
-        raise HTTPException(status_code=400, detail="debate_outcome 为必填且须为非空对象")
+        raise HTTPException(
+            status_code=400, detail="debate_outcome 为必填且须为非空对象"
+        )
     try:
         judge_input = _debate_outcome_to_judge_input(
             symbol=body.symbol.strip(),

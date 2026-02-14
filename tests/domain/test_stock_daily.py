@@ -1,6 +1,9 @@
-import pytest
-from src.modules.data_engineering.domain.model.stock_daily import StockDaily
 from datetime import date
+
+import pytest
+
+from src.modules.data_engineering.domain.model.stock_daily import StockDaily
+
 
 def test_stock_daily_creation():
     """测试 StockDaily 实体创建"""
@@ -16,13 +19,14 @@ def test_stock_daily_creation():
         pct_chg=2.0,
         vol=1000.0,
         amount=10000.0,
-        source="tushare"
+        source="tushare",
     )
-    
+
     assert daily.third_code == "000001.SZ"
     assert daily.trade_date == date(2023, 1, 1)
     assert daily.open == 10.0
     assert daily.source == "tushare"
+
 
 def test_stock_daily_validation():
     """测试 StockDaily 必填字段验证"""
@@ -38,5 +42,5 @@ def test_stock_daily_validation():
             change=0.2,
             pct_chg=2.0,
             vol=1000.0,
-            amount=10000.0
+            amount=10000.0,
         )

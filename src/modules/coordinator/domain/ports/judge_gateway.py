@@ -3,6 +3,7 @@ IJudgeGateway：Coordinator 调用 Judge 模块的 Port。
 
 仅定义接口签名，由 Infrastructure 的 JudgeGatewayAdapter 实现。
 """
+
 from abc import ABC, abstractmethod
 from typing import Any
 

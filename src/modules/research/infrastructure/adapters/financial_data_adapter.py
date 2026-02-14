@@ -3,13 +3,16 @@
 内部调用 data_engineering 的 GetFinanceForTickerUseCase（Application 接口），
 不直接依赖 data_engineering 的 repository 或 domain。
 """
+
 from typing import List
 
 from src.modules.data_engineering.application.queries.get_finance_for_ticker import (
-    GetFinanceForTickerUseCase,
     FinanceIndicatorDTO,
+    GetFinanceForTickerUseCase,
 )
-from src.modules.research.domain.dtos.financial_record_input import FinanceRecordInput
+from src.modules.research.domain.dtos.financial_record_input import (
+    FinanceRecordInput,
+)
 from src.modules.research.domain.ports.financial_data import IFinancialDataPort
 
 

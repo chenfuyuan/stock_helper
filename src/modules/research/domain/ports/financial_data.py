@@ -2,10 +2,13 @@
 获取财务指标数据的 Port。
 Research 仅依赖此抽象，由 Infrastructure 的 Adapter 调用 data_engineering 的 Application 接口。
 """
+
 from abc import ABC, abstractmethod
 from typing import List
 
-from src.modules.research.domain.dtos.financial_record_input import FinanceRecordInput
+from src.modules.research.domain.dtos.financial_record_input import (
+    FinanceRecordInput,
+)
 
 
 class IFinancialDataPort(ABC):

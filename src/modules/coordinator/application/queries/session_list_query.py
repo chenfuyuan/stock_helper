@@ -1,10 +1,15 @@
 """
 会话列表查询用例：支持 symbol、时间范围、分页。
 """
+
 from datetime import datetime
 
-from src.modules.coordinator.application.dtos.session_dtos import SessionSummaryDTO
-from src.modules.coordinator.domain.ports.research_session_repository import IResearchSessionRepository
+from src.modules.coordinator.application.dtos.session_dtos import (
+    SessionSummaryDTO,
+)
+from src.modules.coordinator.domain.ports.research_session_repository import (
+    IResearchSessionRepository,
+)
 
 
 class SessionListQuery:

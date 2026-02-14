@@ -4,6 +4,7 @@ Research 专家调用 Gateway Port。
 Coordinator 通过此 Port 调用 Research 模块的专家，Infrastructure 层由 ResearchGatewayAdapter 实现，
 内部通过 ResearchContainer 获取对应的 Application Service 并调用。
 """
+
 from abc import ABC, abstractmethod
 from typing import Any
 

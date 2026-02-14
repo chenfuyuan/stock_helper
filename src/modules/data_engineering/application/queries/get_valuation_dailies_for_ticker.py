@@ -2,6 +2,7 @@
 按标的与日期区间返回估值日线数据的 Application 接口。
 供 Research 估值建模师模块获取历史估值指标（PE、PB、PS 等），用于历史分位点计算。
 """
+
 from datetime import date
 from typing import List, Optional
 

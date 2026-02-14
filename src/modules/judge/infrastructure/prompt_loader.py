@@ -4,6 +4,7 @@ Judge Prompt 运行时加载。
 从 agents/verdict/prompts 读取 system.md、user.md，提供 load_system_prompt、
 load_user_prompt_template、fill_user_prompt 等工具函数（复用 Debate 模式）。
 """
+
 from pathlib import Path
 
 # 默认以 infrastructure 为基准，agents 在其下

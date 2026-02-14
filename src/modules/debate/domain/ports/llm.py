@@ -3,6 +3,7 @@ Debate 模块的 LLM Port。
 
 与 Research 的 ILLMPort 签名一致但独立定义，由 Infrastructure 的 LLMAdapter 桥接 llm_platform。
 """
+
 from abc import ABC, abstractmethod
 from typing import Optional
 

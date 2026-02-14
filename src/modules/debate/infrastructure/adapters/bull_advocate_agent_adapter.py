@@ -3,11 +3,14 @@ Bull Advocate Agent Port 的 Infrastructure 实现。
 
 加载 Prompt → 填充 DebateInput 占位符 → 调用 ILLMPort → 解析 → 返回 BullArgument。
 """
+
 from pathlib import Path
 from typing import Optional
 
 from src.modules.debate.domain.dtos.debate_input import DebateInput
-from src.modules.debate.domain.ports.bull_advocate_agent import IBullAdvocateAgentPort
+from src.modules.debate.domain.ports.bull_advocate_agent import (
+    IBullAdvocateAgentPort,
+)
 from src.modules.debate.domain.ports.llm import ILLMPort
 from src.modules.debate.infrastructure.agents.bull_advocate.output_parser import (
     parse_bull_argument,
@@ -35,12 +38,14 @@ def _format_expert_summary(d: DebateInput, key: str) -> str:
 class BullAdvocateAgentAdapter(IBullAdvocateAgentPort):
     """加载 Prompt、填充占位符、调用 LLM、解析 JSON，返回 BullArgument。"""
 
-    def __init__(self, llm_port: ILLMPort, prompts_dir: Optional[Path] = None) -> None:
+    def __init__(
+        self, llm_port: ILLMPort, prompts_dir: Optional[Path] = None
+    ) -> None:
         self._llm = llm_port
         self._prompts_dir = prompts_dir or get_prompts_dir("bull_advocate")
 
     async def advocate(self, input_data: DebateInput) -> "BullArgument":
-        from src.modules.debate.domain.dtos.bull_bear_argument import BullArgument
+        pass
 
         system_prompt = load_system_prompt(self._prompts_dir)
         user_template = load_user_prompt_template(self._prompts_dir)

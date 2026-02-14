@@ -1,21 +1,25 @@
 """
 历史研究会话查询 REST 接口：GET /research/sessions、/research/sessions/{id}、/llm-calls、/api-calls。
 """
+
 from datetime import datetime
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.shared.infrastructure.db.session import get_db_session
 from src.modules.coordinator.application.dtos.session_dtos import (
     ExternalAPICallItemDTO,
     LLMCallItemDTO,
     SessionDetailDTO,
     SessionSummaryDTO,
 )
-from src.modules.coordinator.application.queries.session_detail_query import SessionDetailQuery
-from src.modules.coordinator.application.queries.session_list_query import SessionListQuery
+from src.modules.coordinator.application.queries.session_detail_query import (
+    SessionDetailQuery,
+)
+from src.modules.coordinator.application.queries.session_list_query import (
+    SessionListQuery,
+)
 from src.modules.coordinator.infrastructure.persistence.research_session_repository import (
     PgResearchSessionRepository,
 )
@@ -28,6 +32,7 @@ from src.modules.llm_platform.infrastructure.persistence.repositories.llm_call_l
 from src.shared.application.queries.external_api_call_log_query_service import (
     ExternalAPICallLogQueryService,
 )
+from src.shared.infrastructure.db.session import get_db_session
 from src.shared.infrastructure.persistence.external_api_call_log_repository import (
     PgExternalAPICallLogRepository,
 )
@@ -35,13 +40,17 @@ from src.shared.infrastructure.persistence.external_api_call_log_repository impo
 router = APIRouter()
 
 
-async def get_session_list_query(db: AsyncSession = Depends(get_db_session)) -> SessionListQuery:
+async def get_session_list_query(
+    db: AsyncSession = Depends(get_db_session),
+) -> SessionListQuery:
     """会话列表查询（依赖请求级 DB session）。"""
     repo = PgResearchSessionRepository(db)
     return SessionListQuery(repo)
 
 
-async def get_session_detail_query(db: AsyncSession = Depends(get_db_session)) -> SessionDetailQuery:
+async def get_session_detail_query(
+    db: AsyncSession = Depends(get_db_session),
+) -> SessionDetailQuery:
     """会话详情查询（依赖请求级 DB session）。"""
     repo = PgResearchSessionRepository(db)
     return SessionDetailQuery(repo)
@@ -56,8 +65,12 @@ async def get_session_detail_query(db: AsyncSession = Depends(get_db_session)) -
 async def list_sessions(
     query: SessionListQuery = Depends(get_session_list_query),
     symbol: str | None = Query(None, description="股票代码筛选"),
-    created_after: datetime | None = Query(None, description="创建时间起始（含）"),
-    created_before: datetime | None = Query(None, description="创建时间截止（含）"),
+    created_after: datetime | None = Query(
+        None, description="创建时间起始（含）"
+    ),
+    created_before: datetime | None = Query(
+        None, description="创建时间截止（含）"
+    ),
     skip: int = Query(0, ge=0, description="跳过条数"),
     limit: int = Query(20, ge=1, le=100, description="每页条数"),
 ) -> list[SessionSummaryDTO]:

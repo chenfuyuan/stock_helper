@@ -1,13 +1,17 @@
 """
 单元测试：SyncTask 和 SyncFailureRecord 实体创建与状态转换（任务 9.1）
 """
-import pytest
-from datetime import datetime
-from uuid import uuid4
 
+from datetime import datetime
+
+from src.modules.data_engineering.domain.model.enums import (
+    SyncJobType,
+    SyncTaskStatus,
+)
+from src.modules.data_engineering.domain.model.sync_failure_record import (
+    SyncFailureRecord,
+)
 from src.modules.data_engineering.domain.model.sync_task import SyncTask
-from src.modules.data_engineering.domain.model.sync_failure_record import SyncFailureRecord
-from src.modules.data_engineering.domain.model.enums import SyncJobType, SyncTaskStatus
 
 
 def test_sync_task_creation():
@@ -17,7 +21,7 @@ def test_sync_task_creation():
         status=SyncTaskStatus.PENDING,
         batch_size=50,
     )
-    
+
     assert task.job_type == SyncJobType.DAILY_HISTORY
     assert task.status == SyncTaskStatus.PENDING
     assert task.batch_size == 50
@@ -32,11 +36,11 @@ def test_sync_task_start():
         status=SyncTaskStatus.PENDING,
         batch_size=50,
     )
-    
+
     before_start = datetime.now()
     task.start()
     after_start = datetime.now()
-    
+
     assert task.status == SyncTaskStatus.RUNNING
     assert task.started_at is not None
     assert before_start <= task.started_at <= after_start
@@ -52,14 +56,14 @@ def test_sync_task_update_progress():
         current_offset=0,
         total_processed=0,
     )
-    
+
     task.update_progress(processed_count=50, new_offset=50)
-    
+
     assert task.total_processed == 50
     assert task.current_offset == 50
-    
+
     task.update_progress(processed_count=30, new_offset=80)
-    
+
     assert task.total_processed == 80
     assert task.current_offset == 80
 
@@ -71,11 +75,11 @@ def test_sync_task_complete():
         status=SyncTaskStatus.RUNNING,
         batch_size=50,
     )
-    
+
     before_complete = datetime.now()
     task.complete()
     after_complete = datetime.now()
-    
+
     assert task.status == SyncTaskStatus.COMPLETED
     assert task.completed_at is not None
     assert before_complete <= task.completed_at <= after_complete
@@ -88,9 +92,9 @@ def test_sync_task_fail():
         status=SyncTaskStatus.RUNNING,
         batch_size=50,
     )
-    
+
     task.fail()
-    
+
     assert task.status == SyncTaskStatus.FAILED
 
 
@@ -101,9 +105,9 @@ def test_sync_task_pause():
         status=SyncTaskStatus.RUNNING,
         batch_size=50,
     )
-    
+
     task.pause()
-    
+
     assert task.status == SyncTaskStatus.PAUSED
 
 
@@ -115,14 +119,14 @@ def test_sync_task_is_resumable():
         batch_size=50,
     )
     assert running_task.is_resumable() is True
-    
+
     paused_task = SyncTask(
         job_type=SyncJobType.DAILY_HISTORY,
         status=SyncTaskStatus.PAUSED,
         batch_size=50,
     )
     assert paused_task.is_resumable() is True
-    
+
     completed_task = SyncTask(
         job_type=SyncJobType.DAILY_HISTORY,
         status=SyncTaskStatus.COMPLETED,
@@ -139,7 +143,7 @@ def test_sync_failure_record_creation():
         error_message="API 调用超时",
         max_retries=3,
     )
-    
+
     assert record.job_type == SyncJobType.FINANCE_INCREMENTAL
     assert record.third_code == "000001.SZ"
     assert record.error_message == "API 调用超时"
@@ -156,13 +160,13 @@ def test_sync_failure_record_can_retry():
         retry_count=1,
         max_retries=3,
     )
-    
+
     assert record.can_retry() is True
-    
+
     # 超过最大重试次数
     record.retry_count = 3
     assert record.can_retry() is False
-    
+
     # 已解决
     record.retry_count = 1
     record.resolve()
@@ -177,15 +181,15 @@ def test_sync_failure_record_increment_retry():
         error_message="API 调用超时",
         max_retries=3,
     )
-    
+
     before_increment = datetime.now()
     record.increment_retry()
     after_increment = datetime.now()
-    
+
     assert record.retry_count == 1
     assert record.last_attempt_at is not None
     assert before_increment <= record.last_attempt_at <= after_increment
-    
+
     record.increment_retry()
     assert record.retry_count == 2
 
@@ -198,11 +202,11 @@ def test_sync_failure_record_resolve():
         error_message="API 调用超时",
         max_retries=3,
     )
-    
+
     before_resolve = datetime.now()
     record.resolve()
     after_resolve = datetime.now()
-    
+
     assert record.resolved_at is not None
     assert before_resolve <= record.resolved_at <= after_resolve
     assert record.is_resolved() is True

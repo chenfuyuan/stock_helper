@@ -2,6 +2,7 @@
 按标的与日期区间返回日线数据的 Application 接口。
 供 Research 等模块通过 Application 层获取日线，不直接依赖 repository 或 domain 实现。
 """
+
 from datetime import date
 from typing import List
 
@@ -47,10 +48,12 @@ class GetDailyBarsForTickerUseCase:
         执行查询。ticker 为第三方代码（如 000001.SZ）。
         返回按 trade_date 升序的日线 DTO 列表。
         """
-        dailies: List[StockDaily] = await self._repo.get_by_third_code_and_date_range(
-            third_code=ticker,
-            start_date=start_date,
-            end_date=end_date,
+        dailies: List[StockDaily] = (
+            await self._repo.get_by_third_code_and_date_range(
+                third_code=ticker,
+                start_date=start_date,
+                end_date=end_date,
+            )
         )
         return [
             DailyBarDTO(

@@ -3,6 +3,7 @@ LLM 平台启动逻辑。
 
 将 main.py 中的 LLM 注册表初始化抽取到本模块，main 仅调用 Application 层服务，不直接 import Infrastructure 实现。
 """
+
 from loguru import logger
 
 from src.modules.llm_platform.container import LLMPlatformContainer

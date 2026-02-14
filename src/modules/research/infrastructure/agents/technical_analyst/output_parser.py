@@ -5,7 +5,9 @@
 本模块仅做 narrative_report 默认值补充与异常类型转换。
 """
 
-from src.modules.research.domain.dtos.technical_analysis_dtos import TechnicalAnalysisResultDTO
+from src.modules.research.domain.dtos.technical_analysis_dtos import (
+    TechnicalAnalysisResultDTO,
+)
 from src.modules.research.domain.exceptions import LLMOutputParseError
 from src.shared.domain.exceptions import LLMJsonParseError
 from src.shared.infrastructure.llm_json_parser import parse_llm_json_output
@@ -35,5 +37,6 @@ def parse_technical_analysis_result(raw: str) -> TechnicalAnalysisResultDTO:
         )
     except LLMJsonParseError as e:
         raise LLMOutputParseError(
-            message=e.message, details=e.details,
+            message=e.message,
+            details=e.details,
         ) from e

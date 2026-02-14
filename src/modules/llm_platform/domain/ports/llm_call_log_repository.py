@@ -1,6 +1,7 @@
 """
 LLM 调用日志持久化 Port。
 """
+
 from abc import ABC, abstractmethod
 from uuid import UUID
 

@@ -2,6 +2,7 @@
 财务审计员 REST 接口。
 提供按标的进行财务审计的 HTTP 入口；响应体由代码塞入 input、financial_indicators、output（与技术分析师 technical_indicators 对应）。
 """
+
 from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -9,14 +10,13 @@ from loguru import logger
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.shared.domain.exceptions import BadRequestException
-from src.shared.infrastructure.db.session import get_db_session
 from src.modules.research.application.financial_auditor_service import (
     FinancialAuditorService,
 )
 from src.modules.research.container import ResearchContainer
 from src.modules.research.domain.exceptions import LLMOutputParseError
-
+from src.shared.domain.exceptions import BadRequestException
+from src.shared.infrastructure.db.session import get_db_session
 
 router = APIRouter()
 
@@ -45,7 +45,8 @@ class FinancialAuditApiResponse(BaseModel):
     risk_warning: str
     input: str = Field(..., description="送入大模型的 user prompt")
     financial_indicators: dict[str, Any] = Field(
-        ..., description="财务指标快照（用于填充 prompt，与技术分析师 technical_indicators 对应）"
+        ...,
+        description="财务指标快照（用于填充 prompt，与技术分析师 technical_indicators 对应）",
     )
     output: str = Field(..., description="大模型原始返回字符串")
 
@@ -59,7 +60,9 @@ class FinancialAuditApiResponse(BaseModel):
 )
 async def run_financial_audit(
     symbol: str = Query(..., description="股票代码，如 000001.SZ"),
-    limit: int = Query(5, ge=1, le=20, description="取最近几期财务数据，默认 5 期"),
+    limit: int = Query(
+        5, ge=1, le=20, description="取最近几期财务数据，默认 5 期"
+    ),
     service: FinancialAuditorService = Depends(get_financial_auditor_service),
 ) -> FinancialAuditApiResponse:
     """

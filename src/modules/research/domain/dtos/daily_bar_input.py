@@ -2,9 +2,10 @@
 Research 模块内使用的日线输入型 DTO。
 Adapter 将 data_engineering 的 DailyBarDTO 转为 DailyBarInput。
 """
+
 from datetime import date
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 class DailyBarInput(BaseModel):

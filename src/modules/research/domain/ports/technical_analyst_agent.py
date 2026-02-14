@@ -3,10 +3,15 @@
 入参为标的、分析日期与指标快照，出参为包含解析结果与原始 input/output 的 Agent 结果。
 实现层负责加载/填充 Prompt、调用 LLM、解析结果；Application 不直接依赖 LLMPort 或 prompt 加载。
 """
+
 from abc import ABC, abstractmethod
 
-from src.modules.research.domain.dtos.technical_analysis_dtos import TechnicalAnalysisAgentResult
-from src.modules.research.domain.dtos.indicators_snapshot import TechnicalIndicatorsSnapshot
+from src.modules.research.domain.dtos.indicators_snapshot import (
+    TechnicalIndicatorsSnapshot,
+)
+from src.modules.research.domain.dtos.technical_analysis_dtos import (
+    TechnicalAnalysisAgentResult,
+)
 
 
 class ITechnicalAnalystAgentPort(ABC):

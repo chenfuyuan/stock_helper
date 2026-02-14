@@ -2,13 +2,18 @@
 技术分析师 Application 接口。
 对外暴露独立入口：入参 ticker、analysis_date，出参为包含解析结果与 input/technical_indicators/output 的完整响应（由代码塞入，非大模型拼接）。
 """
+
 from datetime import date, timedelta
 from typing import Any, Optional
 
-from src.shared.domain.exceptions import BadRequestException
-from src.modules.research.domain.ports.indicator_calculator import IIndicatorCalculator
+from src.modules.research.domain.ports.indicator_calculator import (
+    IIndicatorCalculator,
+)
 from src.modules.research.domain.ports.market_quote import IMarketQuotePort
-from src.modules.research.domain.ports.technical_analyst_agent import ITechnicalAnalystAgentPort
+from src.modules.research.domain.ports.technical_analyst_agent import (
+    ITechnicalAnalystAgentPort,
+)
+from src.shared.domain.exceptions import BadRequestException
 
 # 计算 MACD(26)、布林带(20) 等核心指标所需的最低 K 线数量（约 6 周交易日）
 MIN_BARS_REQUIRED = 30

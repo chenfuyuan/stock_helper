@@ -2,18 +2,19 @@
 估值建模师 Application 接口。
 对外暴露独立入口：入参 symbol，出参为包含解析结果与 input/output 的完整响应（由代码塞入，非大模型拼接）。
 """
+
 import logging
 from datetime import date, timedelta
 from typing import Any
 
-from src.shared.domain.exceptions import BadRequestException
 from src.modules.research.domain.ports.valuation_data import IValuationDataPort
-from src.modules.research.domain.ports.valuation_snapshot_builder import (
-    IValuationSnapshotBuilder,
-)
 from src.modules.research.domain.ports.valuation_modeler_agent import (
     IValuationModelerAgentPort,
 )
+from src.modules.research.domain.ports.valuation_snapshot_builder import (
+    IValuationSnapshotBuilder,
+)
+from src.shared.domain.exceptions import BadRequestException
 
 DEFAULT_HISTORICAL_YEARS = 3  # 默认获取 3 年历史估值日线
 
@@ -56,8 +57,10 @@ class ValuationModelerService:
         # 获取历史估值日线（默认 3 年）
         end_date = date.today()
         start_date = end_date - timedelta(days=DEFAULT_HISTORICAL_YEARS * 365)
-        historical_valuations = await self._valuation_data.get_valuation_dailies(
-            ticker=symbol, start_date=start_date, end_date=end_date
+        historical_valuations = (
+            await self._valuation_data.get_valuation_dailies(
+                ticker=symbol, start_date=start_date, end_date=end_date
+            )
         )
         if not historical_valuations:
             logger.warning(

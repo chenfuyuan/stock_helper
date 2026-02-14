@@ -7,7 +7,9 @@
 
 from loguru import logger
 
-from src.modules.research.domain.dtos.catalyst_dtos import CatalystDetectiveResultDTO
+from src.modules.research.domain.dtos.catalyst_dtos import (
+    CatalystDetectiveResultDTO,
+)
 from src.modules.research.domain.exceptions import LLMOutputParseError
 from src.shared.domain.exceptions import LLMJsonParseError
 from src.shared.infrastructure.llm_json_parser import parse_llm_json_output
@@ -37,7 +39,8 @@ def parse_catalyst_detective_result(raw: str) -> CatalystDetectiveResultDTO:
         )
     except LLMJsonParseError as e:
         raise LLMOutputParseError(
-            message=e.message, details=e.details,
+            message=e.message,
+            details=e.details,
         ) from e
 
     logger.info(

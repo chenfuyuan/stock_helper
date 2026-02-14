@@ -1,7 +1,9 @@
 from fastapi import APIRouter
 
 from src.api import health
-from src.modules.coordinator.presentation.rest import router as coordinator_router
+from src.modules.coordinator.presentation.rest import (
+    router as coordinator_router,
+)
 from src.modules.data_engineering.presentation.rest import router as de_router
 from src.modules.debate.presentation.rest import router as debate_router
 from src.modules.judge.presentation.rest import router as judge_router

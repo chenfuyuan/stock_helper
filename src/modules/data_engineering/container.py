@@ -4,6 +4,7 @@
 统一封装日线、财务、股票基础信息、估值日线等 UseCase 的组装逻辑，
 供 Research 等模块通过本 Container 获取 Application 层能力，不直接依赖 Infrastructure 实现。
 """
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.data_engineering.application.queries.get_daily_bars_for_ticker import (
@@ -12,17 +13,17 @@ from src.modules.data_engineering.application.queries.get_daily_bars_for_ticker 
 from src.modules.data_engineering.application.queries.get_finance_for_ticker import (
     GetFinanceForTickerUseCase,
 )
-from src.modules.data_engineering.application.queries.get_valuation_dailies_for_ticker import (
-    GetValuationDailiesForTickerUseCase,
-)
 from src.modules.data_engineering.application.queries.get_stock_basic_info import (
     GetStockBasicInfoUseCase,
 )
-from src.modules.data_engineering.infrastructure.persistence.repositories.pg_quote_repo import (
-    StockDailyRepositoryImpl,
+from src.modules.data_engineering.application.queries.get_valuation_dailies_for_ticker import (
+    GetValuationDailiesForTickerUseCase,
 )
 from src.modules.data_engineering.infrastructure.persistence.repositories.pg_finance_repo import (
     StockFinanceRepositoryImpl,
+)
+from src.modules.data_engineering.infrastructure.persistence.repositories.pg_quote_repo import (
+    StockDailyRepositoryImpl,
 )
 from src.modules.data_engineering.infrastructure.persistence.repositories.pg_stock_repo import (
     StockRepositoryImpl,
@@ -40,7 +41,9 @@ class DataEngineeringContainer:
 
     def get_daily_bars_use_case(self) -> GetDailyBarsForTickerUseCase:
         """组装按标的查询日线的 UseCase。"""
-        return GetDailyBarsForTickerUseCase(market_quote_repo=self._market_quote_repo)
+        return GetDailyBarsForTickerUseCase(
+            market_quote_repo=self._market_quote_repo
+        )
 
     def get_finance_use_case(self) -> GetFinanceForTickerUseCase:
         """组装按标的查询财务数据的 UseCase。"""
@@ -53,6 +56,10 @@ class DataEngineeringContainer:
             daily_repo=self._market_quote_repo,
         )
 
-    def get_valuation_dailies_use_case(self) -> GetValuationDailiesForTickerUseCase:
+    def get_valuation_dailies_use_case(
+        self,
+    ) -> GetValuationDailiesForTickerUseCase:
         """组装按标的查询估值日线的 UseCase。"""
-        return GetValuationDailiesForTickerUseCase(market_quote_repo=self._market_quote_repo)
+        return GetValuationDailiesForTickerUseCase(
+            market_quote_repo=self._market_quote_repo
+        )

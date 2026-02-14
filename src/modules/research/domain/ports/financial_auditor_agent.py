@@ -3,10 +3,15 @@
 入参为标的与财务快照，出参为包含解析结果与原始 input/output 的 Agent 结果。
 实现层负责加载/填充 Prompt、调用 LLM、解析结果；Application 不直接依赖 LLMPort 或 prompt 加载。
 """
+
 from abc import ABC, abstractmethod
 
-from src.modules.research.domain.dtos.financial_dtos import FinancialAuditAgentResult
-from src.modules.research.domain.dtos.financial_snapshot import FinancialSnapshotDTO
+from src.modules.research.domain.dtos.financial_dtos import (
+    FinancialAuditAgentResult,
+)
+from src.modules.research.domain.dtos.financial_snapshot import (
+    FinancialSnapshotDTO,
+)
 
 
 class IFinancialAuditorAgentPort(ABC):

@@ -54,5 +54,6 @@ def parse_valuation_result(raw: str) -> ValuationResultDTO:
         )
     except LLMJsonParseError as e:
         raise LLMOutputParseError(
-            message=e.message, details=e.details,
+            message=e.message,
+            details=e.details,
         ) from e

@@ -2,6 +2,7 @@
 获取日线数据的 Port。
 Research 仅依赖此抽象，由 Infrastructure 的 Adapter 调用 data_engineering 的 Application 接口。
 """
+
 from abc import ABC, abstractmethod
 from datetime import date
 from typing import List

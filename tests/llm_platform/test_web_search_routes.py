@@ -9,19 +9,20 @@
 - 上游错误返回 502
 """
 
-import pytest
 from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
 from fastapi.testclient import TestClient
 
 from src.main import app
+from src.modules.llm_platform.domain.exceptions import (
+    WebSearchConfigError,
+    WebSearchConnectionError,
+    WebSearchError,
+)
 from src.modules.llm_platform.domain.web_search_dtos import (
     WebSearchResponse,
     WebSearchResultItem,
-)
-from src.modules.llm_platform.domain.exceptions import (
-    WebSearchError,
-    WebSearchConnectionError,
-    WebSearchConfigError,
 )
 
 

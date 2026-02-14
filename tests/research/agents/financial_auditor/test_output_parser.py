@@ -3,13 +3,16 @@ Task 4.3：财务审计员输出解析测试。
 合法 JSON 解析后字段正确；非 JSON 或缺字段时解析失败且不返回未校验字符串；
 score/signal 不匹配时自动以 score 为准修正 signal。
 """
+
 import pytest
 
+from src.modules.research.domain.dtos.financial_dtos import (
+    FinancialAuditResultDTO,
+)
+from src.modules.research.domain.exceptions import LLMOutputParseError
 from src.modules.research.infrastructure.agents.financial_auditor.output_parser import (
     parse_financial_audit_result,
 )
-from src.modules.research.domain.dtos.financial_dtos import FinancialAuditResultDTO
-from src.modules.research.domain.exceptions import LLMOutputParseError
 
 
 def _make_valid_json(
@@ -17,7 +20,7 @@ def _make_valid_json(
     signal: str = "BULLISH",
     confidence: float = 0.8,
 ) -> str:
-    return f'''{{
+    return f"""{{
         "financial_score": {financial_score},
         "signal": "{signal}",
         "confidence": {confidence},
@@ -31,7 +34,7 @@ def _make_valid_json(
         ],
         "key_risks": [],
         "risk_warning": ""
-    }}'''
+    }}"""
 
 
 def test_parse_valid_json_returns_dto_with_correct_fields():

@@ -3,6 +3,7 @@
 
 Application 层通过此 Port 委托编排执行，Infrastructure 层由 LangGraphResearchOrchestrator 实现。
 """
+
 from abc import ABC, abstractmethod
 
 from src.modules.coordinator.domain.dtos.research_dtos import (

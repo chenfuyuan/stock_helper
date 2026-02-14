@@ -1,11 +1,14 @@
 """
 任务 12.5：测试 WebSearchService 调用日志（成功、失败、无上下文降级）。
 """
+
 from unittest.mock import AsyncMock
 
 import pytest
 
-from src.modules.llm_platform.application.services.web_search_service import WebSearchService
+from src.modules.llm_platform.application.services.web_search_service import (
+    WebSearchService,
+)
 from src.modules.llm_platform.domain.web_search_dtos import (
     WebSearchRequest,
     WebSearchResponse,
@@ -36,14 +39,18 @@ async def test_web_search_success_writes_log_with_session_id(
 ):
     """搜索成功时写入外部 API 调用日志，session_id 来自 ExecutionContext。"""
     mock_provider.search = AsyncMock(
-        return_value=WebSearchResponse(query="测试", total_matches=0, results=[])
+        return_value=WebSearchResponse(
+            query="测试", total_matches=0, results=[]
+        )
     )
     service = WebSearchService(
         provider=mock_provider,
         api_call_log_repository=mock_api_call_log_repository,
     )
 
-    token = current_execution_ctx.set(ExecutionContext(session_id="cccccccc-dddd-eeee-ffff-000000000001"))
+    token = current_execution_ctx.set(
+        ExecutionContext(session_id="cccccccc-dddd-eeee-ffff-000000000001")
+    )
     try:
         request = WebSearchRequest(query="测试")
         response = await service.search(request)
@@ -69,7 +76,9 @@ async def test_web_search_failure_writes_log_with_failed_status(
         api_call_log_repository=mock_api_call_log_repository,
     )
 
-    token = current_execution_ctx.set(ExecutionContext(session_id="dddddddd-eeee-ffff-0000-111111111111"))
+    token = current_execution_ctx.set(
+        ExecutionContext(session_id="dddddddd-eeee-ffff-0000-111111111111")
+    )
     try:
         with pytest.raises(Exception, match="网络错误"):
             await service.search(WebSearchRequest(query="测试"))

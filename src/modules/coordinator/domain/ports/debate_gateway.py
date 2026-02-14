@@ -3,6 +3,7 @@ IDebateGateway：Coordinator 调用 Debate 模块的 Port。
 
 仅定义接口签名，由 Infrastructure 的 DebateGatewayAdapter 实现。
 """
+
 from abc import ABC, abstractmethod
 from typing import Any
 
@@ -11,7 +12,9 @@ class IDebateGateway(ABC):
     """辩论网关抽象接口。"""
 
     @abstractmethod
-    async def run_debate(self, symbol: str, expert_results: dict[str, Any]) -> dict[str, Any]:
+    async def run_debate(
+        self, symbol: str, expert_results: dict[str, Any]
+    ) -> dict[str, Any]:
         """
         执行辩论，返回辩论结果的 dict 序列化。
 

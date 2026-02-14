@@ -4,7 +4,9 @@
 Coordinator 在编排入口设置 ExecutionContext，下游（LLM 调用、外部 API 适配器）
 通过 current_execution_ctx.get() 读取，无需在 Port 签名中传递 session_id。
 """
+
 import contextvars
+
 from pydantic import BaseModel
 
 

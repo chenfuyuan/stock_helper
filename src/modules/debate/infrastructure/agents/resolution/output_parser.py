@@ -35,5 +35,6 @@ def parse_resolution_result(raw: str) -> ResolutionResult:
         )
     except LLMJsonParseError as e:
         raise LLMOutputParseError(
-            message=e.message, details=e.details,
+            message=e.message,
+            details=e.details,
         ) from e

@@ -1,15 +1,21 @@
 """
 外部 API 调用日志 PostgreSQL 仓储实现。
 """
-from datetime import datetime
-from uuid import UUID, uuid4
+
+from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.shared.domain.dtos.external_api_call_log_dtos import ExternalAPICallLog
-from src.shared.domain.ports.external_api_call_log_repository import IExternalAPICallLogRepository
-from src.shared.infrastructure.persistence.external_api_call_log_model import ExternalAPICallLogModel
+from src.shared.domain.dtos.external_api_call_log_dtos import (
+    ExternalAPICallLog,
+)
+from src.shared.domain.ports.external_api_call_log_repository import (
+    IExternalAPICallLogRepository,
+)
+from src.shared.infrastructure.persistence.external_api_call_log_model import (
+    ExternalAPICallLogModel,
+)
 
 
 def _dto_to_model(d: ExternalAPICallLog) -> ExternalAPICallLogModel:
@@ -53,7 +59,9 @@ class PgExternalAPICallLogRepository(IExternalAPICallLogRepository):
         self._session.add(model)
         await self._session.commit()
 
-    async def get_by_session_id(self, session_id: UUID) -> list[ExternalAPICallLog]:
+    async def get_by_session_id(
+        self, session_id: UUID
+    ) -> list[ExternalAPICallLog]:
         result = await self._session.execute(
             select(ExternalAPICallLogModel)
             .where(ExternalAPICallLogModel.session_id == session_id)

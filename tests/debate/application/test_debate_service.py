@@ -1,11 +1,20 @@
 """DebateService 单元测试：三阶段正常流程返回完整 DebateOutcomeDTO；某 Agent 抛异常时向上传播。"""
+
 from unittest.mock import AsyncMock
 
 import pytest
 
-from src.modules.debate.application.services.debate_service import DebateService
-from src.modules.debate.domain.dtos.bull_bear_argument import BearArgument, BullArgument
-from src.modules.debate.domain.dtos.debate_input import DebateInput, ExpertSummary
+from src.modules.debate.application.services.debate_service import (
+    DebateService,
+)
+from src.modules.debate.domain.dtos.bull_bear_argument import (
+    BearArgument,
+    BullArgument,
+)
+from src.modules.debate.domain.dtos.debate_input import (
+    DebateInput,
+    ExpertSummary,
+)
 from src.modules.debate.domain.dtos.resolution_result import ResolutionResult
 from src.modules.debate.domain.dtos.risk_matrix import RiskItemDTO
 

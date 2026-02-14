@@ -3,12 +3,15 @@
 
 由 Coordinator 编排层使用，实现位于 infrastructure/persistence。
 """
+
 from abc import ABC, abstractmethod
 from datetime import datetime
 from uuid import UUID
 
 from src.modules.coordinator.domain.model.node_execution import NodeExecution
-from src.modules.coordinator.domain.model.research_session import ResearchSession
+from src.modules.coordinator.domain.model.research_session import (
+    ResearchSession,
+)
 
 
 class IResearchSessionRepository(ABC):
@@ -30,7 +33,9 @@ class IResearchSessionRepository(ABC):
         ...
 
     @abstractmethod
-    async def get_session_by_id(self, session_id: UUID) -> ResearchSession | None:
+    async def get_session_by_id(
+        self, session_id: UUID
+    ) -> ResearchSession | None:
         """按 ID 查询会话，不存在返回 None。"""
         ...
 
@@ -48,6 +53,8 @@ class IResearchSessionRepository(ABC):
         ...
 
     @abstractmethod
-    async def get_node_executions_by_session(self, session_id: UUID) -> list[NodeExecution]:
+    async def get_node_executions_by_session(
+        self, session_id: UUID
+    ) -> list[NodeExecution]:
         """查询某会话下的全部节点执行记录，按 started_at 排序。"""
         ...

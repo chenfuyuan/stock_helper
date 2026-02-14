@@ -4,25 +4,31 @@
 mock 财务数据返回空列表时断言明确错误；
 E2E：mock 三个 Port 返回固定数据，断言完整编排返回结果包含 valuation_verdict、input、valuation_indicators、output 等字段。
 """
-import pytest
+
 from datetime import date
 from unittest.mock import AsyncMock
 
-from src.shared.domain.exceptions import BadRequestException
+import pytest
+
 from src.modules.research.application.valuation_modeler_service import (
     ValuationModelerService,
+)
+from src.modules.research.domain.dtos.financial_record_input import (
+    FinanceRecordInput,
+)
+from src.modules.research.domain.dtos.valuation_dtos import (
+    IntrinsicValueRangeDTO,
+    ValuationModelAgentResult,
+    ValuationResultDTO,
 )
 from src.modules.research.domain.dtos.valuation_inputs import (
     StockOverviewInput,
     ValuationDailyInput,
 )
-from src.modules.research.domain.dtos.valuation_snapshot import ValuationSnapshotDTO
-from src.modules.research.domain.dtos.financial_record_input import FinanceRecordInput
-from src.modules.research.domain.dtos.valuation_dtos import (
-    ValuationResultDTO,
-    IntrinsicValueRangeDTO,
-    ValuationModelAgentResult,
+from src.modules.research.domain.dtos.valuation_snapshot import (
+    ValuationSnapshotDTO,
 )
+from src.shared.domain.exceptions import BadRequestException
 
 
 class _MockSnapshotBuilder:
@@ -70,7 +76,10 @@ async def test_missing_symbol_raises_bad_request():
 
     with pytest.raises(BadRequestException) as exc_info:
         await svc.run(symbol="")
-    assert "symbol" in exc_info.value.message.lower() or "必填" in exc_info.value.message
+    assert (
+        "symbol" in exc_info.value.message.lower()
+        or "必填" in exc_info.value.message
+    )
 
     with pytest.raises(BadRequestException):
         await svc.run(symbol="   ")
@@ -125,7 +134,10 @@ async def test_empty_finance_records_raises_bad_request():
 
     with pytest.raises(BadRequestException) as exc_info:
         await svc.run(symbol="000001.SZ")
-    assert "无财务数据" in exc_info.value.message or "无数据" in exc_info.value.message
+    assert (
+        "无财务数据" in exc_info.value.message
+        or "无数据" in exc_info.value.message
+    )
 
 
 @pytest.mark.asyncio
@@ -165,7 +177,8 @@ async def test_empty_historical_valuations_logs_warning_and_continues():
             valuation_verdict="Fair",
             confidence_score=0.5,
             estimated_intrinsic_value_range=IntrinsicValueRangeDTO(
-                lower_bound="", upper_bound="",
+                lower_bound="",
+                upper_bound="",
             ),
             key_evidence=["无历史估值日线，仅基于财务数据"],
             risk_factors=["数据有限"],
@@ -202,7 +215,8 @@ async def test_full_flow_returns_valuation_result_with_all_fields():
     )
     mock_data.get_valuation_dailies.return_value = [
         ValuationDailyInput(
-            trade_date=date(2023, 1, 1) + __import__("datetime").timedelta(days=i * 3),
+            trade_date=date(2023, 1, 1)
+            + __import__("datetime").timedelta(days=i * 3),
             close=10.0,
             pe_ttm=5.0,
             pb=0.6,
@@ -273,7 +287,10 @@ async def test_full_flow_returns_valuation_result_with_all_fields():
     assert "risk_factors" in result
     assert "reasoning_summary" in result
     assert "narrative_report" in result
-    assert result["narrative_report"] == "【核心结论】当前估值偏低。【关键论据】PE 分位 15%，PEG 0.24。【风险】毛利率需观察。【置信度】0.85。"
+    assert (
+        result["narrative_report"]
+        == "【核心结论】当前估值偏低。【关键论据】PE 分位 15%，PEG 0.24。【风险】毛利率需观察。【置信度】0.85。"
+    )
     assert "input" in result
     assert "output" in result
     assert "valuation_indicators" in result

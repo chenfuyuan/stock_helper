@@ -2,12 +2,14 @@
 单元测试：配置外部化与模块化。
 Shared Settings 仅保留全局配置；Tushare/同步配置在 DataEngineeringConfig，LLM/博查在 LLMPlatformConfig。
 """
-import pytest
+
 import os
 
-from src.shared.config import Settings
-from src.modules.data_engineering.infrastructure.config import DataEngineeringConfig
+from src.modules.data_engineering.infrastructure.config import (
+    DataEngineeringConfig,
+)
 from src.modules.llm_platform.infrastructure.config import LLMPlatformConfig
+from src.shared.config import Settings
 
 
 def test_shared_config_global_only():

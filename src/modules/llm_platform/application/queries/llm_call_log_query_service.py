@@ -3,10 +3,13 @@
 
 供 Coordinator 历史查询 API 调用，不直接暴露给 REST。
 """
+
 from uuid import UUID
 
 from src.modules.llm_platform.domain.dtos.llm_call_log_dtos import LLMCallLog
-from src.modules.llm_platform.domain.ports.llm_call_log_repository import ILLMCallLogRepository
+from src.modules.llm_platform.domain.ports.llm_call_log_repository import (
+    ILLMCallLogRepository,
+)
 
 
 class LLMCallLogQueryService:

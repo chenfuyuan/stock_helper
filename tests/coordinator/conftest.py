@@ -1,6 +1,7 @@
 """
 Coordinator 测试 fixtures：mock IResearchExpertGateway 等。
 """
+
 from unittest.mock import AsyncMock
 
 import pytest

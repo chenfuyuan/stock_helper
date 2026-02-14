@@ -1,4 +1,5 @@
 """JudgeService 单元测试：Mock IJudgeVerdictAgentPort，验证正常流程返回完整 VerdictDTO（含 symbol 注入）；异常向上传播。"""
+
 from unittest.mock import AsyncMock
 
 import pytest
@@ -42,7 +43,9 @@ def mock_verdict_agent():
 
 
 @pytest.mark.asyncio
-async def test_run_returns_complete_verdict_dto_with_symbol_injected(mock_verdict_agent):
+async def test_run_returns_complete_verdict_dto_with_symbol_injected(
+    mock_verdict_agent,
+):
     """正常流程返回完整 VerdictDTO，symbol 从 JudgeInput 注入。"""
     service = JudgeService(verdict_agent=mock_verdict_agent)
     result = await service.run(_sample_judge_input())

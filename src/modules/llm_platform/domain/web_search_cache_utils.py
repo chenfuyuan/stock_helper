@@ -4,12 +4,12 @@ Web 搜索缓存键与 TTL 计算。
 基于 WebSearchRequest 的 query、freshness、summary、count 生成确定性缓存键（SHA-256 十六进制），
 并根据 freshness 计算 TTL（timedelta），供 CachingWebSearchProvider 与 Repository 使用。
 """
+
 import hashlib
 from datetime import datetime, timedelta
 from typing import Optional
 
 from src.modules.llm_platform.domain.web_search_dtos import WebSearchRequest
-
 
 # freshness -> TTL 小时数（与 design 一致）
 _FRESHNESS_TTL_HOURS = {
@@ -54,7 +54,9 @@ def compute_ttl_seconds(freshness: Optional[str]) -> int:
     return hours * 3600
 
 
-def compute_expires_at(created_at: datetime, freshness: Optional[str]) -> datetime:
+def compute_expires_at(
+    created_at: datetime, freshness: Optional[str]
+) -> datetime:
     """
     根据创建时间和 freshness 计算过期时间。
 

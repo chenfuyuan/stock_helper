@@ -1,6 +1,7 @@
 """
 LangGraphResearchOrchestrator：实现 IResearchOrchestrationPort，基于 LangGraph 执行研究编排。
 """
+
 import logging
 from datetime import datetime
 from typing import Any
@@ -8,19 +9,30 @@ from uuid import uuid4
 
 logger = logging.getLogger(__name__)
 
-from src.shared.infrastructure.execution_context import current_execution_ctx, ExecutionContext
 from src.modules.coordinator.domain.dtos.research_dtos import (
     ExpertResultItem,
     ResearchRequest,
     ResearchResult,
 )
 from src.modules.coordinator.domain.model.enums import ExpertType
-from src.modules.coordinator.domain.model.research_session import ResearchSession
-from src.modules.coordinator.domain.ports.research_expert_gateway import IResearchExpertGateway
-from src.modules.coordinator.domain.ports.research_orchestration import IResearchOrchestrationPort
-from src.modules.coordinator.domain.ports.research_session_repository import IResearchSessionRepository
+from src.modules.coordinator.domain.model.research_session import (
+    ResearchSession,
+)
+from src.modules.coordinator.domain.ports.research_expert_gateway import (
+    IResearchExpertGateway,
+)
+from src.modules.coordinator.domain.ports.research_orchestration import (
+    IResearchOrchestrationPort,
+)
+from src.modules.coordinator.domain.ports.research_session_repository import (
+    IResearchSessionRepository,
+)
 from src.modules.coordinator.infrastructure.orchestration.graph_builder import (
     build_research_graph,
+)
+from src.shared.infrastructure.execution_context import (
+    ExecutionContext,
+    current_execution_ctx,
 )
 
 
@@ -64,7 +76,9 @@ class LangGraphResearchOrchestrator(IResearchOrchestrationPort):
                 parent_session_id=request.parent_session_id,
             )
             await self._session_repo.save_session(session)
-            token = current_execution_ctx.set(ExecutionContext(session_id=str(session.id)))
+            token = current_execution_ctx.set(
+                ExecutionContext(session_id=str(session.id))
+            )
 
         try:
             debate_gw = None if request.skip_debate else self._debate_gateway
@@ -136,7 +150,9 @@ class LangGraphResearchOrchestrator(IResearchOrchestrationPort):
                 verdict = None
 
             completed_at = datetime.utcnow()
-            duration_ms = int((completed_at - started_at).total_seconds() * 1000)
+            duration_ms = int(
+                (completed_at - started_at).total_seconds() * 1000
+            )
             if session and self._session_repo is not None:
                 if overall_status == "completed":
                     session.complete(completed_at, duration_ms)
@@ -156,13 +172,17 @@ class LangGraphResearchOrchestrator(IResearchOrchestrationPort):
         except Exception:
             # 研究节点或图执行异常时将会话置为失败，避免长期处于 running
             completed_at = datetime.utcnow()
-            duration_ms = int((completed_at - started_at).total_seconds() * 1000)
+            duration_ms = int(
+                (completed_at - started_at).total_seconds() * 1000
+            )
             if session is not None and self._session_repo is not None:
                 session.fail(completed_at, duration_ms)
                 try:
                     await self._session_repo.update_session(session)
                 except Exception as update_err:
-                    logger.warning("研究异常后会话状态更新失败: %s", update_err)
+                    logger.warning(
+                        "研究异常后会话状态更新失败: %s", update_err
+                    )
             raise
         finally:
             if token is not None:

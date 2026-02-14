@@ -5,18 +5,23 @@
 所有数值计算在代码中完成，LLM 仅做定性解读。
 财务指标超出合理范围时替换为 N/A 并记录 WARNING，避免脏数据传入 LLM。
 """
+
 import logging
 import math
 from datetime import date, datetime
 from typing import Any, List, Optional, Tuple
 
+from src.modules.research.domain.dtos.financial_record_input import (
+    FinanceRecordInput,
+)
+from src.modules.research.domain.dtos.types import PlaceholderValue
 from src.modules.research.domain.dtos.valuation_inputs import (
     StockOverviewInput,
     ValuationDailyInput,
 )
-from src.modules.research.domain.dtos.valuation_snapshot import ValuationSnapshotDTO
-from src.modules.research.domain.dtos.financial_record_input import FinanceRecordInput
-from src.modules.research.domain.dtos.types import PlaceholderValue
+from src.modules.research.domain.dtos.valuation_snapshot import (
+    ValuationSnapshotDTO,
+)
 from src.modules.research.domain.ports.valuation_snapshot_builder import (
     IValuationSnapshotBuilder,
 )
@@ -93,7 +98,9 @@ def _calculate_peg(
     return round(pe_ttm / growth_rate_avg, 2)
 
 
-def _calculate_graham_number(eps: Optional[float], bps: Optional[float]) -> Any:
+def _calculate_graham_number(
+    eps: Optional[float], bps: Optional[float]
+) -> Any:
     """
     计算格雷厄姆数字：Graham = sqrt(22.5 × EPS × BPS)。
     EPS 或 BPS ≤ 0 或为 None 时返回 N/A。
@@ -158,7 +165,9 @@ def _calculate_gross_margin_trend(records: List[FinanceRecordInput]) -> str:
         return f"同比下降 {abs(diff):.1f}%"
 
 
-def _calculate_avg_profit_growth(records: List[FinanceRecordInput]) -> Optional[float]:
+def _calculate_avg_profit_growth(
+    records: List[FinanceRecordInput],
+) -> Optional[float]:
     """
     计算最近 4 季度利润 YoY 增速的平均值。
     需要找到相邻同期记录计算 YoY，再对最近 4 个 YoY 求平均。
@@ -180,7 +189,7 @@ def _calculate_avg_profit_growth(records: List[FinanceRecordInput]) -> Optional[
     # 计算 YoY 增速序列（使用 profit_dedt 作为利润指标）
     yoy_list: List[float] = []
     for r in records:
-        q = _end_date_to_quarter(r.end_date)
+        _end_date_to_quarter(r.end_date)
         prev_q = f"{r.end_date.year - 1}Q{(r.end_date.month - 1) // 3 + 1}"
         prev = by_quarter.get(prev_q)
         if prev is None:
@@ -246,9 +255,15 @@ class ValuationSnapshotBuilderImpl(IValuationSnapshotBuilder):
         historical_pb_values = [v.pb for v in historical_valuations]
         historical_ps_values = [v.ps_ttm for v in historical_valuations]
 
-        pe_percentile = _calculate_percentile(historical_pe_values, overview.pe_ttm)
-        pb_percentile = _calculate_percentile(historical_pb_values, overview.pb)
-        ps_percentile = _calculate_percentile(historical_ps_values, overview.ps_ttm)
+        pe_percentile = _calculate_percentile(
+            historical_pe_values, overview.pe_ttm
+        )
+        pb_percentile = _calculate_percentile(
+            historical_pb_values, overview.pb
+        )
+        ps_percentile = _calculate_percentile(
+            historical_ps_values, overview.ps_ttm
+        )
 
         # 基本面质量体检（来自财务数据，经合理性校验后填入）
         latest_finance = sorted_finances[0] if sorted_finances else None

@@ -3,6 +3,7 @@
 
 仅包含基本类型与 DTO，不引用 Domain 实体。
 """
+
 from pydantic import BaseModel
 
 from src.modules.debate.domain.dtos.risk_matrix import RiskItemDTO

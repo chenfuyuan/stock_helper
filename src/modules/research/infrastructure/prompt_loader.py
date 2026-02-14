@@ -1,16 +1,21 @@
 """
 技术分析师 Prompt 运行时加载：从资源目录读取 system.md、user.md，不硬编码在代码中。
 """
+
 import json
 from pathlib import Path
 from typing import Optional
 
-from src.modules.research.domain.dtos.indicators_snapshot import TechnicalIndicatorsSnapshot
-
+from src.modules.research.domain.dtos.indicators_snapshot import (
+    TechnicalIndicatorsSnapshot,
+)
 
 # 默认资源目录：agents 已迁入 infrastructure/agents，相对于本文件定位 technical_analyst/prompts
 _DEFAULT_PROMPTS_DIR = (
-    Path(__file__).resolve().parent / "agents" / "technical_analyst" / "prompts"
+    Path(__file__).resolve().parent
+    / "agents"
+    / "technical_analyst"
+    / "prompts"
 )
 
 
@@ -44,9 +49,21 @@ def fill_user_prompt(
     snapshot: TechnicalIndicatorsSnapshot,
 ) -> str:
     """用本次调用的 ticker、analysis_date、指标快照填充 User Prompt 占位符。快照中为 None 的指标值转为 N/A。"""
-    support_str = json.dumps(snapshot.calculated_support_levels) if snapshot.calculated_support_levels else "[]"
-    resistance_str = json.dumps(snapshot.calculated_resistance_levels) if snapshot.calculated_resistance_levels else "[]"
-    patterns_str = json.dumps(snapshot.detected_patterns, ensure_ascii=False) if snapshot.detected_patterns else "[]"
+    support_str = (
+        json.dumps(snapshot.calculated_support_levels)
+        if snapshot.calculated_support_levels
+        else "[]"
+    )
+    resistance_str = (
+        json.dumps(snapshot.calculated_resistance_levels)
+        if snapshot.calculated_resistance_levels
+        else "[]"
+    )
+    patterns_str = (
+        json.dumps(snapshot.detected_patterns, ensure_ascii=False)
+        if snapshot.detected_patterns
+        else "[]"
+    )
     return template.format(
         ticker=ticker,
         analysis_date=analysis_date,
@@ -222,18 +239,18 @@ def load_macro_intelligence_user_template(prompts_dir: Path) -> str:
 def fill_macro_intelligence_user_prompt(template: str, macro_context) -> str:
     """
     用宏观上下文 DTO 填充 User Prompt 占位符。macro_context 为 MacroContextDTO。
-    
+
     该 DTO 的 9 个字段与 user.md 模板中的占位符一一对应：
     - stock_name、third_code、industry、current_date（基础信息）
     - monetary_context、policy_context、economic_context、industry_context（四维搜索情报）
     - all_source_urls（来源 URL 列表）
-    
+
     使用 str.format() 填充 {占位符} 单花括号占位符（Python 标准格式化）。
-    
+
     Args:
         template: User Prompt 模板字符串（含 {占位符}）
         macro_context: MacroContextDTO 实例（包含 9 个字段）
-        
+
     Returns:
         str: 填充后的 User Prompt
     """
@@ -269,7 +286,9 @@ def load_catalyst_detective_user_template(prompts_dir: Path) -> str:
     return path.read_text(encoding="utf-8").strip()
 
 
-def fill_catalyst_detective_user_prompt(template: str, catalyst_context) -> str:
+def fill_catalyst_detective_user_prompt(
+    template: str, catalyst_context
+) -> str:
     """
     用催化剂上下文 DTO 填充 User Prompt 占位符。catalyst_context 为 CatalystContextDTO。
 

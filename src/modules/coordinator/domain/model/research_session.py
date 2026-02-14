@@ -3,6 +3,7 @@
 
 表示一次完整的研究流水线执行，含状态转换：running → completed / partial / failed。
 """
+
 from datetime import datetime
 from typing import Any, Literal
 from uuid import UUID

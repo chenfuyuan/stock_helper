@@ -3,7 +3,10 @@ Debate 模块 Composition Root。
 
 装配 LLMAdapter → BullAdvocateAgentAdapter / BearAdvocateAgentAdapter / ResolutionAgentAdapter → DebateService。
 """
-from src.modules.debate.application.services.debate_service import DebateService
+
+from src.modules.debate.application.services.debate_service import (
+    DebateService,
+)
 from src.modules.debate.infrastructure.adapters.bear_advocate_agent_adapter import (
     BearAdvocateAgentAdapter,
 )
@@ -19,6 +22,7 @@ from src.modules.debate.infrastructure.adapters.resolution_agent_adapter import 
 def _get_llm_service():
     """延迟导入避免循环依赖。"""
     from src.modules.llm_platform.container import LLMPlatformContainer
+
     return LLMPlatformContainer().llm_service()
 
 
@@ -30,7 +34,9 @@ class DebateContainer:
         self._llm_adapter = LLMAdapter(llm_service=self._llm_service)
         self._bull_agent = BullAdvocateAgentAdapter(llm_port=self._llm_adapter)
         self._bear_agent = BearAdvocateAgentAdapter(llm_port=self._llm_adapter)
-        self._resolution_agent = ResolutionAgentAdapter(llm_port=self._llm_adapter)
+        self._resolution_agent = ResolutionAgentAdapter(
+            llm_port=self._llm_adapter
+        )
         self._debate_service = DebateService(
             bull_agent=self._bull_agent,
             bear_agent=self._bear_agent,

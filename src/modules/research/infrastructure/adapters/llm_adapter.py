@@ -3,9 +3,12 @@
 内部调用 llm_platform 的 LLMService.generate（Application 接口），
 不直接依赖 llm_platform 的 router、registry 或 adapter 实现类。
 """
+
 from typing import Optional
 
-from src.modules.llm_platform.application.services.llm_service import LLMService
+from src.modules.llm_platform.application.services.llm_service import (
+    LLMService,
+)
 from src.modules.research.domain.ports.llm import ILLMPort
 
 

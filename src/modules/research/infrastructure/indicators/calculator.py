@@ -3,10 +3,13 @@
 实现：多周期 MA、RSI、MACD、KDJ、ADX、量比、支撑/阻力。
 数据不足时对应指标返回 None，由调用方填入 N/A。
 """
+
 from typing import List, Optional, Tuple
 
 from src.modules.research.domain.dtos.daily_bar_input import DailyBarInput
-from src.modules.research.domain.dtos.indicators_snapshot import TechnicalIndicatorsSnapshot
+from src.modules.research.domain.dtos.indicators_snapshot import (
+    TechnicalIndicatorsSnapshot,
+)
 
 
 def _sma(values: List[float], period: int) -> float:
@@ -44,7 +47,9 @@ def _rsi(closes: List[float], period: int = 14) -> Optional[float]:
     return 100.0 - (100.0 / (1 + rs))
 
 
-def _macd(closes: List[float], fast: int = 12, slow: int = 26, signal: int = 9) -> Tuple[Optional[float], Optional[float], Optional[float]]:
+def _macd(
+    closes: List[float], fast: int = 12, slow: int = 26, signal: int = 9
+) -> Tuple[Optional[float], Optional[float], Optional[float]]:
     """MACD：返回 (DIF, DEA, 柱状图)。DEA 为 DIF 的 signal 日 EMA。数据不足时返回 (None, None, None)。"""
     if len(closes) < slow:
         return None, None, None
@@ -65,7 +70,14 @@ def _macd(closes: List[float], fast: int = 12, slow: int = 26, signal: int = 9) 
     return round(dif, 4), round(dea, 4), round(hist, 4)
 
 
-def _kdj(highs: List[float], lows: List[float], closes: List[float], n: int = 9, m1: int = 3, m2: int = 3) -> Tuple[Optional[float], Optional[float], Optional[float]]:
+def _kdj(
+    highs: List[float],
+    lows: List[float],
+    closes: List[float],
+    n: int = 9,
+    m1: int = 3,
+    m2: int = 3,
+) -> Tuple[Optional[float], Optional[float], Optional[float]]:
     """KDJ(n,m1,m2)：取最后一日的 K, D, J。数据不足时返回 (None, None, None)。"""
     if len(closes) < n:
         return None, None, None
@@ -94,21 +106,35 @@ def _vwap(bars: List[DailyBarInput], lookback: int = 0) -> Optional[float]:
     return round(total_pv / total_v, 4) if total_v > 0 else None
 
 
-def _bollinger(closes: List[float], period: int = 20, k: float = 2.0) -> Tuple[Optional[float], Optional[float], Optional[float], Optional[float]]:
+def _bollinger(
+    closes: List[float], period: int = 20, k: float = 2.0
+) -> Tuple[Optional[float], Optional[float], Optional[float], Optional[float]]:
     """布林带(20,2)：返回 (upper, lower, middle, bandwidth%)。数据不足时返回 (None, None, None, None)。"""
     if len(closes) < period:
         return None, None, None, None
     slice_c = closes[-period:]
     middle = sum(slice_c) / period
     variance = sum((x - middle) ** 2 for x in slice_c) / period
-    std = (variance ** 0.5) if variance > 0 else 0.0
+    std = (variance**0.5) if variance > 0 else 0.0
     upper = middle + k * std
     lower = middle - k * std
-    bandwidth = (upper - lower) / middle * 100.0 if middle and middle != 0 else 0.0
-    return round(upper, 4), round(lower, 4), round(middle, 4), round(bandwidth, 2)
+    bandwidth = (
+        (upper - lower) / middle * 100.0 if middle and middle != 0 else 0.0
+    )
+    return (
+        round(upper, 4),
+        round(lower, 4),
+        round(middle, 4),
+        round(bandwidth, 2),
+    )
 
 
-def _atr(highs: List[float], lows: List[float], closes: List[float], period: int = 14) -> Optional[float]:
+def _atr(
+    highs: List[float],
+    lows: List[float],
+    closes: List[float],
+    period: int = 14,
+) -> Optional[float]:
     """ATR(period)：Wilder 平滑的真实波幅。数据不足时返回 None。"""
     if len(closes) < period + 1:
         return None
@@ -130,7 +156,12 @@ def _atr(highs: List[float], lows: List[float], closes: List[float], period: int
 
 def _obv_trend(closes: List[float], vols: List[float], days: int = 5) -> str:
     """OBV 累计后，比较当前与 days 日前，返回 Rising / Falling / Flat。"""
-    if len(closes) < 2 or len(vols) < 2 or len(closes) != len(vols) or days < 1:
+    if (
+        len(closes) < 2
+        or len(vols) < 2
+        or len(closes) != len(vols)
+        or days < 1
+    ):
         return "Flat"
     obv_list: List[float] = [0.0]
     for i in range(1, len(closes)):
@@ -151,7 +182,12 @@ def _obv_trend(closes: List[float], vols: List[float], days: int = 5) -> str:
     return "Flat"
 
 
-def _adx(highs: List[float], lows: List[float], closes: List[float], period: int = 14) -> Optional[float]:
+def _adx(
+    highs: List[float],
+    lows: List[float],
+    closes: List[float],
+    period: int = 14,
+) -> Optional[float]:
     """ADX(period)，Wilder 平滑。返回序列末尾的 ADX。数据不足时返回 None。"""
     if len(closes) < period + 1:
         return None
@@ -171,6 +207,7 @@ def _adx(highs: List[float], lows: List[float], closes: List[float], period: int
         minus_dm.append(down if down > up and down > 0 else 0.0)
     if len(tr_list) < period:
         return None
+
     # Wilder 平滑：首日为 period 日之和，之后 smooth = prev * (period-1)/period + new
     def wilder_smooth(arr: List[float], p: int) -> List[float]:
         out: List[float] = []
@@ -208,7 +245,9 @@ def _adx(highs: List[float], lows: List[float], closes: List[float], period: int
     return round(adx_smooth, 2)
 
 
-def compute_technical_indicators(bars: List[DailyBarInput]) -> TechnicalIndicatorsSnapshot:
+def compute_technical_indicators(
+    bars: List[DailyBarInput],
+) -> TechnicalIndicatorsSnapshot:
     """
     基于日线序列计算全量技术指标，仅输出原始数值，供 Prompt 与大模型判断。
     """

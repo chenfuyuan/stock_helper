@@ -1,8 +1,8 @@
 """Resolution output_parser 单元测试：合法 JSON 解析成功、非法 JSON 抛 LLMOutputParseError。"""
+
 import pytest
 
 from src.modules.debate.domain.dtos.resolution_result import ResolutionResult
-from src.modules.debate.domain.dtos.risk_matrix import RiskItemDTO
 from src.modules.debate.domain.exceptions import LLMOutputParseError
 from src.modules.debate.infrastructure.agents.resolution.output_parser import (
     parse_resolution_result,
@@ -11,7 +11,7 @@ from src.modules.debate.infrastructure.agents.resolution.output_parser import (
 
 def test_parse_valid_json_returns_resolution_result():
     """合法 JSON 解析为 ResolutionResult，含 risk_matrix。"""
-    raw = '''{
+    raw = """{
         "direction": "NEUTRAL",
         "confidence": 0.55,
         "bull_case_summary": "多头论点摘要",
@@ -21,7 +21,7 @@ def test_parse_valid_json_returns_resolution_result():
         ],
         "key_disagreements": ["估值分歧"],
         "conflict_resolution": "综合裁决为中性"
-    }'''
+    }"""
     result = parse_resolution_result(raw)
     assert isinstance(result, ResolutionResult)
     assert result.direction == "NEUTRAL"

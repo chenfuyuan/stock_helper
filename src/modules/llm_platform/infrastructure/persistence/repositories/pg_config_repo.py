@@ -1,21 +1,28 @@
 from typing import List, Optional
-from sqlalchemy import select, delete, func
+
+from loguru import logger
+from sqlalchemy import delete, func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
-from loguru import logger
 
 from src.modules.llm_platform.domain.entities.llm_config import LLMConfig
-from src.modules.llm_platform.domain.ports.repositories.config_repo import ILLMConfigRepository
-from src.modules.llm_platform.infrastructure.persistence.models.llm_config_model import LLMConfigModel
+from src.modules.llm_platform.domain.ports.repositories.config_repo import (
+    ILLMConfigRepository,
+)
+from src.modules.llm_platform.infrastructure.persistence.models.llm_config_model import (
+    LLMConfigModel,
+)
+
 
 class PgLLMConfigRepository(ILLMConfigRepository):
     """
     PostgreSQL 实现的 LLM 配置仓储
     """
+
     def __init__(self, session: AsyncSession):
         """
         初始化仓储
-        
+
         Args:
             session (AsyncSession): SQLAlchemy 异步会话
         """
@@ -38,7 +45,9 @@ class PgLLMConfigRepository(ILLMConfigRepository):
         获取所有激活的 LLM 配置
         """
         try:
-            stmt = select(LLMConfigModel).where(LLMConfigModel.is_active == True)
+            stmt = select(LLMConfigModel).where(
+                LLMConfigModel.is_active == True
+            )
             result = await self.session.execute(stmt)
             return [model.to_entity() for model in result.scalars().all()]
         except Exception as e:
@@ -75,11 +84,11 @@ class PgLLMConfigRepository(ILLMConfigRepository):
                 "tags": config.tags,
                 "is_active": config.is_active,
             }
-            
+
             # Use upsert (insert on conflict update)
             stmt = insert(LLMConfigModel).values(**data)
             stmt = stmt.on_conflict_do_update(
-                index_elements=['alias'],
+                index_elements=["alias"],
                 set_={
                     "vendor": stmt.excluded.vendor,
                     "provider_type": stmt.excluded.provider_type,
@@ -90,10 +99,10 @@ class PgLLMConfigRepository(ILLMConfigRepository):
                     "priority": stmt.excluded.priority,
                     "tags": stmt.excluded.tags,
                     "is_active": stmt.excluded.is_active,
-                    "updated_at": func.now()
-                }
+                    "updated_at": func.now(),
+                },
             ).returning(LLMConfigModel)
-            
+
             result = await self.session.execute(stmt)
             model = result.scalars().first()
             await self.session.commit()

@@ -2,15 +2,18 @@
 获取估值所需数据的 Port。
 Research 仅依赖此抽象，由 Infrastructure 的 Adapter 调用 data_engineering 的 Application 接口。
 """
+
 from abc import ABC, abstractmethod
 from datetime import date
 from typing import List, Optional
 
+from src.modules.research.domain.dtos.financial_record_input import (
+    FinanceRecordInput,
+)
 from src.modules.research.domain.dtos.valuation_inputs import (
     StockOverviewInput,
     ValuationDailyInput,
 )
-from src.modules.research.domain.dtos.financial_record_input import FinanceRecordInput
 
 
 class IValuationDataPort(ABC):
@@ -20,7 +23,9 @@ class IValuationDataPort(ABC):
     """
 
     @abstractmethod
-    async def get_stock_overview(self, symbol: str) -> Optional[StockOverviewInput]:
+    async def get_stock_overview(
+        self, symbol: str
+    ) -> Optional[StockOverviewInput]:
         """
         获取股票基础信息与最新市场估值数据。
         返回 None 表示标的不存在。

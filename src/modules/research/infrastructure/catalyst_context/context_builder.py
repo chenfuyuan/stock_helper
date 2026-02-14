@@ -1,11 +1,13 @@
 from datetime import date
-from typing import List, Dict, Set
+from typing import Dict, List, Set
 
-from src.modules.research.domain.dtos.catalyst_context import CatalystContextDTO
+from src.modules.research.domain.dtos.catalyst_context import (
+    CatalystContextDTO,
+)
 from src.modules.research.domain.dtos.catalyst_inputs import (
-    CatalystStockOverview,
     CatalystSearchResult,
     CatalystSearchResultItem,
+    CatalystStockOverview,
 )
 from src.modules.research.domain.ports.catalyst_context_builder import (
     ICatalystContextBuilder,
@@ -14,7 +16,9 @@ from src.modules.research.domain.ports.catalyst_context_builder import (
 
 class CatalystContextBuilderImpl(ICatalystContextBuilder):
     def build(
-        self, overview: CatalystStockOverview, search_results: List[CatalystSearchResult]
+        self,
+        overview: CatalystStockOverview,
+        search_results: List[CatalystSearchResult],
     ) -> CatalystContextDTO:
         # 1. Initialize context parts with default message
         # Internal keys to track the four dimensions
@@ -75,7 +79,9 @@ class CatalystContextBuilderImpl(ICatalystContextBuilder):
     def _format_items(self, items: List[CatalystSearchResultItem]) -> str:
         lines = []
         for i, item in enumerate(items, 1):
-            date_str = f" ({item.published_date})" if item.published_date else ""
+            date_str = (
+                f" ({item.published_date})" if item.published_date else ""
+            )
             source_str = f" - 来源: {item.site_name}" if item.site_name else ""
             summary = item.summary or item.snippet or "无摘要"
 

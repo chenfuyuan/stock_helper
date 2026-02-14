@@ -1,12 +1,13 @@
 """
 任务 12.2：测试 ResearchSession 生命周期（running → completed / partial / failed）。
 """
+
 from datetime import datetime, timezone
 from uuid import UUID
 
-import pytest
-
-from src.modules.coordinator.domain.model.research_session import ResearchSession
+from src.modules.coordinator.domain.model.research_session import (
+    ResearchSession,
+)
 
 
 def test_session_starts_running():

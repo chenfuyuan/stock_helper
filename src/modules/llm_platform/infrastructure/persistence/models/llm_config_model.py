@@ -1,7 +1,9 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text
-from sqlalchemy.sql import func
+from sqlalchemy import Boolean, Column, DateTime, Integer, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.sql import func
+
 from src.shared.infrastructure.db.base import Base
+
 
 class LLMConfigModel(Base):
     __tablename__ = "llm_configs"
@@ -18,10 +20,15 @@ class LLMConfigModel(Base):
     tags = Column(JSONB, default=list)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now(), server_default=func.now())
+    updated_at = Column(
+        DateTime(timezone=True), onupdate=func.now(), server_default=func.now()
+    )
 
     def to_entity(self):
-        from src.modules.llm_platform.domain.entities.llm_config import LLMConfig
+        from src.modules.llm_platform.domain.entities.llm_config import (
+            LLMConfig,
+        )
+
         return LLMConfig(
             id=self.id,
             alias=self.alias,
@@ -35,12 +42,12 @@ class LLMConfigModel(Base):
             tags=self.tags or [],
             is_active=self.is_active,
             created_at=self.created_at,
-            updated_at=self.updated_at
+            updated_at=self.updated_at,
         )
 
     def __repr__(self):
         return f"<LLMConfigModel(alias={self.alias}, model={self.model_name}, id={self.id})>"
-    
+
     @staticmethod
     def from_entity(entity):
         return LLMConfigModel(
@@ -54,5 +61,5 @@ class LLMConfigModel(Base):
             description=entity.description,
             priority=entity.priority,
             tags=entity.tags,
-            is_active=entity.is_active
+            is_active=entity.is_active,
         )

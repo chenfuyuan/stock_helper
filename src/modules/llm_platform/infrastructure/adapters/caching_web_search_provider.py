@@ -1,17 +1,25 @@
 """
 CachingWebSearchProvider：实现 IWebSearchProvider，包装实际 Provider 与缓存仓储，透明缓存博查搜索结果。
 """
+
 from datetime import datetime, timezone
 
 from loguru import logger
 
+from src.modules.llm_platform.domain.dtos.web_search_cache_entry import (
+    WebSearchCacheEntry,
+)
 from src.modules.llm_platform.domain.ports.web_search import IWebSearchProvider
-from src.modules.llm_platform.domain.ports.web_search_cache_repository import IWebSearchCacheRepository
-from src.modules.llm_platform.domain.dtos.web_search_cache_entry import WebSearchCacheEntry
-from src.modules.llm_platform.domain.web_search_dtos import WebSearchRequest, WebSearchResponse
+from src.modules.llm_platform.domain.ports.web_search_cache_repository import (
+    IWebSearchCacheRepository,
+)
 from src.modules.llm_platform.domain.web_search_cache_utils import (
     compute_cache_key,
     compute_expires_at,
+)
+from src.modules.llm_platform.domain.web_search_dtos import (
+    WebSearchRequest,
+    WebSearchResponse,
 )
 
 
@@ -45,7 +53,9 @@ class CachingWebSearchProvider(IWebSearchProvider):
             )
             return WebSearchResponse.model_validate_json(entry.response_data)
 
-        logger.info("博查搜索缓存未命中，查询词: {}，将调用博查 API", request.query)
+        logger.info(
+            "博查搜索缓存未命中，查询词: {}，将调用博查 API", request.query
+        )
         response = await self._inner.search(request)
         # 使用 naive UTC 以匹配 DB 的 TIMESTAMP WITHOUT TIME ZONE，避免 asyncpg 的 offset-naive/aware 混用报错
         created_at = datetime.now(timezone.utc).replace(tzinfo=None)

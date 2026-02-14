@@ -2,6 +2,7 @@
 财务快照 DTO，与 User Prompt 模板占位符一一对应。
 快照构建器将多期 FinanceRecordInput 转为 FinancialSnapshotDTO。
 """
+
 from pydantic import BaseModel, Field
 
 from src.modules.research.domain.dtos.types import PlaceholderValue
@@ -23,7 +24,9 @@ class FinancialSnapshotDTO(BaseModel):
     roic: PlaceholderValue = "N/A"
 
     eps: PlaceholderValue = "N/A"
-    eps_deducted: PlaceholderValue = "N/A"  # 注意：实际填入的是 profit_dedt（扣非净利润总额），非每股扣非收益
+    eps_deducted: PlaceholderValue = (
+        "N/A"  # 注意：实际填入的是 profit_dedt（扣非净利润总额），非每股扣非收益
+    )
     bps: PlaceholderValue = "N/A"
     ocfps: PlaceholderValue = "N/A"
     fcff_ps: PlaceholderValue = "N/A"

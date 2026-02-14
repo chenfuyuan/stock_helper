@@ -3,6 +3,7 @@ Coordinator 领域异常。
 
 继承 src.shared.domain.exceptions.AppException，便于 Presentation 层映射 HTTP 状态码。
 """
+
 from src.shared.domain.exceptions import AppException
 
 
@@ -31,7 +32,11 @@ class SessionNotFoundError(AppException):
 class SessionNotRetryableError(AppException):
     """研究会话当前状态不允许重试时抛出（如 completed 或 running）。"""
 
-    def __init__(self, message: str = "该研究会话当前状态不允许重试", status_code: int = 400):
+    def __init__(
+        self,
+        message: str = "该研究会话当前状态不允许重试",
+        status_code: int = 400,
+    ):
         super().__init__(
             message=message,
             code="SESSION_NOT_RETRYABLE",

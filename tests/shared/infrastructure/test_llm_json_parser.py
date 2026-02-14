@@ -14,10 +14,10 @@ from pydantic import BaseModel
 from src.shared.domain.exceptions import LLMJsonParseError
 from src.shared.infrastructure.llm_json_parser import parse_llm_json_output
 
-
 # ---------------------------------------------------------------------------
 # 测试用 DTO
 # ---------------------------------------------------------------------------
+
 
 class _SimpleDTO(BaseModel):
     score: int
@@ -33,6 +33,7 @@ class _RequiredFieldDTO(BaseModel):
 # Scenario: 纯净 JSON 直接解析
 # ---------------------------------------------------------------------------
 
+
 class TestCleanJson:
     def test_parse_clean_json(self):
         raw = '{"score": 85, "signal": "bullish"}'
@@ -44,6 +45,7 @@ class TestCleanJson:
 # ---------------------------------------------------------------------------
 # Scenario: Markdown 代码块包裹
 # ---------------------------------------------------------------------------
+
 
 class TestMarkdownCodeBlock:
     def test_parse_json_in_markdown_block(self):
@@ -62,6 +64,7 @@ class TestMarkdownCodeBlock:
 # ---------------------------------------------------------------------------
 # Scenario: think 标签 + Markdown 代码块
 # ---------------------------------------------------------------------------
+
 
 class TestThinkTags:
     def test_strip_think_then_markdown(self):
@@ -82,6 +85,7 @@ class TestThinkTags:
 # Scenario: JSON 前后附带说明文字（fallback 提取）
 # ---------------------------------------------------------------------------
 
+
 class TestFallbackExtraction:
     def test_json_with_surrounding_text(self):
         raw = '以下是分析结果：\n{"score": 85, "signal": "bullish"}\n以上为分析。'
@@ -93,6 +97,7 @@ class TestFallbackExtraction:
 # ---------------------------------------------------------------------------
 # Scenario: 字符串值内含字面换行（控制字符修复）
 # ---------------------------------------------------------------------------
+
 
 class TestControlCharRepair:
     def test_literal_newline_in_string_value(self):
@@ -112,6 +117,7 @@ class TestControlCharRepair:
 # Scenario: 完全非法内容
 # ---------------------------------------------------------------------------
 
+
 class TestInvalidContent:
     def test_plain_text_raises(self):
         raw = "我无法完成这个任务"
@@ -123,6 +129,7 @@ class TestInvalidContent:
 # ---------------------------------------------------------------------------
 # Scenario: 空返回
 # ---------------------------------------------------------------------------
+
 
 class TestEmptyInput:
     def test_empty_string_raises(self):
@@ -144,6 +151,7 @@ class TestEmptyInput:
 # Scenario: JSON 根节点为数组
 # ---------------------------------------------------------------------------
 
+
 class TestArrayRoot:
     def test_array_root_raises(self):
         raw = '[{"item": 1}]'
@@ -155,6 +163,7 @@ class TestArrayRoot:
 # ---------------------------------------------------------------------------
 # Scenario: 字段校验成功 / 失败
 # ---------------------------------------------------------------------------
+
 
 class TestPydanticValidation:
     def test_valid_fields(self):
@@ -179,6 +188,7 @@ class TestPydanticValidation:
 # ---------------------------------------------------------------------------
 # Scenario: 归一化钩子
 # ---------------------------------------------------------------------------
+
 
 class TestNormalizers:
     def test_enum_normalization(self):
@@ -206,13 +216,19 @@ class TestNormalizers:
         def normalize_items(data: dict) -> dict:
             raw_items = data.get("items", [])
             data["items"] = [
-                item.get("text", str(item)) if isinstance(item, dict) else str(item)
+                (
+                    item.get("text", str(item))
+                    if isinstance(item, dict)
+                    else str(item)
+                )
                 for item in raw_items
             ]
             return data
 
         raw = '{"items": [{"text": "arg1"}, {"text": "arg2"}]}'
-        result = parse_llm_json_output(raw, _ListDTO, normalizers=[normalize_items])
+        result = parse_llm_json_output(
+            raw, _ListDTO, normalizers=[normalize_items]
+        )
         assert result.items == ["arg1", "arg2"]
 
     def test_no_normalizers(self):
@@ -230,6 +246,7 @@ class TestNormalizers:
 # Scenario: 钩子执行异常
 # ---------------------------------------------------------------------------
 
+
 class TestNormalizerException:
     def test_hook_raises_key_error(self):
         def bad_hook(data: dict) -> dict:
@@ -245,6 +262,7 @@ class TestNormalizerException:
 # ---------------------------------------------------------------------------
 # Scenario: context_label 日志
 # ---------------------------------------------------------------------------
+
 
 class TestContextLabel:
     def test_label_in_warning_log(self, capfd):

@@ -3,6 +3,7 @@ CachingWebSearchProvider 单元测试。
 
 4.3 缓存命中不调用 inner、未命中调用 inner 并写入、写入失败不阻塞、搜索失败不写缓存。
 """
+
 from unittest.mock import AsyncMock
 
 import pytest
@@ -32,11 +33,17 @@ async def test_cache_hit_does_not_call_inner(mock_inner, mock_cache_repo):
     """缓存命中时直接返回缓存结果，不调用 inner provider。"""
     from datetime import datetime, timezone
 
-    from src.modules.llm_platform.domain.dtos.web_search_cache_entry import WebSearchCacheEntry
-    from src.modules.llm_platform.domain.web_search_cache_utils import compute_cache_key
+    from src.modules.llm_platform.domain.dtos.web_search_cache_entry import (
+        WebSearchCacheEntry,
+    )
+    from src.modules.llm_platform.domain.web_search_cache_utils import (
+        compute_cache_key,
+    )
 
     request = WebSearchRequest(query="货币", freshness="oneDay")
-    cached_response = WebSearchResponse(query="货币", total_matches=0, results=[])
+    cached_response = WebSearchResponse(
+        query="货币", total_matches=0, results=[]
+    )
     key = compute_cache_key(request)
     now = datetime.now(timezone.utc)
     entry = WebSearchCacheEntry(
@@ -47,7 +54,9 @@ async def test_cache_hit_does_not_call_inner(mock_inner, mock_cache_repo):
         expires_at=now,
     )
     mock_cache_repo.get = AsyncMock(return_value=entry)
-    provider = CachingWebSearchProvider(inner=mock_inner, cache_repo=mock_cache_repo)
+    provider = CachingWebSearchProvider(
+        inner=mock_inner, cache_repo=mock_cache_repo
+    )
 
     response = await provider.search(request)
 
@@ -68,7 +77,9 @@ async def test_cache_miss_calls_inner_and_puts(mock_inner, mock_cache_repo):
     mock_inner.search = AsyncMock(return_value=search_response)
     mock_cache_repo.get = AsyncMock(return_value=None)
     mock_cache_repo.put = AsyncMock()
-    provider = CachingWebSearchProvider(inner=mock_inner, cache_repo=mock_cache_repo)
+    provider = CachingWebSearchProvider(
+        inner=mock_inner, cache_repo=mock_cache_repo
+    )
 
     response = await provider.search(request)
 
@@ -84,11 +95,15 @@ async def test_cache_miss_calls_inner_and_puts(mock_inner, mock_cache_repo):
 async def test_put_failure_does_not_block_return(mock_inner, mock_cache_repo):
     """缓存写入失败时不阻塞，搜索结果正常返回。"""
     request = WebSearchRequest(query="行业")
-    search_response = WebSearchResponse(query="行业", total_matches=0, results=[])
+    search_response = WebSearchResponse(
+        query="行业", total_matches=0, results=[]
+    )
     mock_inner.search = AsyncMock(return_value=search_response)
     mock_cache_repo.get = AsyncMock(return_value=None)
     mock_cache_repo.put = AsyncMock(side_effect=Exception("DB error"))
-    provider = CachingWebSearchProvider(inner=mock_inner, cache_repo=mock_cache_repo)
+    provider = CachingWebSearchProvider(
+        inner=mock_inner, cache_repo=mock_cache_repo
+    )
 
     response = await provider.search(request)
 
@@ -103,7 +118,9 @@ async def test_search_failure_does_not_put(mock_inner, mock_cache_repo):
     mock_inner.search = AsyncMock(side_effect=Exception("网络错误"))
     mock_cache_repo.get = AsyncMock(return_value=None)
     mock_cache_repo.put = AsyncMock()
-    provider = CachingWebSearchProvider(inner=mock_inner, cache_repo=mock_cache_repo)
+    provider = CachingWebSearchProvider(
+        inner=mock_inner, cache_repo=mock_cache_repo
+    )
 
     with pytest.raises(Exception, match="网络错误"):
         await provider.search(request)

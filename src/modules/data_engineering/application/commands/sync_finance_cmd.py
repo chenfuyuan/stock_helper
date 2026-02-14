@@ -1,20 +1,28 @@
-import asyncio
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict
+
 from loguru import logger
-from src.modules.data_engineering.domain.ports.repositories.stock_basic_repo import IStockBasicRepository
-from src.modules.data_engineering.domain.ports.repositories.financial_data_repo import IFinancialDataRepository
-from src.modules.data_engineering.domain.ports.providers.financial_data_provider import IFinancialDataProvider
-from src.modules.data_engineering.domain.model.stock import StockInfo
+
+from src.modules.data_engineering.domain.ports.providers.financial_data_provider import (
+    IFinancialDataProvider,
+)
+from src.modules.data_engineering.domain.ports.repositories.financial_data_repo import (
+    IFinancialDataRepository,
+)
+from src.modules.data_engineering.domain.ports.repositories.stock_basic_repo import (
+    IStockBasicRepository,
+)
+
 
 class SyncFinanceHistoryUseCase:
     """
     同步历史财务数据
     """
+
     def __init__(
         self,
         stock_repo: IStockBasicRepository,
         finance_repo: IFinancialDataRepository,
-        data_provider: IFinancialDataProvider
+        data_provider: IFinancialDataProvider,
     ):
         self.stock_repo = stock_repo
         self.finance_repo = finance_repo

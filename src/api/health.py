@@ -20,4 +20,8 @@ async def health_check(
         await db.execute(text("SELECT 1"))
         return {"status": "ok", "database": "connected"}
     except Exception as e:
-        return {"status": "error", "database": "disconnected", "details": str(e)}
+        return {
+            "status": "error",
+            "database": "disconnected",
+            "details": str(e),
+        }

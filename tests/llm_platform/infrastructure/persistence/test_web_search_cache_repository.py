@@ -3,11 +3,14 @@ PgWebSearchCacheRepository 集成测试。
 
 4.4 写入/读取、过期不返回、UPSERT 覆盖、cleanup_expired 删除过期条目。
 """
+
 from datetime import datetime, timedelta
 
 import pytest
 
-from src.modules.llm_platform.domain.dtos.web_search_cache_entry import WebSearchCacheEntry
+from src.modules.llm_platform.domain.dtos.web_search_cache_entry import (
+    WebSearchCacheEntry,
+)
 from src.modules.llm_platform.infrastructure.persistence.repositories.web_search_cache_repository import (
     PgWebSearchCacheRepository,
 )
@@ -56,20 +59,24 @@ async def test_upsert_overwrites(db_session):
     key = "c" * 64
     now = datetime.utcnow()
     exp = now + timedelta(hours=24)
-    await repo.put(WebSearchCacheEntry(
-        cache_key=key,
-        request_params={"v": 1},
-        response_data="first",
-        created_at=now,
-        expires_at=exp,
-    ))
-    await repo.put(WebSearchCacheEntry(
-        cache_key=key,
-        request_params={"v": 2},
-        response_data="second",
-        created_at=now,
-        expires_at=exp,
-    ))
+    await repo.put(
+        WebSearchCacheEntry(
+            cache_key=key,
+            request_params={"v": 1},
+            response_data="first",
+            created_at=now,
+            expires_at=exp,
+        )
+    )
+    await repo.put(
+        WebSearchCacheEntry(
+            cache_key=key,
+            request_params={"v": 2},
+            response_data="second",
+            created_at=now,
+            expires_at=exp,
+        )
+    )
     got = await repo.get(key)
     assert got is not None
     assert got.response_data == "second"
@@ -84,20 +91,24 @@ async def test_cleanup_expired_deletes_and_returns_count(db_session):
     past = now - timedelta(hours=1)
     key1 = "d" * 64
     key2 = "e" * 64
-    await repo.put(WebSearchCacheEntry(
-        cache_key=key1,
-        request_params={},
-        response_data="x",
-        created_at=past,
-        expires_at=past + timedelta(minutes=30),
-    ))
-    await repo.put(WebSearchCacheEntry(
-        cache_key=key2,
-        request_params={},
-        response_data="y",
-        created_at=now,
-        expires_at=now + timedelta(hours=24),
-    ))
+    await repo.put(
+        WebSearchCacheEntry(
+            cache_key=key1,
+            request_params={},
+            response_data="x",
+            created_at=past,
+            expires_at=past + timedelta(minutes=30),
+        )
+    )
+    await repo.put(
+        WebSearchCacheEntry(
+            cache_key=key2,
+            request_params={},
+            response_data="y",
+            created_at=now,
+            expires_at=now + timedelta(hours=24),
+        )
+    )
     n = await repo.cleanup_expired()
     assert n >= 1
     assert await repo.get(key1) is None

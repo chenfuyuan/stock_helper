@@ -3,20 +3,21 @@
 合法 JSON 解析后字段正确；非 JSON 或缺字段时解析失败且不返回未校验字符串；
 含 `<think>` 标签时正确剥离后解析。
 """
+
 import pytest
 
+from src.modules.research.domain.dtos.valuation_dtos import ValuationResultDTO
+from src.modules.research.domain.exceptions import LLMOutputParseError
 from src.modules.research.infrastructure.agents.valuation_modeler.output_parser import (
     parse_valuation_result,
 )
-from src.modules.research.domain.dtos.valuation_dtos import ValuationResultDTO
-from src.modules.research.domain.exceptions import LLMOutputParseError
 
 
 def _make_valid_json(
     valuation_verdict: str = "Undervalued",
     confidence_score: float = 0.85,
 ) -> str:
-    return f'''{{
+    return f"""{{
         "valuation_verdict": "{valuation_verdict}",
         "confidence_score": {confidence_score},
         "estimated_intrinsic_value_range": {{
@@ -32,7 +33,7 @@ def _make_valid_json(
             "资产负债率 65%"
         ],
         "reasoning_summary": "综合三模型显示低估，但需关注盈利质量下滑风险。"
-    }}'''
+    }}"""
 
 
 def test_parse_valid_json_returns_dto_with_correct_fields():
@@ -44,7 +45,10 @@ def test_parse_valid_json_returns_dto_with_correct_fields():
     assert result.confidence_score == 0.85
     assert len(result.key_evidence) >= 1
     assert len(result.risk_factors) >= 1
-    assert result.estimated_intrinsic_value_range.lower_bound == "基于 Graham 模型推导的 18.5 元"
+    assert (
+        result.estimated_intrinsic_value_range.lower_bound
+        == "基于 Graham 模型推导的 18.5 元"
+    )
 
 
 def test_parse_valid_json_stripped_from_markdown_code_block():
@@ -59,7 +63,9 @@ def test_parse_valid_json_stripped_from_markdown_code_block():
 
 def test_parse_legacy_verdict_with_chinese_normalizes_to_english():
     """LLM 返回「英文 (中文)」格式时归一化为英文枚举。"""
-    raw = _make_valid_json(valuation_verdict="Overvalued (高估)", confidence_score=0.9)
+    raw = _make_valid_json(
+        valuation_verdict="Overvalued (高估)", confidence_score=0.9
+    )
     result = parse_valuation_result(raw)
     assert result.valuation_verdict == "Overvalued"
 
@@ -93,9 +99,9 @@ def test_parse_missing_required_field_raises():
 
 def test_parse_invalid_verdict_value_raises():
     """valuation_verdict 不为三值之一时解析失败。"""
-    raw = '''{"valuation_verdict": "INVALID", "confidence_score": 0.8, 
+    raw = """{"valuation_verdict": "INVALID", "confidence_score": 0.8,
     "estimated_intrinsic_value_range": {"lower_bound": "18", "upper_bound": "25"},
-    "key_evidence": ["test"], "risk_factors": ["test"], "reasoning_summary": "test"}'''
+    "key_evidence": ["test"], "risk_factors": ["test"], "reasoning_summary": "test"}"""
     with pytest.raises(LLMOutputParseError):
         parse_valuation_result(raw)
 
@@ -109,9 +115,9 @@ def test_parse_confidence_out_of_range_raises():
 
 def test_parse_empty_key_evidence_raises():
     """key_evidence 为空列表时解析失败（要求非空）。"""
-    raw = '''{"valuation_verdict": "Fair", "confidence_score": 0.7,
+    raw = """{"valuation_verdict": "Fair", "confidence_score": 0.7,
     "estimated_intrinsic_value_range": {"lower_bound": "20", "upper_bound": "25"},
-    "key_evidence": [], "risk_factors": ["test"], "reasoning_summary": "test"}'''
+    "key_evidence": [], "risk_factors": ["test"], "reasoning_summary": "test"}"""
     with pytest.raises(LLMOutputParseError):
         parse_valuation_result(raw)
 
@@ -124,7 +130,10 @@ def test_parse_empty_string_raises():
 
 def test_parse_narrative_report_present():
     """JSON 含 narrative_report 时解析为 DTO 对应字段。"""
-    raw = _make_valid_json()[:-1] + ', "narrative_report": "估值偏低，PE 分位 15%，置信度 0.85。"}'
+    raw = (
+        _make_valid_json()[:-1]
+        + ', "narrative_report": "估值偏低，PE 分位 15%，置信度 0.85。"}'
+    )
     result = parse_valuation_result(raw)
     assert result.narrative_report == "估值偏低，PE 分位 15%，置信度 0.85。"
 

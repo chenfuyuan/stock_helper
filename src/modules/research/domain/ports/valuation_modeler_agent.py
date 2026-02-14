@@ -2,10 +2,15 @@
 估值建模 Agent 的 Port。
 Domain 层定义「调用估值 Agent」契约，具体实现（Prompt 加载/填充、LLM 调用、解析）在 Infrastructure 层。
 """
+
 from abc import ABC, abstractmethod
 
-from src.modules.research.domain.dtos.valuation_dtos import ValuationModelAgentResult
-from src.modules.research.domain.dtos.valuation_snapshot import ValuationSnapshotDTO
+from src.modules.research.domain.dtos.valuation_dtos import (
+    ValuationModelAgentResult,
+)
+from src.modules.research.domain.dtos.valuation_snapshot import (
+    ValuationSnapshotDTO,
+)
 
 
 class IValuationModelerAgentPort(ABC):

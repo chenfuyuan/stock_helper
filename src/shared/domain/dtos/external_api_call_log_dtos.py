@@ -1,6 +1,7 @@
 """
 外部 API 调用日志 DTO，用于持久化与查询。
 """
+
 from datetime import datetime
 from typing import Any
 from uuid import UUID

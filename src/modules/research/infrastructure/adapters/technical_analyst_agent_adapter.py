@@ -2,16 +2,23 @@
 技术分析 Agent Port 的 Infrastructure 实现。
 负责加载/填充 Prompt、调用 LLM、解析结果，并返回 DTO + 原始 input/output（由代码塞入，非大模型拼接）。
 """
+
 from pathlib import Path
 from typing import Optional
 
-from src.modules.research.domain.dtos.technical_analysis_dtos import TechnicalAnalysisAgentResult
-from src.modules.research.domain.dtos.indicators_snapshot import TechnicalIndicatorsSnapshot
+from src.modules.research.domain.dtos.indicators_snapshot import (
+    TechnicalIndicatorsSnapshot,
+)
+from src.modules.research.domain.dtos.technical_analysis_dtos import (
+    TechnicalAnalysisAgentResult,
+)
+from src.modules.research.domain.ports.llm import ILLMPort
+from src.modules.research.domain.ports.technical_analyst_agent import (
+    ITechnicalAnalystAgentPort,
+)
 from src.modules.research.infrastructure.agents.technical_analyst.output_parser import (
     parse_technical_analysis_result,
 )
-from src.modules.research.domain.ports.llm import ILLMPort
-from src.modules.research.domain.ports.technical_analyst_agent import ITechnicalAnalystAgentPort
 from src.modules.research.infrastructure.prompt_loader import (
     fill_user_prompt,
     load_system_prompt,

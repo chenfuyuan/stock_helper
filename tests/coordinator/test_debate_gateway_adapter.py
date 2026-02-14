@@ -1,17 +1,18 @@
 """DebateGatewayAdapter 单元测试：per-expert 字段映射、调试字段过滤、仅成功专家被包含。"""
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from src.modules.coordinator.infrastructure.adapters.debate_gateway_adapter import (
+    DebateGatewayAdapter,
+)
 from src.modules.debate.application.dtos.debate_outcome_dto import (
     BearCaseDTO,
     BullCaseDTO,
     DebateOutcomeDTO,
 )
 from src.modules.debate.domain.dtos.risk_matrix import RiskItemDTO
-from src.modules.coordinator.infrastructure.adapters.debate_gateway_adapter import (
-    DebateGatewayAdapter,
-)
 
 
 class _MockAsyncSessionContext:
@@ -33,9 +34,15 @@ def mock_debate_container():
         symbol="000001.SZ",
         direction="NEUTRAL",
         confidence=0.6,
-        bull_case=BullCaseDTO(core_thesis="b", supporting_arguments=[], acknowledged_risks=[]),
-        bear_case=BearCaseDTO(core_thesis="e", supporting_arguments=[], acknowledged_strengths=[]),
-        risk_matrix=[RiskItemDTO(risk="R", probability="中", impact="高", mitigation="")],
+        bull_case=BullCaseDTO(
+            core_thesis="b", supporting_arguments=[], acknowledged_risks=[]
+        ),
+        bear_case=BearCaseDTO(
+            core_thesis="e", supporting_arguments=[], acknowledged_strengths=[]
+        ),
+        risk_matrix=[
+            RiskItemDTO(risk="R", probability="中", impact="高", mitigation="")
+        ],
         key_disagreements=[],
         conflict_resolution="ok",
     )
@@ -149,7 +156,12 @@ async def test_only_successful_experts_included(mock_debate_container):
         await adapter.run_debate(
             symbol="000001.SZ",
             expert_results={
-                "technical_analyst": {"signal": "BULLISH", "confidence": 0.8, "summary_reasoning": "x", "risk_warning": ""},
+                "technical_analyst": {
+                    "signal": "BULLISH",
+                    "confidence": 0.8,
+                    "summary_reasoning": "x",
+                    "risk_warning": "",
+                },
                 "unknown_expert": {"foo": "bar"},
             },
         )
@@ -168,7 +180,14 @@ async def test_return_value_is_dict_serialization(mock_debate_container):
         adapter = DebateGatewayAdapter(_mock_session_factory())
         result = await adapter.run_debate(
             symbol="000001.SZ",
-            expert_results={"technical_analyst": {"signal": "BULLISH", "confidence": 0.8, "summary_reasoning": "", "risk_warning": ""}},
+            expert_results={
+                "technical_analyst": {
+                    "signal": "BULLISH",
+                    "confidence": 0.8,
+                    "summary_reasoning": "",
+                    "risk_warning": "",
+                }
+            },
         )
     assert isinstance(result, dict)
     assert result["symbol"] == "000001.SZ"

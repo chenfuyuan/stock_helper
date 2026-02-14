@@ -4,6 +4,7 @@ LangGraph 研究编排图构建。
 包含：通用专家节点工厂、5 个专家节点、Send 路由函数、聚合节点、debate 节点、图编译。
 当提供 session_repo 时，专家节点、debate、judge 均用 persist_node_execution 包装以持久化节点执行。
 """
+
 import logging
 from collections.abc import Callable
 from typing import Any
@@ -12,10 +13,18 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.types import Send
 
 from src.modules.coordinator.domain.model.enums import ExpertType
-from src.modules.coordinator.domain.ports.research_expert_gateway import IResearchExpertGateway
-from src.modules.coordinator.domain.ports.research_session_repository import IResearchSessionRepository
-from src.modules.coordinator.infrastructure.orchestration.graph_state import ResearchGraphState
-from src.modules.coordinator.infrastructure.orchestration.node_persistence_wrapper import persist_node_execution
+from src.modules.coordinator.domain.ports.research_expert_gateway import (
+    IResearchExpertGateway,
+)
+from src.modules.coordinator.domain.ports.research_session_repository import (
+    IResearchSessionRepository,
+)
+from src.modules.coordinator.infrastructure.orchestration.graph_state import (
+    ResearchGraphState,
+)
+from src.modules.coordinator.infrastructure.orchestration.node_persistence_wrapper import (
+    persist_node_execution,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -80,7 +89,9 @@ def create_aggregator_node() -> Callable[[ResearchGraphState], dict[str, Any]]:
     return aggregator_node
 
 
-def create_debate_node(debate_gateway: Any) -> Callable[[ResearchGraphState], dict[str, Any]]:
+def create_debate_node(
+    debate_gateway: Any,
+) -> Callable[[ResearchGraphState], dict[str, Any]]:
     """
     debate 节点工厂：读取 results/overall_status，全部失败时跳过辩论；
     否则调用 IDebateGateway.run_debate；异常时记录日志并降级（debate_outcome 为空 dict）。
@@ -95,7 +106,9 @@ def create_debate_node(debate_gateway: Any) -> Callable[[ResearchGraphState], di
             return {"debate_outcome": {}}
 
         try:
-            outcome = await debate_gateway.run_debate(symbol=symbol, expert_results=results)
+            outcome = await debate_gateway.run_debate(
+                symbol=symbol, expert_results=results
+            )
             return {"debate_outcome": outcome}
         except Exception as e:
             logger.warning("辩论节点执行失败，降级为空结果: %s", e)
@@ -105,7 +118,9 @@ def create_debate_node(debate_gateway: Any) -> Callable[[ResearchGraphState], di
     return debate_node
 
 
-def create_judge_node(judge_gateway: Any) -> Callable[[ResearchGraphState], dict[str, Any]]:
+def create_judge_node(
+    judge_gateway: Any,
+) -> Callable[[ResearchGraphState], dict[str, Any]]:
     """
     judge 节点工厂：读取 debate_outcome，为空时跳过裁决；
     否则调用 IJudgeGateway.run_verdict；异常时记录日志并降级（verdict 为空 dict）。
@@ -119,7 +134,9 @@ def create_judge_node(judge_gateway: Any) -> Callable[[ResearchGraphState], dict
             return {"verdict": {}}
 
         try:
-            verdict = await judge_gateway.run_verdict(symbol=symbol, debate_outcome=debate_outcome)
+            verdict = await judge_gateway.run_verdict(
+                symbol=symbol, debate_outcome=debate_outcome
+            )
             return {"verdict": verdict}
         except Exception as e:
             logger.warning("裁决节点执行失败，降级为空结果: %s", e)

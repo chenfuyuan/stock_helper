@@ -1,22 +1,23 @@
 import logging
 from typing import Any, List
 
-from src.shared.domain.exceptions import BadRequestException
-from src.modules.research.domain.ports.catalyst_data import ICatalystDataPort
-from src.modules.research.domain.ports.catalyst_context_builder import (
-    ICatalystContextBuilder,
+from src.modules.research.domain.dtos.catalyst_context import (
+    CatalystContextDTO,
 )
-from src.modules.research.domain.ports.catalyst_detective_agent import (
-    ICatalystDetectiveAgentPort,
-)
-from src.modules.research.domain.dtos.catalyst_inputs import (
-    CatalystStockOverview,
-    CatalystSearchResult,
-)
-from src.modules.research.domain.dtos.catalyst_context import CatalystContextDTO
 from src.modules.research.domain.dtos.catalyst_dtos import (
     CatalystDetectiveAgentResult,
 )
+from src.modules.research.domain.dtos.catalyst_inputs import (
+    CatalystSearchResult,
+)
+from src.modules.research.domain.ports.catalyst_context_builder import (
+    ICatalystContextBuilder,
+)
+from src.modules.research.domain.ports.catalyst_data import ICatalystDataPort
+from src.modules.research.domain.ports.catalyst_detective_agent import (
+    ICatalystDetectiveAgentPort,
+)
+from src.shared.domain.exceptions import BadRequestException
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +48,9 @@ class CatalystDetectiveService:
         overview = await self.data_port.get_stock_overview(symbol)
         if not overview:
             logger.warning("催化剂侦探：标的不存在，symbol=%s", symbol)
-            raise BadRequestException(message=f"标的不存在或无法获取概览：{symbol}")
+            raise BadRequestException(
+                message=f"标的不存在或无法获取概览：{symbol}"
+            )
 
         # 2. 从 Web 搜索获取催化剂上下文
         search_results: List[CatalystSearchResult] = (
@@ -59,7 +62,9 @@ class CatalystDetectiveService:
         # 3. 校验搜索结果是否全为空
         all_empty = all(not r.items for r in search_results)
         if all_empty:
-            logger.warning("催化剂侦探：四维度搜索全部无结果，symbol=%s", symbol)
+            logger.warning(
+                "催化剂侦探：四维度搜索全部无结果，symbol=%s", symbol
+            )
             raise BadRequestException(
                 message="虽然找到了标的，但关于该标的的催化剂搜索全部失败或无结果，无法分析。"
             )
@@ -70,8 +75,8 @@ class CatalystDetectiveService:
         )
 
         # 5. 调用 Agent 进行分析
-        agent_result: CatalystDetectiveAgentResult = await self.agent_port.analyze(
-            symbol, context_dto
+        agent_result: CatalystDetectiveAgentResult = (
+            await self.agent_port.analyze(symbol, context_dto)
         )
 
         # 6. 归一化为 dict，与其他专家返回类型一致

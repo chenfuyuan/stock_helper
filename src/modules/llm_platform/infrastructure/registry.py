@@ -1,11 +1,15 @@
-from typing import Dict, Optional, List
-from loguru import logger
-import asyncio
+from typing import Dict, List, Optional
 
-from src.modules.llm_platform.domain.ports.llm import ILLMProvider
-from src.modules.llm_platform.infrastructure.adapters.openai import OpenAIProvider
+from loguru import logger
+
 from src.modules.llm_platform.domain.entities.llm_config import LLMConfig
-from src.modules.llm_platform.domain.ports.repositories.config_repo import ILLMConfigRepository
+from src.modules.llm_platform.domain.ports.llm import ILLMProvider
+from src.modules.llm_platform.domain.ports.repositories.config_repo import (
+    ILLMConfigRepository,
+)
+from src.modules.llm_platform.infrastructure.adapters.openai import (
+    OpenAIProvider,
+)
 
 
 class LLMRegistry:
@@ -14,6 +18,7 @@ class LLMRegistry:
     负责管理所有活跃的 LLM Provider 实例。
     支持从数据库动态加载配置并实例化 Provider。
     """
+
     _instance = None
     _providers: Dict[str, ILLMProvider] = {}
     _configs: Dict[str, LLMConfig] = {}
@@ -27,7 +32,7 @@ class LLMRegistry:
     def set_repository(self, repo: ILLMConfigRepository):
         """
         设置配置仓储，用于加载配置。
-        
+
         Args:
             repo (ILLMConfigRepository): 仓储实例
         """
@@ -39,23 +44,27 @@ class LLMRegistry:
         这是一个全量刷新操作，会清除旧的实例。
         """
         if not self._repo:
-            logger.warning("Repository not set for LLMRegistry, cannot refresh from DB")
+            logger.warning(
+                "Repository not set for LLMRegistry, cannot refresh from DB"
+            )
             return
 
         logger.info("Starting LLM Registry refresh...")
         try:
             configs = await self._repo.get_active_configs()
-            
+
             # Clear and rebuild
             self._providers.clear()
             self._configs.clear()
-            
+
             success_count = 0
             for config in configs:
                 if self._register(config):
                     success_count += 1
-                
-            logger.info(f"LLM Registry refreshed. Loaded {success_count} providers out of {len(configs)} configs.")
+
+            logger.info(
+                f"LLM Registry refreshed. Loaded {success_count} providers out of {len(configs)} configs."
+            )
         except Exception as e:
             logger.error(f"LLM 注册表刷新失败: {str(e)}")
             # 这里选择记录错误而不是抛出异常，以防启动流程被中断
@@ -64,23 +73,27 @@ class LLMRegistry:
     def _register(self, config: LLMConfig) -> bool:
         """
         注册单个 LLM 配置。
-        
+
         Args:
             config (LLMConfig): 配置实体
-            
+
         Returns:
             bool: 注册成功返回 True，失败返回 False
         """
         try:
-            logger.debug(f"Registering LLM provider: {config.alias} ({config.provider_type})")
+            logger.debug(
+                f"Registering LLM provider: {config.alias} ({config.provider_type})"
+            )
             if config.provider_type.lower() == "openai":
                 provider = OpenAIProvider(
                     api_key=config.api_key,
                     base_url=config.base_url,
-                    model=config.model_name
+                    model=config.model_name,
                 )
             else:
-                logger.warning(f"Unsupported provider type: {config.provider_type} for alias {config.alias}")
+                logger.warning(
+                    f"Unsupported provider type: {config.provider_type} for alias {config.alias}"
+                )
                 return False
 
             self._providers[config.alias] = provider

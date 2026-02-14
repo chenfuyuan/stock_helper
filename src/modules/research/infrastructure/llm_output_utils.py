@@ -5,6 +5,7 @@
 请使用 parse_llm_json_output() 或 generate_and_parse() 代替本模块的函数。
 保留本文件仅为向后兼容，将在后续版本中删除。
 """
+
 import re
 
 
@@ -85,7 +86,9 @@ def _repair_control_chars_in_json_strings(text: str) -> str:
     return "".join(result)
 
 
-def normalize_llm_json_like_text(raw: str, repair_control_chars: bool = True) -> str:
+def normalize_llm_json_like_text(
+    raw: str, repair_control_chars: bool = True
+) -> str:
     """
     对「疑似 JSON 的 LLM 文本」做标准化：先剥 <think>，再剥代码块；
     若 repair_control_chars 为 True，再修复字符串值内的未转义控制字符（换行等）。

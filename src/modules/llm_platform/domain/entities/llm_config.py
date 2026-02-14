@@ -1,13 +1,14 @@
 from dataclasses import dataclass, field
-from typing import List, Optional
 from datetime import datetime
+from typing import List, Optional
+
 
 @dataclass
 class LLMConfig:
     """
     大模型配置实体 (Domain Entity)
     定义了连接和使用大语言模型所需的核心属性。
-    
+
     Attributes:
         alias (str): 配置别名，唯一标识符（如 'deepseek-v3'）。
         vendor (str): 模型厂商（如 'SiliconFlow', 'OpenAI'）。
@@ -23,6 +24,7 @@ class LLMConfig:
         created_at (Optional[datetime]): 创建时间。
         updated_at (Optional[datetime]): 更新时间。
     """
+
     alias: str
     vendor: str
     provider_type: str
@@ -45,7 +47,7 @@ class LLMConfig:
         masked_key = "******"
         if self.api_key and len(self.api_key) >= 8:
             masked_key = f"{self.api_key[:3]}...{self.api_key[-4:]}"
-        
+
         return (
             f"LLMConfig(alias={self.alias}, vendor={self.vendor}, "
             f"model={self.model_name}, api_key={masked_key}, "

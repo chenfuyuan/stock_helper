@@ -4,6 +4,7 @@ Web 搜索缓存条目 DTO。
 用于 IWebSearchCacheRepository 的 get/put 契约，存储请求参数哈希、原始参数、
 WebSearchResponse 的 JSON 序列化及创建/过期时间。
 """
+
 from datetime import datetime
 
 from pydantic import BaseModel

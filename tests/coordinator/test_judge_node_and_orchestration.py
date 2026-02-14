@@ -1,13 +1,16 @@
 """judge_node 与编排图测试：辩论成功后裁决写入 verdict、debate 为空跳过裁决、Gateway 异常降级、完整流水线、skip_debate、辩论失败时 verdict 为 null。"""
-from unittest.mock import AsyncMock, MagicMock
+
+from unittest.mock import AsyncMock
 
 import pytest
 
 from src.modules.coordinator.domain.dtos.research_dtos import ResearchRequest
 from src.modules.coordinator.domain.model.enums import ExpertType
-from src.modules.coordinator.domain.ports.research_expert_gateway import IResearchExpertGateway
 from src.modules.coordinator.domain.ports.debate_gateway import IDebateGateway
 from src.modules.coordinator.domain.ports.judge_gateway import IJudgeGateway
+from src.modules.coordinator.domain.ports.research_expert_gateway import (
+    IResearchExpertGateway,
+)
 from src.modules.coordinator.infrastructure.orchestration.langgraph_orchestrator import (
     LangGraphResearchOrchestrator,
 )
@@ -17,7 +20,9 @@ from src.modules.coordinator.infrastructure.orchestration.langgraph_orchestrator
 def mock_research_gateway():
     """所有专家返回成功。"""
     g = AsyncMock(spec=IResearchExpertGateway)
-    g.run_expert = AsyncMock(return_value={"signal": "NEUTRAL", "confidence": 0.8})
+    g.run_expert = AsyncMock(
+        return_value={"signal": "NEUTRAL", "confidence": 0.8}
+    )
     return g
 
 

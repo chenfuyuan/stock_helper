@@ -1,6 +1,7 @@
 """
 LLM 平台门面服务：统一大模型调用与调用审计。
 """
+
 import time
 from datetime import datetime
 from typing import TYPE_CHECKING, List, Optional
@@ -8,14 +9,16 @@ from uuid import UUID, uuid4
 
 from loguru import logger
 
-from src.shared.infrastructure.execution_context import current_execution_ctx
 from src.modules.llm_platform.domain.dtos.llm_call_log_dtos import LLMCallLog
 from src.modules.llm_platform.domain.ports.llm import ILLMProvider
 from src.modules.llm_platform.infrastructure.registry import LLMRegistry
 from src.modules.llm_platform.infrastructure.router import LLMRouter
+from src.shared.infrastructure.execution_context import current_execution_ctx
 
 if TYPE_CHECKING:
-    from src.modules.llm_platform.domain.ports.llm_call_log_repository import ILLMCallLogRepository
+    from src.modules.llm_platform.domain.ports.llm_call_log_repository import (
+        ILLMCallLogRepository,
+    )
 
 
 class LLMService(ILLMProvider):
@@ -63,7 +66,9 @@ class LLMService(ILLMProvider):
         Raises:
             Exception: 当没有匹配的模型或底层 API 调用失败时抛出。
         """
-        logger.info("LLM Generation request received. Alias=%s, Tags=%s", alias, tags)
+        logger.info(
+            "LLM Generation request received. Alias=%s, Tags=%s", alias, tags
+        )
         ctx = current_execution_ctx.get()
         session_uuid: UUID | None = UUID(ctx.session_id) if ctx else None
         started = time.perf_counter()

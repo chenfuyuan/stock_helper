@@ -1,12 +1,15 @@
 """debate_node 与 skip_debate 测试：正常写入 debate_outcome、全部失败跳过、Gateway 异常降级、skip_debate 时 debate_outcome 为 null。"""
-from unittest.mock import AsyncMock, MagicMock
+
+from unittest.mock import AsyncMock
 
 import pytest
 
 from src.modules.coordinator.domain.dtos.research_dtos import ResearchRequest
 from src.modules.coordinator.domain.model.enums import ExpertType
-from src.modules.coordinator.domain.ports.research_expert_gateway import IResearchExpertGateway
 from src.modules.coordinator.domain.ports.debate_gateway import IDebateGateway
+from src.modules.coordinator.domain.ports.research_expert_gateway import (
+    IResearchExpertGateway,
+)
 from src.modules.coordinator.infrastructure.orchestration.langgraph_orchestrator import (
     LangGraphResearchOrchestrator,
 )
@@ -16,7 +19,9 @@ from src.modules.coordinator.infrastructure.orchestration.langgraph_orchestrator
 def mock_research_gateway():
     """所有专家返回成功。"""
     g = AsyncMock(spec=IResearchExpertGateway)
-    g.run_expert = AsyncMock(return_value={"signal": "NEUTRAL", "confidence": 0.8})
+    g.run_expert = AsyncMock(
+        return_value={"signal": "NEUTRAL", "confidence": 0.8}
+    )
     return g
 
 
@@ -25,7 +30,11 @@ def mock_debate_gateway():
     """辩论返回固定 dict。"""
     g = AsyncMock(spec=IDebateGateway)
     g.run_debate = AsyncMock(
-        return_value={"direction": "NEUTRAL", "confidence": 0.6, "symbol": "000001.SZ"}
+        return_value={
+            "direction": "NEUTRAL",
+            "confidence": 0.6,
+            "symbol": "000001.SZ",
+        }
     )
     return g
 
@@ -85,7 +94,9 @@ async def test_all_experts_fail_debate_skipped():
     gateway = AsyncMock(spec=IResearchExpertGateway)
     gateway.run_expert = AsyncMock(side_effect=RuntimeError("专家失败"))
     debate_gw = AsyncMock(spec=IDebateGateway)
-    orchestrator = LangGraphResearchOrchestrator(gateway, debate_gateway=debate_gw)
+    orchestrator = LangGraphResearchOrchestrator(
+        gateway, debate_gateway=debate_gw
+    )
     request = ResearchRequest(
         symbol="000001.SZ",
         experts=[ExpertType.TECHNICAL_ANALYST],

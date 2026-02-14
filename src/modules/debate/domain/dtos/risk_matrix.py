@@ -3,6 +3,7 @@
 
 用于 Resolution 结果与对外 DebateOutcome 中的 risk_matrix 字段。
 """
+
 from pydantic import BaseModel
 
 

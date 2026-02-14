@@ -1,13 +1,15 @@
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from loguru import logger
 
+
 class SchedulerService:
     """
     任务调度器服务 (Singleton)
-    
+
     封装 APScheduler (AsyncIOScheduler)，提供全局统一的定时任务管理能力。
     负责任务的启动、停止和管理。
     """
+
     _scheduler: AsyncIOScheduler = None
 
     @classmethod
@@ -15,7 +17,7 @@ class SchedulerService:
         """
         获取调度器单例。
         如果尚未初始化，则创建一个新的 AsyncIOScheduler 实例。
-        
+
         Returns:
             AsyncIOScheduler: 全局调度器实例。
         """

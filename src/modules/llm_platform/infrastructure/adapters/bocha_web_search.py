@@ -1,17 +1,18 @@
 import logging
-from typing import Dict, Any
+from typing import Any, Dict
+
 import httpx
 
+from src.modules.llm_platform.domain.exceptions import (
+    WebSearchConfigError,
+    WebSearchConnectionError,
+    WebSearchError,
+)
 from src.modules.llm_platform.domain.ports.web_search import IWebSearchProvider
 from src.modules.llm_platform.domain.web_search_dtos import (
     WebSearchRequest,
     WebSearchResponse,
     WebSearchResultItem,
-)
-from src.modules.llm_platform.domain.exceptions import (
-    WebSearchError,
-    WebSearchConnectionError,
-    WebSearchConfigError,
 )
 
 logger = logging.getLogger(__name__)
@@ -20,10 +21,10 @@ logger = logging.getLogger(__name__)
 class BochaWebSearchAdapter(IWebSearchProvider):
     """
     博查 AI Web Search API 适配器
-    
+
     实现 IWebSearchProvider 接口，调用博查 AI Web Search API (POST /v1/web-search)
     将博查 API 的响应映射为标准的 WebSearchResponse DTO
-    
+
     Attributes:
         api_key: 博查 API Key
         base_url: 博查 API 基础 URL（默认 https://api.bochaai.com）
@@ -38,7 +39,7 @@ class BochaWebSearchAdapter(IWebSearchProvider):
     ):
         """
         初始化博查搜索适配器
-        
+
         Args:
             api_key: 博查 API Key
             base_url: 博查 API 基础 URL
@@ -51,13 +52,13 @@ class BochaWebSearchAdapter(IWebSearchProvider):
     async def search(self, request: WebSearchRequest) -> WebSearchResponse:
         """
         执行 Web 搜索
-        
+
         Args:
             request: 搜索请求
-            
+
         Returns:
             WebSearchResponse: 搜索结果
-            
+
         Raises:
             WebSearchConfigError: API Key 未配置
             WebSearchConnectionError: 网络连接/超时错误
@@ -66,11 +67,15 @@ class BochaWebSearchAdapter(IWebSearchProvider):
         # 检查 API Key 是否配置
         if not self.api_key or self.api_key.strip() == "":
             logger.error("博查 API Key 未配置")
-            raise WebSearchConfigError("博查 API Key 未配置，请设置 BOCHA_API_KEY 环境变量")
+            raise WebSearchConfigError(
+                "博查 API Key 未配置，请设置 BOCHA_API_KEY 环境变量"
+            )
 
         # 构建请求体
         request_body = self._build_request_body(request)
-        logger.info(f"执行博查搜索，查询词: {request.query}, 请求体: {request_body}")
+        logger.info(
+            f"执行博查搜索，查询词: {request.query}, 请求体: {request_body}"
+        )
 
         try:
             async with httpx.AsyncClient(timeout=self.timeout) as client:
@@ -85,7 +90,9 @@ class BochaWebSearchAdapter(IWebSearchProvider):
 
                 # 处理 HTTP 错误
                 if response.status_code >= 400:
-                    error_msg = f"博查 API 返回错误，状态码: {response.status_code}"
+                    error_msg = (
+                        f"博查 API 返回错误，状态码: {response.status_code}"
+                    )
                     logger.error(error_msg)
                     try:
                         error_detail = response.json()
@@ -121,10 +128,10 @@ class BochaWebSearchAdapter(IWebSearchProvider):
     def _build_request_body(self, request: WebSearchRequest) -> Dict[str, Any]:
         """
         构建博查 API 请求体
-        
+
         Args:
             request: 搜索请求 DTO
-            
+
         Returns:
             博查 API 请求体字典
         """
@@ -145,21 +152,21 @@ class BochaWebSearchAdapter(IWebSearchProvider):
     ) -> WebSearchResponse:
         """
         将博查 API 响应映射为标准 WebSearchResponse DTO
-        
+
         Args:
             query: 原始查询词
             response_data: 博查 API 响应数据
-            
+
         Returns:
             WebSearchResponse: 标准搜索响应
         """
         # 防御性解析：博查 API 响应结构为 {code, data: {webPages: {...}}}
         logger.debug(f"响应数据结构: keys={list(response_data.keys())}")
-        
+
         # 提取 data 字段（博查 API 的实际响应结构）
         data = response_data.get("data", {})
         web_pages = data.get("webPages", {})
-        
+
         logger.debug(f"webPages 结构: {web_pages}")
         value_list = web_pages.get("value", [])
         logger.info(f"value_list 长度: {len(value_list)}")

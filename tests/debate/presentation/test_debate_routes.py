@@ -1,11 +1,14 @@
 """Debate REST 端点集成测试：正常请求 200、symbol 缺失 400、expert_results 为空 400。"""
+
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from httpx import ASGITransport, AsyncClient
 
 from src.main import app
-from src.modules.debate.presentation.rest.debate_router import get_debate_service
+from src.modules.debate.presentation.rest.debate_router import (
+    get_debate_service,
+)
 
 
 @pytest.fixture
@@ -17,6 +20,7 @@ def mock_debate_outcome_dto():
         DebateOutcomeDTO,
     )
     from src.modules.debate.domain.dtos.risk_matrix import RiskItemDTO
+
     return DebateOutcomeDTO(
         symbol="000001.SZ",
         direction="NEUTRAL",
@@ -31,7 +35,9 @@ def mock_debate_outcome_dto():
             supporting_arguments=[],
             acknowledged_strengths=[],
         ),
-        risk_matrix=[RiskItemDTO(risk="R", probability="中", impact="高", mitigation="")],
+        risk_matrix=[
+            RiskItemDTO(risk="R", probability="中", impact="高", mitigation="")
+        ],
         key_disagreements=[],
         conflict_resolution="中性",
     )
@@ -48,8 +54,10 @@ def mock_debate_service(mock_debate_outcome_dto):
 @pytest.mark.asyncio
 async def test_post_debate_run_returns_200(mock_debate_service):
     """正常 POST /api/v1/debate/run 返回 200，响应含 direction、confidence、risk_matrix。"""
+
     async def override_get_debate_service():
         return mock_debate_service
+
     app.dependency_overrides[get_debate_service] = override_get_debate_service
     try:
         async with AsyncClient(
@@ -84,8 +92,10 @@ async def test_post_debate_run_returns_200(mock_debate_service):
 @pytest.mark.asyncio
 async def test_post_debate_run_symbol_missing_returns_400():
     """symbol 缺失或空时返回 400。"""
+
     async def override_get_debate_service():
         return MagicMock()
+
     app.dependency_overrides[get_debate_service] = override_get_debate_service
     try:
         async with AsyncClient(
@@ -94,7 +104,17 @@ async def test_post_debate_run_symbol_missing_returns_400():
         ) as client:
             resp = await client.post(
                 "/api/v1/debate/run",
-                json={"symbol": "", "expert_results": {"ta": {"signal": "BULLISH", "confidence": 0.8, "reasoning": "", "risk_warning": ""}}},
+                json={
+                    "symbol": "",
+                    "expert_results": {
+                        "ta": {
+                            "signal": "BULLISH",
+                            "confidence": 0.8,
+                            "reasoning": "",
+                            "risk_warning": "",
+                        }
+                    },
+                },
             )
         assert resp.status_code == 400
     finally:
@@ -104,8 +124,10 @@ async def test_post_debate_run_symbol_missing_returns_400():
 @pytest.mark.asyncio
 async def test_post_debate_run_expert_results_empty_returns_400():
     """expert_results 为空时返回 400。"""
+
     async def override_get_debate_service():
         return MagicMock()
+
     app.dependency_overrides[get_debate_service] = override_get_debate_service
     try:
         async with AsyncClient(

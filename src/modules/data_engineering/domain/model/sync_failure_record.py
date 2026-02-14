@@ -10,10 +10,11 @@ from src.modules.data_engineering.domain.model.enums import SyncJobType
 class SyncFailureRecord:
     """
     同步失败记录实体
-    
+
     用于记录单只股票在同步过程中的失败信息，支持自动重试机制。
     超过最大重试次数后需人工介入处理。
     """
+
     id: UUID = field(default_factory=uuid4)
     job_type: SyncJobType = SyncJobType.DAILY_HISTORY
     third_code: str = ""  # 失败的股票代码（Tushare ts_code 格式）

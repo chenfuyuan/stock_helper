@@ -3,9 +3,12 @@ Judge 应用服务：编排裁决流程。
 
 接收 JudgeInput，调用 IJudgeVerdictAgentPort.judge()，组装 VerdictDTO 返回（从 JudgeInput 注入 symbol）。
 """
+
 from src.modules.judge.application.dtos.verdict_dto import VerdictDTO
 from src.modules.judge.domain.dtos.judge_input import JudgeInput
-from src.modules.judge.domain.ports.judge_verdict_agent import IJudgeVerdictAgentPort
+from src.modules.judge.domain.ports.judge_verdict_agent import (
+    IJudgeVerdictAgentPort,
+)
 
 
 class JudgeService:

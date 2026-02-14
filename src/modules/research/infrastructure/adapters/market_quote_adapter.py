@@ -3,6 +3,7 @@
 内部调用 data_engineering 的 GetDailyBarsForTickerUseCase（Application 接口），
 不直接依赖 data_engineering 的 repository 或 domain。
 """
+
 from datetime import date
 from typing import List
 

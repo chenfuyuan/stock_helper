@@ -35,5 +35,6 @@ def parse_verdict_result(raw: str) -> VerdictResult:
         )
     except LLMJsonParseError as e:
         raise LLMOutputParseError(
-            message=e.message, details=e.details,
+            message=e.message,
+            details=e.details,
         ) from e

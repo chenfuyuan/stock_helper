@@ -1,10 +1,9 @@
 """
 任务 12.3：测试 NodeExecution 成功记录与失败记录。
 """
+
 from datetime import datetime, timezone
 from uuid import uuid4
-
-import pytest
 
 from src.modules.coordinator.domain.model.node_execution import NodeExecution
 

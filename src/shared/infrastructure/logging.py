@@ -10,6 +10,7 @@ class InterceptHandler(logging.Handler):
     """
     拦截标准 logging 日志并转发到 Loguru
     """
+
     def emit(self, record):
         # 获取对应的 Loguru 日志级别
         try:
@@ -32,7 +33,7 @@ def setup_logging():
     """
     配置日志系统
     接管标准库 logging，统一使用 Loguru 输出
-    
+
     配置格式：
     - 时间戳 (YYYY-MM-DD HH:mm:ss.SSS)
     - 日志级别 (DEBUG/INFO/WARN/ERROR)
@@ -65,9 +66,13 @@ def setup_logging():
     logger.configure(
         handlers=[
             {
-                "sink": sys.stdout, 
+                "sink": sys.stdout,
                 "serialize": settings.ENVIRONMENT == "prod",
-                "format": log_format if settings.ENVIRONMENT != "prod" else "{message}"
+                "format": (
+                    log_format
+                    if settings.ENVIRONMENT != "prod"
+                    else "{message}"
+                ),
             }
         ]
     )

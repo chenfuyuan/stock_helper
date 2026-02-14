@@ -1,22 +1,24 @@
 """
 Web 搜索应用服务：执行搜索并可选记录外部 API 调用日志。
 """
+
 import logging
 import time
 from datetime import datetime
 from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
-from src.shared.infrastructure.execution_context import current_execution_ctx
 from src.modules.llm_platform.domain.ports.web_search import IWebSearchProvider
 from src.modules.llm_platform.domain.web_search_dtos import (
     WebSearchRequest,
     WebSearchResponse,
 )
+from src.shared.infrastructure.execution_context import current_execution_ctx
 
 if TYPE_CHECKING:
-    from src.shared.domain.dtos.external_api_call_log_dtos import ExternalAPICallLog
-    from src.shared.domain.ports.external_api_call_log_repository import IExternalAPICallLogRepository
+    from src.shared.domain.ports.external_api_call_log_repository import (
+        IExternalAPICallLogRepository,
+    )
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +55,12 @@ class WebSearchService:
             WebSearchConnectionError: 网络连接错误
             WebSearchError: 搜索错误
         """
-        logger.info("开始搜索，查询词: %s, 时效: %s, 条数: %s", request.query, request.freshness, request.count)
+        logger.info(
+            "开始搜索，查询词: %s, 时效: %s, 条数: %s",
+            request.query,
+            request.freshness,
+            request.count,
+        )
 
         ctx = current_execution_ctx.get()
         session_uuid: UUID | None = UUID(ctx.session_id) if ctx else None
@@ -63,7 +70,11 @@ class WebSearchService:
         try:
             response = await self.provider.search(request)
             latency_ms = int((time.perf_counter() - started) * 1000)
-            logger.info("搜索完成，查询词: %s, 返回结果数: %s", request.query, len(response.results))
+            logger.info(
+                "搜索完成，查询词: %s, 返回结果数: %s",
+                request.query,
+                len(response.results),
+            )
             await self._write_call_log(
                 session_id=session_uuid,
                 request_params=request_params,
@@ -101,7 +112,9 @@ class WebSearchService:
         """写入外部 API 调用日志，失败仅打 warning 不阻塞。"""
         if not self._api_call_log_repository:
             return
-        from src.shared.domain.dtos.external_api_call_log_dtos import ExternalAPICallLog
+        from src.shared.domain.dtos.external_api_call_log_dtos import (
+            ExternalAPICallLog,
+        )
 
         log = ExternalAPICallLog(
             id=uuid4(),
@@ -119,4 +132,6 @@ class WebSearchService:
         try:
             await self._api_call_log_repository.save(log)
         except Exception as e:
-            logger.warning("外部 API 调用日志写入失败，不阻塞主流程: %s", str(e))
+            logger.warning(
+                "外部 API 调用日志写入失败，不阻塞主流程: %s", str(e)
+            )

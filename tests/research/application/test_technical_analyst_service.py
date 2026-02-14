@@ -3,24 +3,32 @@ Task 2.3 Red：技术分析师 Application 接口的测试。
 入参至少含 ticker、analysis_date；出参为包含解析结果与 input、technical_indicators、output 的 dict。
 编排通过 Port：获取日线 → 指标计算 Port → 技术分析 Agent Port。
 """
-import pytest
+
 from datetime import date
 from unittest.mock import AsyncMock, MagicMock
 
+import pytest
+
 from src.modules.research.application.technical_analyst_service import (
-    TechnicalAnalystService,
     MIN_BARS_REQUIRED,
+    TechnicalAnalystService,
+)
+from src.modules.research.domain.dtos.daily_bar_input import DailyBarInput
+from src.modules.research.domain.dtos.indicators_snapshot import (
+    TechnicalIndicatorsSnapshot,
 )
 from src.modules.research.domain.dtos.technical_analysis_dtos import (
+    KeyTechnicalLevelsDTO,
     TechnicalAnalysisAgentResult,
     TechnicalAnalysisResultDTO,
-    KeyTechnicalLevelsDTO,
 )
-from src.modules.research.domain.dtos.indicators_snapshot import TechnicalIndicatorsSnapshot
-from src.modules.research.domain.dtos.daily_bar_input import DailyBarInput
-from src.modules.research.domain.ports.indicator_calculator import IIndicatorCalculator
+from src.modules.research.domain.ports.indicator_calculator import (
+    IIndicatorCalculator,
+)
 from src.modules.research.domain.ports.market_quote import IMarketQuotePort
-from src.modules.research.domain.ports.technical_analyst_agent import ITechnicalAnalystAgentPort
+from src.modules.research.domain.ports.technical_analyst_agent import (
+    ITechnicalAnalystAgentPort,
+)
 
 
 def _make_result_dto() -> TechnicalAnalysisResultDTO:
@@ -28,7 +36,9 @@ def _make_result_dto() -> TechnicalAnalysisResultDTO:
         signal="BULLISH",
         confidence=0.8,
         summary_reasoning="测试",
-        key_technical_levels=KeyTechnicalLevelsDTO(support=10.0, resistance=11.0),
+        key_technical_levels=KeyTechnicalLevelsDTO(
+            support=10.0, resistance=11.0
+        ),
         risk_warning="",
     )
 
@@ -44,6 +54,7 @@ def _make_agent_result() -> TechnicalAnalysisAgentResult:
 def _make_bars():
     """返回不少于 MIN_BARS_REQUIRED 的日线列表，避免触发「K 线数量不足」校验。"""
     from datetime import timedelta
+
     base = date(2024, 1, 1)
     return [
         DailyBarInput(
@@ -76,12 +87,18 @@ async def test_technical_analyst_accepts_ticker_and_analysis_date_returns_dto():
         indicator_calculator=mock_indicator,
         analyst_agent_port=mock_agent,
     )
-    result = await service.run(ticker="000001.SZ", analysis_date=date(2024, 1, 15))
+    result = await service.run(
+        ticker="000001.SZ", analysis_date=date(2024, 1, 15)
+    )
 
     assert isinstance(result, dict)
     assert result["signal"] in ("BULLISH", "BEARISH", "NEUTRAL")
     assert 0 <= result["confidence"] <= 1
-    assert "summary_reasoning" in result and "key_technical_levels" in result and "risk_warning" in result
+    assert (
+        "summary_reasoning" in result
+        and "key_technical_levels" in result
+        and "risk_warning" in result
+    )
     assert result["input"] == "user prompt content"
     assert result["output"] == '{"signal":"BULLISH",...}'
     assert "technical_indicators" in result
@@ -136,7 +153,10 @@ async def test_technical_analyst_rejects_missing_ticker():
     with pytest.raises(BadRequestException) as exc_info:
         await service.run(ticker="", analysis_date=date(2024, 1, 15))
 
-    assert "ticker" in exc_info.value.message.lower() or "必填" in exc_info.value.message
+    assert (
+        "ticker" in exc_info.value.message.lower()
+        or "必填" in exc_info.value.message
+    )
 
 
 @pytest.mark.asyncio
@@ -145,7 +165,9 @@ async def test_technical_analyst_raises_when_bars_less_than_min_required():
     from src.shared.domain.exceptions import BadRequestException
 
     mock_market = AsyncMock(spec=IMarketQuotePort)
-    mock_market.get_daily_bars.return_value = _make_bars()[: (MIN_BARS_REQUIRED - 1)]
+    mock_market.get_daily_bars.return_value = _make_bars()[
+        : (MIN_BARS_REQUIRED - 1)
+    ]
     mock_indicator = MagicMock(spec=IIndicatorCalculator)
     mock_agent = AsyncMock(spec=ITechnicalAnalystAgentPort)
     service = TechnicalAnalystService(

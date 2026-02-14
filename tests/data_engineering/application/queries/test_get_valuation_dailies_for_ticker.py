@@ -3,9 +3,11 @@
 给定 ticker 与日期区间，调用 data_engineering 的估值日线查询接口，
 断言返回 DTO 列表且含 trade_date、close、pe_ttm、pb、ps_ttm、dv_ratio、total_mv 等估值字段。
 """
-import pytest
+
 from datetime import date
 from unittest.mock import AsyncMock
+
+import pytest
 
 from src.modules.data_engineering.application.queries.get_valuation_dailies_for_ticker import (
     GetValuationDailiesForTickerUseCase,
@@ -69,7 +71,7 @@ async def test_get_valuation_dailies_returns_dto_list_with_valuation_fields():
 
     assert isinstance(result, list)
     assert len(result) == 2
-    
+
     # 验证 DTO 包含估值字段
     for daily in result:
         assert isinstance(daily, ValuationDailyDTO)
@@ -80,7 +82,7 @@ async def test_get_valuation_dailies_returns_dto_list_with_valuation_fields():
         assert hasattr(daily, "ps_ttm")
         assert hasattr(daily, "dv_ratio")
         assert hasattr(daily, "total_mv")
-    
+
     # 验证具体值
     assert result[0].pe_ttm == 5.5
     assert result[0].pb == 0.65
@@ -93,7 +95,7 @@ async def test_finance_indicator_dto_contains_bps_field():
     from src.modules.data_engineering.application.queries.get_finance_for_ticker import (
         FinanceIndicatorDTO,
     )
-    
+
     # 验证 DTO 可以接受 bps 字段
     dto = FinanceIndicatorDTO(
         end_date=date(2024, 9, 30),
@@ -102,7 +104,7 @@ async def test_finance_indicator_dto_contains_bps_field():
         eps=2.0,
         bps=16.0,  # 新增字段
     )
-    
+
     assert dto.bps == 16.0
     assert hasattr(dto, "bps")
 
@@ -118,7 +120,9 @@ async def test_get_valuation_dailies_calls_correct_repo_method():
     mock_repo.get_valuation_dailies.return_value = []
 
     use_case = GetValuationDailiesForTickerUseCase(mock_repo)
-    await use_case.execute(ticker=ticker, start_date=start_date, end_date=end_date)
+    await use_case.execute(
+        ticker=ticker, start_date=start_date, end_date=end_date
+    )
 
     # 验证调用了正确的 repository 方法
     mock_repo.get_valuation_dailies.assert_called_once_with(

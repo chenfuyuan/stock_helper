@@ -2,6 +2,7 @@
 技术分析师 REST 接口。
 提供按标的与日期进行技术分析的 HTTP 入口；响应体由代码塞入 input、technical_indicators、output。
 """
+
 from datetime import date
 from typing import Any, Literal, Optional
 
@@ -10,12 +11,13 @@ from loguru import logger
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.shared.infrastructure.db.session import get_db_session
-from src.modules.research.application.technical_analyst_service import TechnicalAnalystService
+from src.modules.research.application.technical_analyst_service import (
+    TechnicalAnalystService,
+)
 from src.modules.research.container import ResearchContainer
 from src.modules.research.domain.exceptions import LLMOutputParseError
 from src.shared.domain.exceptions import BadRequestException
-
+from src.shared.infrastructure.db.session import get_db_session
 
 router = APIRouter()
 
@@ -63,8 +65,14 @@ async def run_technical_analysis(
     对单个标的运行技术分析；响应体包含解析结果及 input、technical_indicators、output（由代码填入）。
     """
     try:
-        date_obj = date.fromisoformat(analysis_date) if analysis_date else date.today()
-        result = await service.run(ticker=ticker.strip(), analysis_date=date_obj)
+        date_obj = (
+            date.fromisoformat(analysis_date)
+            if analysis_date
+            else date.today()
+        )
+        result = await service.run(
+            ticker=ticker.strip(), analysis_date=date_obj
+        )
         return TechnicalAnalysisApiResponse(**result)
     except BadRequestException as e:
         raise HTTPException(status_code=400, detail=e.message)

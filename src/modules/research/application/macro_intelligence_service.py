@@ -3,22 +3,23 @@
 
 对外暴露独立入口：入参 symbol，出参为包含解析结果与 input/output/macro_indicators 的完整响应（由代码塞入，非大模型拼接）。
 """
+
 from typing import Any
 
-from src.shared.domain.exceptions import BadRequestException
-from src.modules.research.domain.ports.macro_data import IMacroDataPort
 from src.modules.research.domain.ports.macro_context_builder import (
     IMacroContextBuilder,
 )
+from src.modules.research.domain.ports.macro_data import IMacroDataPort
 from src.modules.research.domain.ports.macro_intelligence_agent import (
     IMacroIntelligenceAgentPort,
 )
+from src.shared.domain.exceptions import BadRequestException
 
 
 class MacroIntelligenceService:
     """
     宏观情报员服务。Coordinator 仅调用本服务获取宏观面评估，不共用其他专家入口。
-    
+
     编排流程：
     1. 校验 symbol
     2. 获取股票概览（名称、行业、代码）
@@ -37,7 +38,7 @@ class MacroIntelligenceService:
     ):
         """
         初始化宏观情报员服务。
-        
+
         Args:
             macro_data_port: 宏观数据 Port（获取股票信息 + 执行搜索）
             context_builder: 宏观上下文构建器（将搜索结果转为 Prompt 上下文）
@@ -50,10 +51,10 @@ class MacroIntelligenceService:
     async def run(self, symbol: str) -> dict[str, Any]:
         """
         执行宏观情报分析，返回包含解析结果与 input、macro_indicators、output 的字典（代码侧塞入）。
-        
+
         Args:
             symbol: 股票代码（如 '000001.SZ'）
-            
+
         Returns:
             dict[str, Any]: 包含以下字段的完整响应：
                 - macro_environment: 宏观环境判定（Favorable/Neutral/Unfavorable）
@@ -66,7 +67,7 @@ class MacroIntelligenceService:
                 - input: 发送给 LLM 的 user prompt
                 - macro_indicators: 宏观上下文快照（MacroContextDTO 序列化）
                 - output: LLM 原始返回字符串
-                
+
         Raises:
             BadRequestException: symbol 缺失、标的不存在、或宏观搜索全部失败时
             LLMOutputParseError: LLM 返回内容无法解析时（由 Agent 层抛出）
@@ -117,7 +118,9 @@ class MacroIntelligenceService:
             "macro_environment": result_dto.macro_environment,
             "confidence_score": result_dto.confidence_score,
             "macro_summary": result_dto.macro_summary,
-            "dimension_analyses": [d.model_dump() for d in result_dto.dimension_analyses],
+            "dimension_analyses": [
+                d.model_dump() for d in result_dto.dimension_analyses
+            ],
             "key_opportunities": result_dto.key_opportunities,
             "key_risks": result_dto.key_risks,
             "information_sources": result_dto.information_sources,

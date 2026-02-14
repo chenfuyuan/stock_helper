@@ -1,11 +1,14 @@
 """
 Web 搜索缓存 ORM 模型，映射 web_search_cache 表。
 """
-from sqlalchemy import Column, String, Text, DateTime
+
+from sqlalchemy import Column, DateTime, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
 
+from src.modules.llm_platform.domain.dtos.web_search_cache_entry import (
+    WebSearchCacheEntry,
+)
 from src.shared.infrastructure.db.base import Base
-from src.modules.llm_platform.domain.dtos.web_search_cache_entry import WebSearchCacheEntry
 
 
 class WebSearchCacheModel(Base):
@@ -13,9 +16,13 @@ class WebSearchCacheModel(Base):
 
     __tablename__ = "web_search_cache"
 
-    cache_key = Column(String(64), primary_key=True, comment="请求参数 SHA-256 哈希")
+    cache_key = Column(
+        String(64), primary_key=True, comment="请求参数 SHA-256 哈希"
+    )
     request_params = Column(JSONB, nullable=False, comment="原始请求参数")
-    response_data = Column(Text, nullable=False, comment="WebSearchResponse JSON")
+    response_data = Column(
+        Text, nullable=False, comment="WebSearchResponse JSON"
+    )
     created_at = Column(DateTime, nullable=False, comment="写入时间")
     expires_at = Column(DateTime, nullable=False, comment="过期时间")
 

@@ -9,6 +9,7 @@ class Base:
     SQLAlchemy 声明式基类
     所有 ORM 模型应继承此类
     """
+
     id: Any
     __name__: str
 

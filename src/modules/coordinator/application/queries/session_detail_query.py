@@ -1,13 +1,16 @@
 """
 会话详情查询用例：按 session_id 返回会话及全部节点执行记录。
 """
+
 from uuid import UUID
 
 from src.modules.coordinator.application.dtos.session_dtos import (
     NodeExecutionItemDTO,
     SessionDetailDTO,
 )
-from src.modules.coordinator.domain.ports.research_session_repository import IResearchSessionRepository
+from src.modules.coordinator.domain.ports.research_session_repository import (
+    IResearchSessionRepository,
+)
 
 
 class SessionDetailQuery:
@@ -21,7 +24,9 @@ class SessionDetailQuery:
         session = await self._repo.get_session_by_id(session_id)
         if session is None:
             return None
-        executions = await self._repo.get_node_executions_by_session(session_id)
+        executions = await self._repo.get_node_executions_by_session(
+            session_id
+        )
         return SessionDetailDTO(
             id=str(session.id),
             symbol=session.symbol,

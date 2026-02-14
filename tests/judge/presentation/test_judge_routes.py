@@ -1,4 +1,5 @@
 """Judge REST 端点集成测试：正常请求返回 200、symbol 缺失返回 400、debate_outcome 为空返回 400。"""
+
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -12,6 +13,7 @@ from src.modules.judge.presentation.rest.judge_router import get_judge_service
 def mock_verdict_dto():
     """模拟 VerdictDTO。"""
     from src.modules.judge.application.dtos.verdict_dto import VerdictDTO
+
     return VerdictDTO(
         symbol="000001.SZ",
         action="BUY",
@@ -37,8 +39,10 @@ def mock_judge_service(mock_verdict_dto):
 @pytest.mark.asyncio
 async def test_post_judge_verdict_returns_200(mock_judge_service):
     """正常 POST /api/v1/judge/verdict 返回 200，响应含 action、position_percent、confidence。"""
+
     async def override_get_judge_service():
         return mock_judge_service
+
     app.dependency_overrides[get_judge_service] = override_get_judge_service
     try:
         async with AsyncClient(
@@ -74,8 +78,10 @@ async def test_post_judge_verdict_returns_200(mock_judge_service):
 @pytest.mark.asyncio
 async def test_post_judge_verdict_symbol_missing_returns_400():
     """symbol 缺失或空时返回 400。"""
+
     async def override_get_judge_service():
         return MagicMock()
+
     app.dependency_overrides[get_judge_service] = override_get_judge_service
     try:
         async with AsyncClient(
@@ -86,7 +92,10 @@ async def test_post_judge_verdict_symbol_missing_returns_400():
                 "/api/v1/judge/verdict",
                 json={
                     "symbol": "",
-                    "debate_outcome": {"direction": "BULLISH", "confidence": 0.7},
+                    "debate_outcome": {
+                        "direction": "BULLISH",
+                        "confidence": 0.7,
+                    },
                 },
             )
         assert resp.status_code == 400
@@ -97,8 +106,10 @@ async def test_post_judge_verdict_symbol_missing_returns_400():
 @pytest.mark.asyncio
 async def test_post_judge_verdict_debate_outcome_empty_returns_400():
     """debate_outcome 为空时返回 400。"""
+
     async def override_get_judge_service():
         return MagicMock()
+
     app.dependency_overrides[get_judge_service] = override_get_judge_service
     try:
         async with AsyncClient(

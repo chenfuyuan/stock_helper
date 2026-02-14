@@ -3,11 +3,14 @@
 
 使用 TypedDict + Annotated reducer，使并行专家节点各自写入 results/errors 后自动合并。
 """
+
 from typing import Any, Literal, TypedDict
 
 from typing_extensions import Annotated
 
-from src.modules.coordinator.infrastructure.orchestration.reducers import merge_dicts
+from src.modules.coordinator.infrastructure.orchestration.reducers import (
+    merge_dicts,
+)
 
 
 class ResearchGraphState(TypedDict, total=False):

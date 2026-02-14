@@ -1,7 +1,6 @@
-from typing import List, Union, Optional
-import json
+from typing import List, Union
 
-from pydantic import AnyHttpUrl, PostgresDsn, validator, BaseModel
+from pydantic import AnyHttpUrl, PostgresDsn, validator
 from pydantic_settings import BaseSettings
 
 
@@ -10,17 +9,20 @@ class Settings(BaseSettings):
     应用全局配置类
     使用 Pydantic BaseSettings 自动加载环境变量
     """
+
     PROJECT_NAME: str = "Stock Helper"
     API_V1_STR: str = "/api/v1"
-    
+
     # 运行环境: local, dev, prod
     ENVIRONMENT: str = "local"
-    
+
     # CORS (跨域资源共享) 配置
     BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = []
 
     @validator("BACKEND_CORS_ORIGINS", pre=True)
-    def assemble_cors_origins(cls, v: Union[str, List[str]]) -> Union[List[str], str]:
+    def assemble_cors_origins(
+        cls, v: Union[str, List[str]]
+    ) -> Union[List[str], str]:
         """
         验证并处理 CORS 域名配置
         支持逗号分隔的字符串或列表格式
@@ -40,14 +42,16 @@ class Settings(BaseSettings):
     SQLALCHEMY_DATABASE_URI: Union[str, PostgresDsn] | None = None
 
     @validator("SQLALCHEMY_DATABASE_URI", pre=True)
-    def assemble_db_connection(cls, v: str | None, values: dict[str, str]) -> str:
+    def assemble_db_connection(
+        cls, v: str | None, values: dict[str, str]
+    ) -> str:
         """
         组装数据库连接字符串
         如果未直接提供 URI，则根据各个参数构建 PostgreSQL 异步连接字符串
         """
         if isinstance(v, str):
             return v
-        
+
         return PostgresDsn.build(
             scheme="postgresql+asyncpg",
             username=values.get("POSTGRES_USER"),

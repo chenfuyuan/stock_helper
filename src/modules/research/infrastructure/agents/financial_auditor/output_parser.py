@@ -27,7 +27,9 @@ def _score_to_signal(score: int) -> FinancialSignal:
     return "STRONG_BEARISH"
 
 
-def _ensure_signal_consistent(dto: FinancialAuditResultDTO) -> FinancialAuditResultDTO:
+def _ensure_signal_consistent(
+    dto: FinancialAuditResultDTO,
+) -> FinancialAuditResultDTO:
     """若 score 与 signal 不匹配，以 score 为准重新映射 signal。"""
     expected = _score_to_signal(dto.financial_score)
     if dto.signal != expected:
@@ -60,7 +62,8 @@ def parse_financial_audit_result(raw: str) -> FinancialAuditResultDTO:
         )
     except LLMJsonParseError as e:
         raise LLMOutputParseError(
-            message=e.message, details=e.details,
+            message=e.message,
+            details=e.details,
         ) from e
 
     return _ensure_signal_consistent(dto)

@@ -1,14 +1,20 @@
-from typing import Optional
 from datetime import date
-from pydantic import Field, ConfigDict
+from typing import Optional
+
+from pydantic import ConfigDict, Field
+
 from src.shared.domain.base_entity import BaseEntity
+
 
 class StockDaily(BaseEntity):
     """
     股票日线行情领域实体
     Stock Daily Quotation Domain Entity
     """
-    third_code: str = Field(..., description="第三方系统代码 (如 Tushare 的 ts_code)")
+
+    third_code: str = Field(
+        ..., description="第三方系统代码 (如 Tushare 的 ts_code)"
+    )
     trade_date: date = Field(..., description="交易日期")
     open: float = Field(..., description="开盘价")
     high: float = Field(..., description="最高价")
@@ -22,7 +28,9 @@ class StockDaily(BaseEntity):
 
     adj_factor: Optional[float] = Field(None, description="复权因子")
     turnover_rate: Optional[float] = Field(None, description="换手率")
-    turnover_rate_f: Optional[float] = Field(None, description="换手率(自由流通股)")
+    turnover_rate_f: Optional[float] = Field(
+        None, description="换手率(自由流通股)"
+    )
     volume_ratio: Optional[float] = Field(None, description="量比")
     pe: Optional[float] = Field(None, description="市盈率")
     pe_ttm: Optional[float] = Field(None, description="市盈率TTM")

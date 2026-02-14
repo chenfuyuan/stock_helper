@@ -2,15 +2,19 @@
 Task 1.4：财务数据查询 Application 接口的测试。
 给定 ticker 与 limit，调用 data_engineering 的财务查询接口，断言返回 DTO 列表且含盈利/效率/偿债/现金流等字段。
 """
-import pytest
+
 from datetime import date
 from unittest.mock import AsyncMock
 
+import pytest
+
 from src.modules.data_engineering.application.queries.get_finance_for_ticker import (
-    GetFinanceForTickerUseCase,
     FinanceIndicatorDTO,
+    GetFinanceForTickerUseCase,
 )
-from src.modules.data_engineering.domain.model.financial_report import StockFinance
+from src.modules.data_engineering.domain.model.financial_report import (
+    StockFinance,
+)
 
 
 def _make_stock_finance() -> StockFinance:

@@ -1,23 +1,24 @@
 """Bull Advocate output_parser 单元测试：合法 JSON 解析成功、非法 JSON 抛 LLMOutputParseError。"""
+
 import pytest
 
+from src.modules.debate.domain.dtos.bull_bear_argument import BullArgument
 from src.modules.debate.domain.exceptions import LLMOutputParseError
 from src.modules.debate.infrastructure.agents.bull_advocate.output_parser import (
     parse_bull_argument,
 )
-from src.modules.debate.domain.dtos.bull_bear_argument import BullArgument
 
 
 def test_parse_valid_json_returns_bull_argument():
     """合法 JSON 解析为 BullArgument，字段正确。"""
-    raw = '''{
+    raw = """{
         "direction": "BULLISH",
         "confidence": 0.75,
         "core_thesis": "技术面与估值面共振看多",
         "supporting_arguments": ["均线多头", "估值合理"],
         "acknowledged_risks": ["宏观波动"],
         "price_catalysts": ["业绩预告"]
-    }'''
+    }"""
     result = parse_bull_argument(raw)
     assert isinstance(result, BullArgument)
     assert result.direction == "BULLISH"

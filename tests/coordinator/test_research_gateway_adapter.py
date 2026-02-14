@@ -1,6 +1,7 @@
 """
 ResearchGatewayAdapter 测试：按 ExpertType 正确调度到对应 Research Service 并传参。
 """
+
 from datetime import date
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -33,7 +34,9 @@ def mock_research_container():
     container = MagicMock()
     for expert_type in ExpertType:
         svc = MagicMock()
-        svc.run = AsyncMock(return_value={"result": f"mock_{expert_type.value}"})
+        svc.run = AsyncMock(
+            return_value={"result": f"mock_{expert_type.value}"}
+        )
         method_name = f"{expert_type.value}_service"
         getattr(container, method_name).return_value = svc
     return container

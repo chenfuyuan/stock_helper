@@ -3,6 +3,7 @@ JudgeGatewayAdapter：实现 IJudgeGateway。
 
 将 debate_outcome dict 转为 JudgeInput，调用 JudgeContainer → JudgeService，返回 dict。
 """
+
 from typing import Any
 
 from src.modules.coordinator.domain.ports.judge_gateway import IJudgeGateway
@@ -11,7 +12,9 @@ from src.modules.judge.container import JudgeContainer
 from src.modules.judge.domain.dtos.judge_input import JudgeInput
 
 
-def _debate_outcome_to_judge_input(symbol: str, debate_outcome: dict[str, Any]) -> JudgeInput:
+def _debate_outcome_to_judge_input(
+    symbol: str, debate_outcome: dict[str, Any]
+) -> JudgeInput:
     """
     从 debate_outcome dict 提取结论级字段，构造 JudgeInput。
     过滤 supporting_arguments、acknowledged_risks、probability/impact/mitigation 等细节。
@@ -55,7 +58,9 @@ class JudgeGatewayAdapter(IJudgeGateway):
         """
         debate_outcome 转为 JudgeInput（仅结论级字段），调用 JudgeService.run，返回 .model_dump()。
         """
-        judge_input = _debate_outcome_to_judge_input(symbol=symbol, debate_outcome=debate_outcome)
+        judge_input = _debate_outcome_to_judge_input(
+            symbol=symbol, debate_outcome=debate_outcome
+        )
         container = JudgeContainer()
         service = container.judge_service()
         verdict: VerdictDTO = await service.run(judge_input)

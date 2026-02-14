@@ -1,20 +1,23 @@
 """JudgeGatewayAdapter 单元测试：debate_outcome → JudgeInput 字段映射、risk_factors 提取、细节字段过滤。"""
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from src.modules.judge.application.dtos.verdict_dto import VerdictDTO
 from src.modules.coordinator.infrastructure.adapters.judge_gateway_adapter import (
     JudgeGatewayAdapter,
 )
+from src.modules.judge.application.dtos.verdict_dto import VerdictDTO
 
 
 def _mock_session_factory():
     class _Ctx:
         async def __aenter__(self):
             return MagicMock()
+
         async def __aexit__(self, *args):
             pass
+
     return _Ctx()
 
 
@@ -81,8 +84,18 @@ async def test_risk_factors_from_risk_matrix(mock_judge_container):
                 "bull_case": {"core_thesis": "a"},
                 "bear_case": {"core_thesis": "b"},
                 "risk_matrix": [
-                    {"risk": "政策风险", "probability": "高", "impact": "中", "mitigation": "无"},
-                    {"risk": "流动性风险", "probability": "低", "impact": "高", "mitigation": "分散"},
+                    {
+                        "risk": "政策风险",
+                        "probability": "高",
+                        "impact": "中",
+                        "mitigation": "无",
+                    },
+                    {
+                        "risk": "流动性风险",
+                        "probability": "低",
+                        "impact": "高",
+                        "mitigation": "分散",
+                    },
                 ],
                 "key_disagreements": [],
                 "conflict_resolution": "ok",

@@ -1,14 +1,17 @@
 """output_parser 单元测试：合法 JSON 解析为 VerdictResult 成功、非法 JSON 抛 LLMOutputParseError。"""
+
 import pytest
 
 from src.modules.judge.domain.dtos.verdict_result import VerdictResult
 from src.modules.judge.domain.exceptions import LLMOutputParseError
-from src.modules.judge.infrastructure.agents.verdict.output_parser import parse_verdict_result
+from src.modules.judge.infrastructure.agents.verdict.output_parser import (
+    parse_verdict_result,
+)
 
 
 def test_parse_valid_json_returns_verdict_result():
     """合法 JSON 解析为 VerdictResult。"""
-    raw = '''{
+    raw = """{
         "action": "BUY",
         "position_percent": 0.3,
         "confidence": 0.72,
@@ -18,7 +21,7 @@ def test_parse_valid_json_returns_verdict_result():
         "time_horizon": "3-6个月",
         "risk_warnings": ["流动性风险", "政策风险"],
         "reasoning": "综合辩论结论偏多，建议轻仓参与"
-    }'''
+    }"""
     result = parse_verdict_result(raw)
     assert isinstance(result, VerdictResult)
     assert result.action == "BUY"

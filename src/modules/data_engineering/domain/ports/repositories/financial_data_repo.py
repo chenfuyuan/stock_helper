@@ -1,7 +1,9 @@
 from abc import ABC, abstractmethod
 from typing import List
 
-from src.modules.data_engineering.domain.model.financial_report import StockFinance
+from src.modules.data_engineering.domain.model.financial_report import (
+    StockFinance,
+)
 
 
 class IFinancialDataRepository(ABC):
@@ -14,4 +16,3 @@ class IFinancialDataRepository(ABC):
         self, third_code: str, limit: int
     ) -> List[StockFinance]:
         """按第三方代码查询最近 N 期财务记录，按 end_date 降序返回。"""
-        pass

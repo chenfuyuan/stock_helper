@@ -4,8 +4,8 @@ Debate Prompt 运行时加载。
 从 agents/<agent_name>/prompts 读取 system.md、user.md，提供 load_system_prompt、
 load_user_prompt_template、fill_user_prompt 等工具函数（复用 Research 模式）。
 """
+
 from pathlib import Path
-from typing import Optional
 
 # 默认以 infrastructure 为基准，agents 在其下
 _BASE_AGENTS = Path(__file__).resolve().parent / "agents"

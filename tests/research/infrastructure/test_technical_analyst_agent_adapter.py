@@ -2,13 +2,18 @@
 技术分析 Agent Port 的 Infrastructure 实现测试。
 Agent 负责加载 Prompt、调用 LLM、解析结果；合法 JSON 返回 DTO，非法则抛出。
 """
+
 from unittest.mock import AsyncMock
 
 import pytest
 
-from src.modules.research.domain.dtos.technical_analysis_dtos import TechnicalAnalysisAgentResult
+from src.modules.research.domain.dtos.indicators_snapshot import (
+    TechnicalIndicatorsSnapshot,
+)
+from src.modules.research.domain.dtos.technical_analysis_dtos import (
+    TechnicalAnalysisAgentResult,
+)
 from src.modules.research.domain.exceptions import LLMOutputParseError
-from src.modules.research.domain.dtos.indicators_snapshot import TechnicalIndicatorsSnapshot
 from src.modules.research.domain.ports.llm import ILLMPort
 from src.modules.research.infrastructure.adapters.technical_analyst_agent_adapter import (
     TechnicalAnalystAgentAdapter,

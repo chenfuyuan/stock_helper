@@ -3,9 +3,10 @@
 
 写入失败不阻塞主流程，仅记录 error 日志。
 """
+
 import logging
-from collections.abc import Callable
 import math
+from collections.abc import Callable
 from datetime import datetime
 from typing import Any
 from uuid import uuid4
@@ -13,8 +14,12 @@ from uuid import uuid4
 from loguru import logger
 
 from src.modules.coordinator.domain.model.node_execution import NodeExecution
-from src.modules.coordinator.domain.ports.research_session_repository import IResearchSessionRepository
-from src.modules.coordinator.infrastructure.orchestration.graph_state import ResearchGraphState
+from src.modules.coordinator.domain.ports.research_session_repository import (
+    IResearchSessionRepository,
+)
+from src.modules.coordinator.infrastructure.orchestration.graph_state import (
+    ResearchGraphState,
+)
 from src.shared.infrastructure.execution_context import current_execution_ctx
 
 logger = logging.getLogger(__name__)
@@ -36,7 +41,9 @@ def _sanitize_jsonb(obj: Any) -> Any:
         return obj
 
 
-def _extract_result_and_narrative(node_type: str, return_value: dict[str, Any]) -> tuple[dict[str, Any] | None, str]:
+def _extract_result_and_narrative(
+    node_type: str, return_value: dict[str, Any]
+) -> tuple[dict[str, Any] | None, str]:
     """从节点返回值中提取 result_data 与 narrative_report。"""
     result_data: dict[str, Any] | None = None
     narrative_report = ""
@@ -83,6 +90,7 @@ def persist_node_execution(
             return await node_fn(state)
 
         from uuid import UUID
+
         session_id = UUID(ctx.session_id)
         started_at = datetime.utcnow()
         execution = NodeExecution(
@@ -95,11 +103,17 @@ def persist_node_execution(
         try:
             result = await node_fn(state)
             completed_at = datetime.utcnow()
-            duration_ms = int((completed_at - started_at).total_seconds() * 1000)
+            duration_ms = int(
+                (completed_at - started_at).total_seconds() * 1000
+            )
 
-            result_data, narrative_report = _extract_result_and_narrative(node_type, result)
+            result_data, narrative_report = _extract_result_and_narrative(
+                node_type, result
+            )
             # 清理 NaN/Inf，避免 PostgreSQL JSONB 写入失败
-            sanitized_result_data = _sanitize_jsonb(result_data) if result_data else None
+            sanitized_result_data = (
+                _sanitize_jsonb(result_data) if result_data else None
+            )
             execution.mark_success(
                 result_data=sanitized_result_data or {},
                 narrative_report=narrative_report,
@@ -113,7 +127,9 @@ def persist_node_execution(
             return result
         except Exception as e:
             completed_at = datetime.utcnow()
-            duration_ms = int((completed_at - started_at).total_seconds() * 1000)
+            duration_ms = int(
+                (completed_at - started_at).total_seconds() * 1000
+            )
             execution.mark_failed(
                 error_type=type(e).__name__,
                 error_message=str(e),
@@ -123,7 +139,9 @@ def persist_node_execution(
             try:
                 await session_repo.save_node_execution(execution)
             except Exception as save_err:
-                logger.warning("节点失败记录写入失败，不阻塞主流程: %s", save_err)
+                logger.warning(
+                    "节点失败记录写入失败，不阻塞主流程: %s", save_err
+                )
             raise
 
     wrapper.__name__ = getattr(node_fn, "__name__", f"persisted_{node_type}")

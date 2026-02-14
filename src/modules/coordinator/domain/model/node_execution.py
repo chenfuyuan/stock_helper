@@ -3,11 +3,12 @@
 
 表示 LangGraph 中单个节点（专家/debate/judge）的一次执行快照，含成功/失败记录。
 """
+
 from datetime import datetime
 from typing import Any, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 class NodeExecution(BaseModel):
@@ -15,7 +16,9 @@ class NodeExecution(BaseModel):
 
     id: UUID
     session_id: UUID
-    node_type: str  # technical_analyst / financial_auditor / ... / debate / judge
+    node_type: (
+        str  # technical_analyst / financial_auditor / ... / debate / judge
+    )
     status: Literal["success", "failed", "skipped"] = "success"
     result_data: dict[str, Any] | None = None
     narrative_report: str | None = None

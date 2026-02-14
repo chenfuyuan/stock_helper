@@ -4,7 +4,10 @@
 定义四个催化维度的搜索配置，遵循聚焦查询规范（核心领域关键词 ≤ 3），
 所有维度查询包含 stock_name。
 """
-from src.modules.research.domain.dtos.search_dimension_config import SearchDimensionConfig
+
+from src.modules.research.domain.dtos.search_dimension_config import (
+    SearchDimensionConfig,
+)
 
 # 催化剂侦探四维度搜索配置
 CATALYST_SEARCH_DIMENSIONS = [

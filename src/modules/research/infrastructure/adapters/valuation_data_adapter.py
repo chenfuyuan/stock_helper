@@ -6,10 +6,15 @@
 - GetFinanceForTickerUseCase（获取财务指标）
 不直接依赖 data_engineering 的 repository 或 domain。
 """
+
 import logging
 from datetime import date
-from typing import List, Optional, Any
+from typing import Any, List, Optional
 
+from src.modules.data_engineering.application.queries.get_finance_for_ticker import (
+    FinanceIndicatorDTO,
+    GetFinanceForTickerUseCase,
+)
 from src.modules.data_engineering.application.queries.get_stock_basic_info import (
     GetStockBasicInfoUseCase,
 )
@@ -17,15 +22,13 @@ from src.modules.data_engineering.application.queries.get_valuation_dailies_for_
     GetValuationDailiesForTickerUseCase,
     ValuationDailyDTO,
 )
-from src.modules.data_engineering.application.queries.get_finance_for_ticker import (
-    GetFinanceForTickerUseCase,
-    FinanceIndicatorDTO,
+from src.modules.research.domain.dtos.financial_record_input import (
+    FinanceRecordInput,
 )
 from src.modules.research.domain.dtos.valuation_inputs import (
     StockOverviewInput,
     ValuationDailyInput,
 )
-from src.modules.research.domain.dtos.financial_record_input import FinanceRecordInput
 from src.modules.research.domain.ports.valuation_data import IValuationDataPort
 
 logger = logging.getLogger(__name__)
@@ -116,7 +119,9 @@ class ValuationDataAdapter(IValuationDataPort):
         self._get_valuation_dailies = get_valuation_dailies_use_case
         self._get_finance = get_finance_use_case
 
-    async def get_stock_overview(self, symbol: str) -> Optional[StockOverviewInput]:
+    async def get_stock_overview(
+        self, symbol: str
+    ) -> Optional[StockOverviewInput]:
         """
         获取股票基础信息与最新市场估值数据。
         返回 None 表示标的不存在。

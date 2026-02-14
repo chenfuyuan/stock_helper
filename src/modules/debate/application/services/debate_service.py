@@ -1,6 +1,7 @@
 """
 DebateService：编排三阶段辩论流程（Bull/Bear 并行 → Resolution 串行），返回 DebateOutcomeDTO。
 """
+
 import asyncio
 
 from src.modules.debate.application.dtos.debate_outcome_dto import (
@@ -9,9 +10,15 @@ from src.modules.debate.application.dtos.debate_outcome_dto import (
     DebateOutcomeDTO,
 )
 from src.modules.debate.domain.dtos.debate_input import DebateInput
-from src.modules.debate.domain.ports.bear_advocate_agent import IBearAdvocateAgentPort
-from src.modules.debate.domain.ports.bull_advocate_agent import IBullAdvocateAgentPort
-from src.modules.debate.domain.ports.resolution_agent import IResolutionAgentPort
+from src.modules.debate.domain.ports.bear_advocate_agent import (
+    IBearAdvocateAgentPort,
+)
+from src.modules.debate.domain.ports.bull_advocate_agent import (
+    IBullAdvocateAgentPort,
+)
+from src.modules.debate.domain.ports.resolution_agent import (
+    IResolutionAgentPort,
+)
 
 
 class DebateService:

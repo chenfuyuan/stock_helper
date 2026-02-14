@@ -3,6 +3,7 @@ Coordinator Domain 枚举定义。
 
 ExpertType 与 REST 请求体中的 experts 列表值一一对应，值为 snake_case 字符串。
 """
+
 from enum import Enum
 
 

@@ -2,6 +2,7 @@
 估值建模师 REST 接口。
 提供按标的进行估值建模的 HTTP 入口；响应体由代码塞入 input、valuation_indicators、output。
 """
+
 from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -9,14 +10,13 @@ from loguru import logger
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.shared.domain.exceptions import BadRequestException
-from src.shared.infrastructure.db.session import get_db_session
 from src.modules.research.application.valuation_modeler_service import (
     ValuationModelerService,
 )
 from src.modules.research.container import ResearchContainer
 from src.modules.research.domain.exceptions import LLMOutputParseError
-
+from src.shared.domain.exceptions import BadRequestException
+from src.shared.infrastructure.db.session import get_db_session
 
 router = APIRouter()
 
@@ -32,15 +32,21 @@ async def get_valuation_modeler_service(
 class IntrinsicValueRangeResponse(BaseModel):
     """内在价值区间响应。"""
 
-    lower_bound: str = Field(..., description="保守模型推导的价格下界（含推导依据）")
-    upper_bound: str = Field(..., description="乐观模型推导的价格上界（含推导依据）")
+    lower_bound: str = Field(
+        ..., description="保守模型推导的价格下界（含推导依据）"
+    )
+    upper_bound: str = Field(
+        ..., description="乐观模型推导的价格上界（含推导依据）"
+    )
 
 
 class ValuationModelApiResponse(BaseModel):
     """估值建模接口响应：解析结果 + input、valuation_indicators、output。"""
 
     valuation_verdict: Literal["Undervalued", "Fair", "Overvalued"]
-    confidence_score: float = Field(..., ge=0.0, le=1.0, description="置信度 0~1")
+    confidence_score: float = Field(
+        ..., ge=0.0, le=1.0, description="置信度 0~1"
+    )
     estimated_intrinsic_value_range: IntrinsicValueRangeResponse
     key_evidence: list[str] = Field(..., min_length=1, description="证据列表")
     risk_factors: list[str] = Field(..., min_length=1, description="风险列表")
