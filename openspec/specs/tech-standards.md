@@ -166,100 +166,40 @@ OpenSpec 变更的实现须保证**可验证**：Spec 与可执行测试一致�
 
 ---
 
-## CI/CD 与代码质量规范
+## Git 协作与版本控制
 
-### 代码质量检查工具
+- **分支策略**：采用主干开发（Trunk Based Development）或 GitHub Flow。长期存在的仅为 `main` 分支。
+- **提交信息规范**：严格遵循 **Conventional Commits** 标准。
+  - 格式：`<type>(<scope>): <subject>`
+  - 示例：`feat(auth): 增加 JWT 令牌刷新机制`
+  - 常用类型：
+    - `feat`: 新功能
+    - `fix`: 修复 Bug
+    - `docs`: 文档变更
+    - `style`: 代码格式调整（不影响逻辑）
+    - `refactor`: 重构（无功能修复或新增）
+    - `test`: 测试用例变更
+    - `chore`: 构建过程或辅助工具变更
+- **原子提交**：每个 Commit 只做一件事，避免"大杂烩"提交。
 
-项目使用以下工具确保代码质量和一致性：
+---
 
-- **flake8**：代码风格检查（PEP 8 + 行长度限制）
-- **mypy**：静态类型检查
-- **black**：代码自动格式化（79字符行长度）
-- **isort**：导入顺序规范化
-- **autoflake**：自动清理未使用的导入和变量
+## 测试策略
 
-### 代码风格标准
+- **测试金字塔**：
+  - **单元测试 (Unit)**：覆盖领域逻辑、工具函数。Mock 所有外部依赖（DB, Network）。目标：快、稳定。
+  - **集成测试 (Integration)**：覆盖 Repository、Adapter、Service。连接真实的测试数据库（Docker）。目标：验证组件协作。
+  - **端到端测试 (E2E)**：覆盖关键用户旅程。
+- **测试原则**：
+  - **AAA 模式**：Arrange (准备), Act (执行), Assert (断言)。
+  - **独立性**：测试用例之间不可互相依赖，每个测试均可独立运行。
+  - **可见性**：测试失败信息必须清晰指明期望值与实际值的差异。
 
-- **行长度限制**：79字符（严格遵循PEP 8）
-- **导入语句处理**：
-  - 当导入路径超过79字符时，使用反斜杠(`\`)换行
-  - continuation line 缩进4个空格，括号内内容缩进8个空格
-  - 示例：
-    ```python
-    from src.modules.research.infrastructure.\
-            financial_snapshot.snapshot_builder import (
-                FinancialSnapshotBuilderImpl,
-            )
-    ```
-- **长字符串处理**：
-  - JSON字符串、长文本等使用括号包裹换行
-  - 示例：
-    ```python
-    valid_json = (
-        '{"signal":"BEARISH","confidence":0.6,'
-        '"summary_reasoning":"RSI 超买",'
-        '"key_technical_levels":{"support":9.0,"resistance":12.0}}'
-    )
-    ```
-- **导入顺序**：使用isort自动规范化，遵循black配置
-- **空白行**：禁止空白行包含空格或制表符
-- **未使用导入**：必须清理，避免命名空间污染
+---
 
-### 类型检查要求
+## 质量标准索引
 
-- **强制类型注解**：所有函数参数和返回值必须有类型提示
-- **异步函数**：接口和实现必须保持async/await一致性
-- **可选参数**：使用`| None`明确标注可选类型，避免隐式Optional
-- **泛型类型**：正确使用`TypeVar`和`Generic`，避免`Any`类型滥用
-
-### CI流程规范
-
-1. **代码检查阶段**：
-   ```bash
-   flake8 src tests --max-line-length=79
-   mypy src tests --ignore-missing-imports
-   ```
-
-2. **测试阶段**：
-   - 单元测试：`pytest tests/unit/`
-   - 集成测试：`pytest tests/integration/`
-   - 测试环境：使用Docker Compose确保环境一致性
-
-3. **代码修复流程**：
-   - **行长度问题修复**：
-     ```bash
-     # 检查具体违规
-     flake8 --select=E501 src tests
-     # 手动修复导入语句（使用反斜杠换行）
-     # 手动修复长字符串（使用括号包裹）
-     ```
-   - **一般修复顺序**：
-     ```bash
-     autoflake --in-place --remove-unused-variables --remove-all-imports src tests
-     isort src tests
-     black src tests
-     ```
-   - 手动修复工具无法处理的类型错误
-   - 提交前确保本地检查通过
-
-4. **常见E501修复模式**：
-   - **导入语句过长**：使用反斜杠换行，缩进4空格
-   - **JSON字符串过长**：使用括号包裹，按逻辑换行
-   - **函数调用过长**：参数换行，每行一个参数
-   - **条件语句过长**：使用括号包裹逻辑表达式
-
-### 质量门禁
-
-- **flake8错误数量**：目标< 100个（主要行长度问题）
-- **mypy错误数量**：目标< 50个（关键类型错误必须修复）
-- **测试覆盖率**：核心业务逻辑> 80%
-- **构建状态**：所有检查必须通过方可合并
-
-### 持续改进
-
-- 定期更新工具版本以获得最新检查能力
-- 根据团队反馈调整检查规则严格程度
-- 将新发现的代码质量问题加入规范文档
-- 培训团队成员遵循代码质量标准
+关于具体的代码检查工具（flake8, mypy）、CI 流水线配置、Pre-commit 钩子及自动化修复脚本，请查阅单一事实来源文档：
+👉 **[ci-standards.md](ci-standards.md)**
 
 ---
