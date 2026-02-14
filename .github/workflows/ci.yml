@@ -56,5 +56,6 @@ jobs:
         POSTGRES_DB: stock_helper_test
         POSTGRES_PORT: 5432
         ENVIRONMENT: test
+        PYTHONPATH: ${{ github.workspace }}/src
       run: |
         pytest tests/
