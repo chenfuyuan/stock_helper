@@ -16,6 +16,8 @@ from src.modules.research.domain.dtos.valuation_inputs import (
 )
 from src.modules.research.infrastructure.valuation_snapshot.snapshot_builder import (
     ValuationSnapshotBuilderImpl,
+) (
+    ValuationSnapshotBuilderImpl,
 )
 
 
