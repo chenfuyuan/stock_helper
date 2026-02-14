@@ -18,6 +18,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      neo4j:
+        condition: service_healthy
     networks:
       - stock_helper_net
     healthcheck:
@@ -46,9 +48,31 @@ services:
       timeout: 5s
       retries: 5
 
+  neo4j:
+    image: neo4j:5-community
+    container_name: stock_helper_neo4j
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    environment:
+      - NEO4J_AUTH=neo4j/password
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+    networks:
+      - stock_helper_net
+    healthcheck:
+      test: ["CMD-SHELL", "cypher-shell -u neo4j -p password 'RETURN 1;' > /dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
 networks:
   stock_helper_net:
     driver: bridge
 
 volumes:
   postgres_data:
+  neo4j_data:
+  neo4j_logs:

@@ -5,6 +5,10 @@ from loguru import logger
 
 from src.api.middlewares.error_handler import ErrorHandlingMiddleware
 from src.api.routes import api_router
+from src.modules.knowledge_center.container import (
+    KnowledgeCenterContainer,
+    close_knowledge_center_driver,
+)
 from src.shared.config import settings
 from src.shared.infrastructure.logging import setup_logging
 from src.shared.infrastructure.scheduler import SchedulerService
@@ -33,6 +37,12 @@ async def lifespan(app: FastAPI):
     )
 
     await LLMPlatformStartup.initialize()
+
+    # 初始化 Knowledge Center 图谱约束（幂等）
+    try:
+        await KnowledgeCenterContainer().graph_repository().ensure_constraints()
+    except Exception as exc:  # noqa: BLE001
+        logger.warning(f"Knowledge Center 图谱约束初始化失败，将在后续同步时重试: {exc}")
     logger.info("Application startup completed.")
 
     yield
@@ -42,6 +52,9 @@ async def lifespan(app: FastAPI):
 
     # 关闭调度器
     SchedulerService.shutdown()
+
+    # 关闭 Knowledge Center Neo4j Driver
+    close_knowledge_center_driver()
     logger.info("Application shutdown completed.")
 
 

@@ -12,6 +12,7 @@ prometheus-client
 pandas
 tushare
 APScheduler==3.10.4
+neo4j
 openai
 langgraph>=0.2
 pytest
