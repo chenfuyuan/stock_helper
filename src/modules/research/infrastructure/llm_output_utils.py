@@ -1,9 +1,9 @@
 """
-研究模块内 LLM 输出的通用预处理。
+[DEPRECATED] 研究模块内 LLM 输出的通用预处理。
 
-用于各 Agent 的 output_parser：剥离 <think> 标签、剥离 Markdown 代码块，
-使「裸 JSON」或「```json ... ```」或「前后有多余文字」的响应都能得到可解析的片段。
-并可选地修复字符串值内的未转义控制字符（如字面换行），以通过 json.loads。
+本模块已被 src.shared.infrastructure.llm_json_parser 中的统一处理器取代。
+请使用 parse_llm_json_output() 或 generate_and_parse() 代替本模块的函数。
+保留本文件仅为向后兼容，将在后续版本中删除。
 """
 import re
 

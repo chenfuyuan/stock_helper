@@ -64,3 +64,24 @@ class ForbiddenException(AppException):
             status_code=403,
         )
 
+
+class LLMJsonParseError(AppException):
+    """
+    LLM 输出 JSON 解析失败。
+
+    统一处理器在预处理、JSON 解析或 Pydantic 校验任一阶段失败时抛出。
+    details 可选键：raw_length、json_error、position、validation_errors、normalizer_error。
+    """
+
+    def __init__(
+        self,
+        message: str = "LLM 输出 JSON 解析失败",
+        details: Dict[str, Any] | None = None,
+    ):
+        super().__init__(
+            message=message,
+            code="LLM_JSON_PARSE_ERROR",
+            status_code=500,
+            details=details,
+        )
+

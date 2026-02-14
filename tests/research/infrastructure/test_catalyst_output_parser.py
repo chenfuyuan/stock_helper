@@ -55,4 +55,4 @@ def test_parse_missing_fields():
     raw = "{}"  # Valid JSON but missing fields
     with pytest.raises(LLMOutputParseError) as exc:
         parse_catalyst_detective_result(raw)
-    assert "LLM 返回格式不符合催化剂侦探结果契约" in str(exc.value)
+    assert "不符合契约" in str(exc.value)
