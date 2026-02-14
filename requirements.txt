@@ -16,3 +16,11 @@ openai
 langgraph>=0.2
 pytest
 pytest-asyncio
+
+# 代码质量工具
+flake8
+mypy
+black
+isort
+autoflake
+pytest-cov

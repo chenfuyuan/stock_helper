@@ -1,0 +1,347 @@
+# CI/CD 配置与代码质量标准
+
+**用途**：定义项目的持续集成流程、代码质量检查标准和自动化工具配置，确保团队开发一致性和代码质量。
+
+---
+
+## CI/CD 流水线架构
+
+### 环境配置
+
+- **运行环境**：Ubuntu Latest
+- **Python版本**：3.10+
+- **数据库**：PostgreSQL 15-Alpine（测试环境）
+- **依赖管理**：pip + requirements.txt
+
+### 流水线阶段
+
+```yaml
+# .github/workflows/ci.yml 核心结构
+name: CI
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10"]
+    
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: stock_helper_test
+        ports:
+          - 5432:5432
+```
+
+---
+
+## 代码质量检查工具链
+
+### 1. 静态代码分析
+
+#### flake8 配置
+```ini
+[flake8]
+max-line-length = 79
+exclude = 
+    .git,
+    __pycache__,
+    .mypy_cache,
+    .pytest_cache,
+    .venv,
+    venv
+ignore = 
+    E203,  # whitespace before ':'
+    W503   # line break before binary operator
+```
+
+#### mypy 配置
+```ini
+[mypy]
+python_version = 3.10
+warn_return_any = True
+warn_unused_configs = True
+disallow_untyped_defs = True
+ignore_missing_imports = True
+```
+
+### 2. 代码格式化工具
+
+#### black 配置
+```toml
+[tool.black]
+line-length = 79
+target-version = ['py310']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+```
+
+#### isort 配置
+```toml
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 79
+known_first_party = ["src"]
+```
+
+---
+
+## 自动化修复流程
+
+### 预提交钩子配置
+
+```yaml
+# .pre-commit-config.yaml
+repos:
+  - repo: https://github.com/pycqa/autoflake
+    rev: v2.3.1
+    hooks:
+      - id: autoflake
+        args:
+          - --in-place
+          - --remove-all-unused-imports
+          - --remove-unused-variables
+          - --remove-duplicate-keys
+
+  - repo: https://github.com/pycqa/isort
+    rev: 6.1.0
+    hooks:
+      - id: isort
+        args: ["--profile", "black"]
+
+  - repo: https://github.com/psf/black
+    rev: 25.9.0
+    hooks:
+      - id: black
+        language_version: python3
+```
+
+### 批量修复脚本
+
+```bash
+#!/bin/bash
+# scripts/fix_code_quality.sh
+
+echo "🔧 开始自动修复代码质量问题..."
+
+# 1. 清理未使用的导入和变量
+echo "📦 清理未使用的导入..."
+find src/ tests/ -name "*.py" -exec autoflake \
+  --in-place \
+  --remove-all-unused-imports \
+  --remove-unused-variables \
+  --remove-duplicate-keys {} \;
+
+# 2. 规范化导入顺序
+echo "📚 规范化导入顺序..."
+isort src/ tests/ --profile black
+
+# 3. 格式化代码
+echo "✨ 格式化代码..."
+black src/ tests/ --line-length 79
+
+# 4. 清理空白行
+echo "🧹 清理空白行..."
+find src/ tests/ -name "*.py" -exec sed -i '' 's/ *$//' {} \;
+
+echo "✅ 代码质量修复完成！"
+```
+
+---
+
+## 质量门禁标准
+
+### 错误阈值
+
+| 检查工具 | 当前状态 | 目标阈值 | 严重程度 |
+|---------|---------|---------|---------|
+| flake8  | < 100   | < 50    | 中等     |
+| mypy    | < 50    | < 20    | 严重     |
+| 测试覆盖率 | > 70%  | > 85%   | 严重     |
+
+### 阻塞性问题
+
+以下问题会**阻止**合并：
+
+1. **mypy严重错误**：
+   - 缺失类型注解的核心函数
+   - 异步函数接口不一致
+   - 类型不匹配的赋值操作
+
+2. **flake8阻塞性错误**：
+   - 导入错误（未定义的名称）
+   - 语法错误
+   - 大量未使用的导入（> 20个）
+
+3. **测试失败**：
+   - 核心业务逻辑测试失败
+   - 集成测试环境问题
+
+### 警告性问题
+
+以下问题会发出警告但**不阻止**合并：
+
+1. **行长度超过79字符**（< 100个）
+2. **空白行格式问题**
+3. **非核心函数的类型注解缺失**
+
+---
+
+## CI优化策略
+
+### 并行执行
+
+```yaml
+# 并行运行检查以加速CI
+- name: Run checks in parallel
+  run: |
+    python -m flake8 src tests &
+    python -m mypy src --ignore-missing-imports &
+    wait
+```
+
+### 缓存策略
+
+```yaml
+# 缓存依赖以加速CI
+- name: Cache dependencies
+  uses: actions/cache@v3
+  with:
+    path: ~/.cache/pip
+    key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+    restore-keys: |
+      ${{ runner.os }}-pip-
+```
+
+### 测试环境优化
+
+```yaml
+# 使用Docker Compose确保环境一致性
+- name: Start test environment
+  run: |
+    docker compose -f docker-compose.test.yml up -d
+    docker compose exec -T app pytest tests/
+```
+
+---
+
+## 本地开发规范
+
+### 提交前检查
+
+```bash
+# 本地运行完整检查
+make check-quality
+
+# 等价于：
+python -m flake8 src tests
+python -m mypy src --ignore-missing-imports
+pytest tests/ --cov=src
+```
+
+### IDE配置
+
+#### VS Code settings.json
+```json
+{
+  "python.linting.enabled": true,
+  "python.linting.flake8Enabled": true,
+  "python.linting.mypyEnabled": true,
+  "python.formatting.provider": "black",
+  "python.sortImports.args": ["--profile", "black"],
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": true
+  }
+}
+```
+
+#### PyCharm配置
+- 启用Black作为代码格式化工具
+- 配置isort作为导入优化工具
+- 启用mypy类型检查
+- 设置行长度为79字符
+
+---
+
+## 持续改进机制
+
+### 定期审查
+
+- **每月**：审查错误趋势和工具版本更新
+- **每季度**：评估质量门禁阈值的合理性
+- **每半年**：全面审查CI/CD流程效率
+
+### 团队培训
+
+- **新成员入职**：CI/CD流程和代码质量标准培训
+- **技术分享**：定期分享代码质量最佳实践
+- **工具更新**：及时同步新工具和配置变更
+
+### 反馈循环
+
+- **CI失败通知**：及时通知相关开发者
+- **质量报告**：每周生成代码质量报告
+- **改进建议**：收集团队反馈持续优化流程
+
+---
+
+## 故障排查指南
+
+### 常见CI问题
+
+1. **数据库连接失败**
+   ```bash
+   # 检查数据库服务状态
+   docker compose ps
+   
+   # 重启数据库服务
+   docker compose restart postgres
+   ```
+
+2. **依赖安装失败**
+   ```bash
+   # 清理pip缓存
+   pip cache purge
+   
+   # 重新安装依赖
+   pip install -r requirements.txt --force-reinstall
+   ```
+
+3. **类型检查错误**
+   ```bash
+   # 详细查看mypy错误
+   python -m mypy src --show-error-codes --show-error-context
+   ```
+
+### 性能优化
+
+- **并行测试**：使用pytest-xdist并行运行测试
+- **增量检查**：仅检查变更的文件
+- **智能缓存**：基于文件哈希的智能缓存策略
+
+---
+
+*此文档与`.github/workflows/ci.yml`、`pyproject.toml`、`.pre-commit-config.yaml`等配置文件保持同步更新。*
