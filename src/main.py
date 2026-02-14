@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
@@ -11,21 +12,15 @@ from src.shared.infrastructure.scheduler import SchedulerService
 # 初始化日志配置
 setup_logging()
 
-app = FastAPI(
-    title=settings.PROJECT_NAME,
-    openapi_url=f"{settings.API_V1_STR}/openapi.json",
-    docs_url=f"{settings.API_V1_STR}/docs",
-)
 
-
-# 事件处理
-@app.on_event("startup")
-async def startup_event():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     """
-    应用启动事件处理
-    - 启动定时任务调度器
-    - 初始化 LLM 注册表并从数据库加载配置
+    应用生命周期管理
+    - startup: 启动定时任务调度器，初始化 LLM 注册表并从数据库加载配置
+    - shutdown: 关闭定时任务调度器
     """
+    # 启动事件
     logger.info("Application starting up...")
 
     # 启动调度器
@@ -38,19 +33,24 @@ async def startup_event():
     )
 
     await LLMPlatformStartup.initialize()
+    logger.info("Application startup completed.")
 
+    yield
 
-@app.on_event("shutdown")
-async def shutdown_event():
-    """
-    应用关闭事件处理
-    - 关闭定时任务调度器
-    """
+    # 关闭事件
     logger.info("Application shutting down...")
 
     # 关闭调度器
     SchedulerService.shutdown()
     logger.info("Application shutdown completed.")
+
+
+app = FastAPI(
+    title=settings.PROJECT_NAME,
+    openapi_url=f"{settings.API_V1_STR}/openapi.json",
+    docs_url=f"{settings.API_V1_STR}/docs",
+    lifespan=lifespan,
+)
 
 
 # 配置 CORS 中间件
