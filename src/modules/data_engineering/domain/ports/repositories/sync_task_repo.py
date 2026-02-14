@@ -53,9 +53,7 @@ class ISyncTaskRepository(ABC):
         """
 
     @abstractmethod
-    async def get_latest_by_job_type(
-        self, job_type: SyncJobType
-    ) -> Optional[SyncTask]:
+    async def get_latest_by_job_type(self, job_type: SyncJobType) -> Optional[SyncTask]:
         """
         查找指定类型的最近一次任务（按 started_at 降序）
 
@@ -69,9 +67,7 @@ class ISyncTaskRepository(ABC):
         """
 
     @abstractmethod
-    async def create_failure(
-        self, record: SyncFailureRecord
-    ) -> SyncFailureRecord:
+    async def create_failure(self, record: SyncFailureRecord) -> SyncFailureRecord:
         """
         创建失败记录
 
@@ -83,9 +79,7 @@ class ISyncTaskRepository(ABC):
         """
 
     @abstractmethod
-    async def update_failure(
-        self, record: SyncFailureRecord
-    ) -> SyncFailureRecord:
+    async def update_failure(self, record: SyncFailureRecord) -> SyncFailureRecord:
         """
         更新失败记录（用于递增重试次数、标记已解决等）
 
@@ -97,9 +91,7 @@ class ISyncTaskRepository(ABC):
         """
 
     @abstractmethod
-    async def get_unresolved_failures(
-        self, job_type: SyncJobType
-    ) -> List[SyncFailureRecord]:
+    async def get_unresolved_failures(self, job_type: SyncJobType) -> List[SyncFailureRecord]:
         """
         查询未解决且可重试的失败记录
 

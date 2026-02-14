@@ -36,9 +36,7 @@ def _make_result_dto() -> TechnicalAnalysisResultDTO:
         signal="BULLISH",
         confidence=0.8,
         summary_reasoning="测试",
-        key_technical_levels=KeyTechnicalLevelsDTO(
-            support=10.0, resistance=11.0
-        ),
+        key_technical_levels=KeyTechnicalLevelsDTO(support=10.0, resistance=11.0),
         risk_warning="",
     )
 
@@ -70,8 +68,7 @@ def _make_bars():
 
 
 @pytest.mark.asyncio
-async def test_technical_analyst_accepts_ticker_and_analysis_date_returns_dto(
-):
+async def test_technical_analyst_accepts_ticker_and_analysis_date_returns_dto():
     """调用技术分析师 Application 接口，出参含解析结果及 input、
     technical_indicators、output（代码塞入）。"""
     mock_market = AsyncMock(spec=IMarketQuotePort)
@@ -89,9 +86,7 @@ async def test_technical_analyst_accepts_ticker_and_analysis_date_returns_dto(
         indicator_calculator=mock_indicator,
         analyst_agent_port=mock_agent,
     )
-    result = await service.run(
-        ticker="000001.SZ", analysis_date=date(2024, 1, 15)
-    )
+    result = await service.run(ticker="000001.SZ", analysis_date=date(2024, 1, 15))
 
     assert isinstance(result, dict)
     assert result["signal"] in ("BULLISH", "BEARISH", "NEUTRAL")
@@ -155,10 +150,7 @@ async def test_technical_analyst_rejects_missing_ticker():
     with pytest.raises(BadRequestException) as exc_info:
         await service.run(ticker="", analysis_date=date(2024, 1, 15))
 
-    assert (
-        "ticker" in exc_info.value.message.lower()
-        or "必填" in exc_info.value.message
-    )
+    assert "ticker" in exc_info.value.message.lower() or "必填" in exc_info.value.message
 
 
 @pytest.mark.asyncio
@@ -167,9 +159,7 @@ async def test_technical_analyst_raises_when_bars_less_than_min_required():
     from src.shared.domain.exceptions import BadRequestException
 
     mock_market = AsyncMock(spec=IMarketQuotePort)
-    mock_market.get_daily_bars.return_value = _make_bars()[
-        : (MIN_BARS_REQUIRED - 1)
-    ]
+    mock_market.get_daily_bars.return_value = _make_bars()[: (MIN_BARS_REQUIRED - 1)]
     mock_indicator = MagicMock(spec=IIndicatorCalculator)
     mock_agent = AsyncMock(spec=ITechnicalAnalystAgentPort)
     service = TechnicalAnalystService(
@@ -202,6 +192,4 @@ async def test_technical_analyst_rejects_missing_analysis_date():
     )
 
     with pytest.raises(BadRequestException):
-        await service.run(
-            ticker="000001.SZ", analysis_date=None
-        )  # type: ignore
+        await service.run(ticker="000001.SZ", analysis_date=None)  # type: ignore

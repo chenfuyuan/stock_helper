@@ -8,6 +8,7 @@ Revises: c0ff00000003
 Create Date: 2026-02-14
 
 """
+
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql

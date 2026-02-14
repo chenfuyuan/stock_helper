@@ -69,9 +69,7 @@ class PgWebSearchCacheRepository(IWebSearchCacheRepository):
         """
         删除 expires_at <= now() 的条目，返回删除条数。
         """
-        stmt = delete(WebSearchCacheModel).where(
-            WebSearchCacheModel.expires_at <= func.now()
-        )
+        stmt = delete(WebSearchCacheModel).where(WebSearchCacheModel.expires_at <= func.now())
         result = await self._session.execute(stmt)
         await self._session.commit()
         return result.rowcount or 0

@@ -24,9 +24,7 @@ class JudgeContainer:
     def __init__(self) -> None:
         self._llm_service = _get_llm_service()
         self._llm_adapter = LLMAdapter(llm_service=self._llm_service)
-        self._verdict_agent = JudgeVerdictAgentAdapter(
-            llm_port=self._llm_adapter
-        )
+        self._verdict_agent = JudgeVerdictAgentAdapter(llm_port=self._llm_adapter)
         self._judge_service = JudgeService(verdict_agent=self._verdict_agent)
 
     def judge_service(self) -> JudgeService:

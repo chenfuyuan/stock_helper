@@ -15,7 +15,5 @@ class IFinancialDataPort(ABC):
     """按标的获取最近 N 期财务指标，返回 Research 约定的输入结构。"""
 
     @abstractmethod
-    async def get_finance_records(
-        self, ticker: str, limit: int = 5
-    ) -> List[FinanceRecordInput]:
+    async def get_finance_records(self, ticker: str, limit: int = 5) -> List[FinanceRecordInput]:
         raise NotImplementedError

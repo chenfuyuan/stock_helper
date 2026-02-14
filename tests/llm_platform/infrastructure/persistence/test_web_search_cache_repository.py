@@ -11,7 +11,7 @@ import pytest
 from src.modules.llm_platform.domain.dtos.web_search_cache_entry import (
     WebSearchCacheEntry,
 )
-from src.modules.llm_platform.infrastructure.persistence.repositories.web_search_cache_repository import (
+from src.modules.llm_platform.infrastructure.persistence.repositories.web_search_cache_repository import (  # noqa: E501
     PgWebSearchCacheRepository,
 )
 

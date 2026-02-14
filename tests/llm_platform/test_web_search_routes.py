@@ -85,9 +85,7 @@ class TestWebSearchRoutes:
             "src.modules.llm_platform.presentation.rest.search_routes.get_web_search_service"
         ) as mock_get_service:
             mock_service = Mock()
-            mock_service.search = AsyncMock(
-                side_effect=WebSearchConfigError("API Key 未配置")
-            )
+            mock_service.search = AsyncMock(side_effect=WebSearchConfigError("API Key 未配置"))
             mock_get_service.return_value = mock_service
 
             response = client.post(
@@ -104,9 +102,7 @@ class TestWebSearchRoutes:
             "src.modules.llm_platform.presentation.rest.search_routes.get_web_search_service"
         ) as mock_get_service:
             mock_service = Mock()
-            mock_service.search = AsyncMock(
-                side_effect=WebSearchConnectionError("网络连接失败")
-            )
+            mock_service.search = AsyncMock(side_effect=WebSearchConnectionError("网络连接失败"))
             mock_get_service.return_value = mock_service
 
             response = client.post(
@@ -122,9 +118,7 @@ class TestWebSearchRoutes:
             "src.modules.llm_platform.presentation.rest.search_routes.get_web_search_service"
         ) as mock_get_service:
             mock_service = Mock()
-            mock_service.search = AsyncMock(
-                side_effect=WebSearchError("上游 API 错误")
-            )
+            mock_service.search = AsyncMock(side_effect=WebSearchError("上游 API 错误"))
             mock_get_service.return_value = mock_service
 
             response = client.post(

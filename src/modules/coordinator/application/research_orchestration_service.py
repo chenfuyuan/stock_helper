@@ -67,9 +67,7 @@ class ResearchOrchestrationService:
 
         # 2. 校验 experts 非空且合法
         if not experts:
-            raise BadRequestException(
-                message="experts 为必填，至少指定一个专家"
-            )
+            raise BadRequestException(message="experts 为必填，至少指定一个专家")
 
         valid_values = {e.value for e in ExpertType}
         expert_types: list[ExpertType] = []
@@ -91,9 +89,7 @@ class ResearchOrchestrationService:
 
         # 4. 全部失败时抛出领域异常
         if result.overall_status == "failed":
-            raise AllExpertsFailedError(
-                message="全部专家执行失败，请检查数据或稍后重试"
-            )
+            raise AllExpertsFailedError(message="全部专家执行失败，请检查数据或稍后重试")
 
         return result
 
@@ -138,9 +134,7 @@ class ResearchOrchestrationService:
             )
 
         # 3. 查询 NodeExecution 记录，分离成功/失败的专家
-        node_executions = (
-            await self._session_repo.get_node_executions_by_session(session_id)
-        )
+        node_executions = await self._session_repo.get_node_executions_by_session(session_id)
 
         # 仅处理专家类型节点（排除 debate、judge）
         expert_values = {e.value for e in ExpertType}
@@ -178,8 +172,6 @@ class ResearchOrchestrationService:
 
         # 6. 全部失败时抛出领域异常
         if result.overall_status == "failed":
-            raise AllExpertsFailedError(
-                message="重试后全部专家仍执行失败，请检查数据或稍后重试"
-            )
+            raise AllExpertsFailedError(message="重试后全部专家仍执行失败，请检查数据或稍后重试")
 
         return result

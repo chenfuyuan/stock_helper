@@ -41,9 +41,7 @@ class ResearchGatewayAdapter(IResearchExpertGateway):
             return value
         if isinstance(value, str):
             return date.fromisoformat(value)
-        raise ValueError(
-            f"analysis_date 须为 ISO 日期字符串或 date，收到: {type(value)}"
-        )
+        raise ValueError(f"analysis_date 须为 ISO 日期字符串或 date，收到: {type(value)}")
 
     async def run_expert(
         self,
@@ -67,18 +65,14 @@ class ResearchGatewayAdapter(IResearchExpertGateway):
                         expert_opts.get("analysis_date", date.today())
                     )
                     svc = research.technical_analyst_service()
-                    result = await svc.run(
-                        ticker=symbol, analysis_date=analysis_date
-                    )
+                    result = await svc.run(ticker=symbol, analysis_date=analysis_date)
                     return result
 
                 case ExpertType.FINANCIAL_AUDITOR:
                     expert_opts = opts.get("financial_auditor", {})
                     limit = expert_opts.get("limit", 8)
                     auditor_svc = research.financial_auditor_service()
-                    result = await auditor_svc.run(
-                        symbol=symbol, limit=int(limit)
-                    )
+                    result = await auditor_svc.run(symbol=symbol, limit=int(limit))
                     return result
 
                 case ExpertType.VALUATION_MODELER:

@@ -5,10 +5,9 @@ from src.modules.research.domain.dtos.catalyst_inputs import (
     CatalystSearchResultItem,
     CatalystStockOverview,
 )
-from src.modules.research.infrastructure.catalyst_context.\
-        context_builder import (
-            CatalystContextBuilderImpl,
-        )
+from src.modules.research.infrastructure.catalyst_context.context_builder import (
+    CatalystContextBuilderImpl,
+)
 
 
 def test_catalyst_context_builder_normal_case():
@@ -41,10 +40,7 @@ def test_catalyst_context_builder_normal_case():
                 )
             ],
         ),
-        CatalystSearchResult(
-            dimension_topic="市场情绪与机构动向",
-            items=[]  # Empty items
-        ),
+        CatalystSearchResult(dimension_topic="市场情绪与机构动向", items=[]),  # Empty items
         # Missing earnings dimension entirely
         # (simulating degradation or logic skip)
     ]
@@ -72,20 +68,14 @@ def test_catalyst_context_builder_normal_case():
 
 def test_catalyst_context_builder_url_deduplication():
     builder = CatalystContextBuilderImpl()
-    overview = CatalystStockOverview(
-        stock_name="S", industry="I", third_code="C"
-    )
+    overview = CatalystStockOverview(stock_name="S", industry="I", third_code="C")
 
     search_results = [
         CatalystSearchResult(
             dimension_topic="公司重大事件与动态",
             items=[
-                CatalystSearchResultItem(
-                    title="T1", url="http://dup.com", snippet="S1"
-                ),
-                CatalystSearchResultItem(
-                    title="T2", url="http://dup.com", snippet="S2"
-                ),
+                CatalystSearchResultItem(title="T1", url="http://dup.com", snippet="S1"),
+                CatalystSearchResultItem(title="T2", url="http://dup.com", snippet="S2"),
             ],
         )
     ]

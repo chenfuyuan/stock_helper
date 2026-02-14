@@ -20,39 +20,25 @@ class TestComputeCacheKey:
 
     def test_same_request_same_key(self):
         """相同请求参数生成相同缓存键。"""
-        r1 = WebSearchRequest(
-            query="货币", freshness="oneDay", summary=True, count=10
-        )
-        r2 = WebSearchRequest(
-            query="货币", freshness="oneDay", summary=True, count=10
-        )
+        r1 = WebSearchRequest(query="货币", freshness="oneDay", summary=True, count=10)
+        r2 = WebSearchRequest(query="货币", freshness="oneDay", summary=True, count=10)
         assert compute_cache_key(r1) == compute_cache_key(r2)
 
     def test_different_freshness_different_key(self):
         """仅 freshness 不同时生成不同缓存键。"""
-        r1 = WebSearchRequest(
-            query="宏观", freshness="oneWeek", summary=True, count=10
-        )
-        r2 = WebSearchRequest(
-            query="宏观", freshness="oneMonth", summary=True, count=10
-        )
+        r1 = WebSearchRequest(query="宏观", freshness="oneWeek", summary=True, count=10)
+        r2 = WebSearchRequest(query="宏观", freshness="oneMonth", summary=True, count=10)
         assert compute_cache_key(r1) != compute_cache_key(r2)
 
     def test_different_query_different_key(self):
         """仅 query 不同时生成不同缓存键。"""
-        r1 = WebSearchRequest(
-            query="A", freshness="oneDay", summary=True, count=10
-        )
-        r2 = WebSearchRequest(
-            query="B", freshness="oneDay", summary=True, count=10
-        )
+        r1 = WebSearchRequest(query="A", freshness="oneDay", summary=True, count=10)
+        r2 = WebSearchRequest(query="B", freshness="oneDay", summary=True, count=10)
         assert compute_cache_key(r1) != compute_cache_key(r2)
 
     def test_key_is_64_hex_chars(self):
         """缓存键为 64 字符十六进制（SHA-256）。"""
-        r = WebSearchRequest(
-            query="任意", freshness=None, summary=False, count=5
-        )
+        r = WebSearchRequest(query="任意", freshness=None, summary=False, count=5)
         key = compute_cache_key(r)
         assert len(key) == 64
         assert all(c in "0123456789abcdef" for c in key)

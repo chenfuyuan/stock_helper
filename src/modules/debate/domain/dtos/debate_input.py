@@ -25,6 +25,4 @@ class DebateInput(BaseModel):
     """辩论输入：标的代码 + 按专家名分组的专家摘要。"""
 
     symbol: str
-    expert_summaries: dict[
-        str, ExpertSummary
-    ]  # key 为专家类型名，如 "technical_analyst"
+    expert_summaries: dict[str, ExpertSummary]  # key 为专家类型名，如 "technical_analyst"

@@ -46,9 +46,7 @@ class TestMacroDataAdapter:
         return SearchResultFilter()
 
     @pytest.fixture
-    def adapter(
-        self, mock_stock_info_usecase, mock_web_search_service, result_filter
-    ):
+    def adapter(self, mock_stock_info_usecase, mock_web_search_service, result_filter):
         """MacroDataAdapter 实例"""
         return MacroDataAdapter(
             stock_info_usecase=mock_stock_info_usecase,
@@ -83,9 +81,7 @@ class TestMacroDataAdapter:
         mock_web_search_service.search.return_value = mock_response
 
         # 执行搜索
-        results = await adapter.search_macro_context(
-            industry="银行", stock_name="平安银行"
-        )
+        results = await adapter.search_macro_context(industry="银行", stock_name="平安银行")
 
         # 验证搜索调用次数（4 个维度）
         assert mock_web_search_service.search.call_count == 4
@@ -116,9 +112,7 @@ class TestMacroDataAdapter:
             assert hasattr(result, "dimension_topic")
             assert hasattr(result, "items")
 
-    async def test_search_macro_context_filters_results(
-        self, adapter, mock_web_search_service
-    ):
+    async def test_search_macro_context_filters_results(self, adapter, mock_web_search_service):
         """测试搜索结果经过过滤后返回"""
         # 模拟包含噪音的搜索响应
         mock_items = [
@@ -159,9 +153,7 @@ class TestMacroDataAdapter:
         mock_web_search_service.search.return_value = mock_response
 
         # 执行搜索
-        results = await adapter.search_macro_context(
-            industry="银行", stock_name="平安银行"
-        )
+        results = await adapter.search_macro_context(industry="银行", stock_name="平安银行")
 
         # 验证过滤后的结果
         # 应该只有 2 个有效条目（有效新闻1 和有效新闻2，后者因 URL 重复被去重）
@@ -179,9 +171,7 @@ class TestMacroDataAdapter:
         mock_web_search_service.search.side_effect = Exception("搜索服务错误")
 
         # 执行搜索
-        results = await adapter.search_macro_context(
-            industry="银行", stock_name="平安银行"
-        )
+        results = await adapter.search_macro_context(industry="银行", stock_name="平安银行")
 
         # 验证错误处理：所有维度返回空结果
         assert len(results) == 4
@@ -189,9 +179,7 @@ class TestMacroDataAdapter:
             assert len(result.items) == 0
             assert hasattr(result, "dimension_topic")
 
-    async def test_get_stock_overview_success(
-        self, adapter, mock_stock_info_usecase
-    ):
+    async def test_get_stock_overview_success(self, adapter, mock_stock_info_usecase):
         """测试获取股票概览成功"""
         # 执行获取
         overview = await adapter.get_stock_overview("000001.SZ")
@@ -205,9 +193,7 @@ class TestMacroDataAdapter:
         assert overview.industry == "银行"
         assert overview.third_code == "000001.SZ"
 
-    async def test_get_stock_overview_not_found(
-        self, adapter, mock_stock_info_usecase
-    ):
+    async def test_get_stock_overview_not_found(self, adapter, mock_stock_info_usecase):
         """测试股票不存在"""
         # 模拟返回 None
         mock_stock_info_usecase.execute.return_value = None

@@ -119,10 +119,7 @@ def test_parse_narrative_report_present():
         "narrative_report": "技术面中性，支撑 9 元、阻力 11 元，置信度 0.6。"
     }"""
     result = parse_technical_analysis_result(raw)
-    assert (
-        result.narrative_report
-        == "技术面中性，支撑 9 元、阻力 11 元，置信度 0.6。"
-    )
+    assert result.narrative_report == "技术面中性，支撑 9 元、阻力 11 元，置信度 0.6。"
 
 
 def test_parse_narrative_report_missing_defaults_to_empty():

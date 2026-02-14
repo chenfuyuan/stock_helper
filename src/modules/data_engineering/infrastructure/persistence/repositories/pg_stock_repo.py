@@ -51,8 +51,7 @@ class StockRepositoryImpl(BaseRepository[StockModel], IStockBasicRepository):
                     StockModel.third_code.not_in(subquery),
                     or_(
                         StockModel.last_finance_sync_date == None,
-                        StockModel.last_finance_sync_date
-                        < check_threshold_date,
+                        StockModel.last_finance_sync_date < check_threshold_date,
                     ),
                 )
             )
@@ -62,9 +61,7 @@ class StockRepositoryImpl(BaseRepository[StockModel], IStockBasicRepository):
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
 
-    async def update_last_finance_sync_date(
-        self, third_codes: List[str], sync_date: date
-    ) -> None:
+    async def update_last_finance_sync_date(self, third_codes: List[str], sync_date: date) -> None:
         """
         批量更新最后财务同步时间
         """
@@ -82,9 +79,7 @@ class StockRepositoryImpl(BaseRepository[StockModel], IStockBasicRepository):
 
     async def get_by_symbol(self, symbol: str) -> Optional[StockInfo]:
         """根据股票代码查询"""
-        result = await self.session.execute(
-            select(StockModel).where(StockModel.symbol == symbol)
-        )
+        result = await self.session.execute(select(StockModel).where(StockModel.symbol == symbol))
         model = result.scalar_one_or_none()
         return StockInfo.model_validate(model) if model else None
 
@@ -96,9 +91,7 @@ class StockRepositoryImpl(BaseRepository[StockModel], IStockBasicRepository):
         model = result.scalar_one_or_none()
         return StockInfo.model_validate(model) if model else None
 
-    async def get_by_third_codes(
-        self, third_codes: List[str]
-    ) -> List[StockInfo]:
+    async def get_by_third_codes(self, third_codes: List[str]) -> List[StockInfo]:
         """根据第三方代码批量查询"""
         if not third_codes:
             return []
@@ -106,29 +99,21 @@ class StockRepositoryImpl(BaseRepository[StockModel], IStockBasicRepository):
         result = await self.session.execute(
             select(StockModel).where(StockModel.third_code.in_(third_codes))
         )
-        return [
-            StockInfo.model_validate(model) for model in result.scalars().all()
-        ]
+        return [StockInfo.model_validate(model) for model in result.scalars().all()]
 
-    async def get_all(
-        self, skip: int = 0, limit: int = 100
-    ) -> List[StockInfo]:
+    async def get_all(self, skip: int = 0, limit: int = 100) -> List[StockInfo]:
         """获取所有股票（支持分页）"""
-        result = await self.session.execute(
-            select(StockModel).offset(skip).limit(limit)
-        )
-        return [
-            StockInfo.model_validate(model) for model in result.scalars().all()
-        ]
+        result = await self.session.execute(select(StockModel).offset(skip).limit(limit))
+        return [StockInfo.model_validate(model) for model in result.scalars().all()]
 
     async def save(self, stock: StockInfo) -> StockInfo:
         """保存单个股票信息 (Create or Update)"""
         stock_data = stock.model_dump(exclude_unset=True)
 
         stmt = insert(StockModel).values(**stock_data)
-        stmt = stmt.on_conflict_do_update(
-            index_elements=["third_code"], set_=stock_data
-        ).returning(StockModel)
+        stmt = stmt.on_conflict_do_update(index_elements=["third_code"], set_=stock_data).returning(
+            StockModel
+        )
 
         result = await self.session.execute(stmt)
         await self.session.commit()
@@ -151,16 +136,12 @@ class StockRepositoryImpl(BaseRepository[StockModel], IStockBasicRepository):
             stmt = stmt.on_conflict_do_update(
                 index_elements=["third_code"],
                 set_={
-                    col.name: col
-                    for col in stmt.excluded
-                    if col.name not in ["id", "created_at"]
+                    col.name: col for col in stmt.excluded if col.name not in ["id", "created_at"]
                 },
             ).returning(StockModel)
 
             result = await self.session.execute(stmt)
-            batch_results = [
-                StockInfo.model_validate(row) for row in result.scalars().all()
-            ]
+            batch_results = [StockInfo.model_validate(row) for row in result.scalars().all()]
             saved_stocks.extend(batch_results)
 
         await self.session.commit()

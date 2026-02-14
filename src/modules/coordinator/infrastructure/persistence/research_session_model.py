@@ -29,9 +29,7 @@ class ResearchSessionModel(Base):
     )
     selected_experts = Column(JSONB, nullable=True, comment="选中的专家列表")
     options = Column(JSONB, nullable=True, comment="执行选项")
-    trigger_source = Column(
-        String(50), nullable=True, comment="触发来源（api / scheduler）"
-    )
+    trigger_source = Column(String(50), nullable=True, comment="触发来源（api / scheduler）")
     created_at = Column(DateTime, nullable=False, comment="创建时间")
     completed_at = Column(DateTime, nullable=True, comment="完成时间")
     duration_ms = Column(Integer, nullable=True, comment="总耗时（毫秒）")

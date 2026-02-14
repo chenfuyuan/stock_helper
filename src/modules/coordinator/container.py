@@ -53,6 +53,4 @@ class CoordinatorContainer:
             judge_gateway=judge_gateway,
             session_repo=session_repo,
         )
-        return ResearchOrchestrationService(
-            orchestrator, session_repo=session_repo
-        )
+        return ResearchOrchestrationService(orchestrator, session_repo=session_repo)

@@ -10,10 +10,9 @@ import pytest
 from datetime import date
 from unittest.mock import AsyncMock
 
-from src.modules.research.application.services.\
-        valuation_modeler_service import (
-            ValuationModelerService,
-        )
+from src.modules.research.application.services.valuation_modeler_service import (
+    ValuationModelerService,
+)
 from src.modules.research.domain.dtos.financial_record_input import (
     FinanceRecordInput,
 )
@@ -77,10 +76,7 @@ async def test_missing_symbol_raises_bad_request():
 
     with pytest.raises(BadRequestException) as exc_info:
         await svc.run(symbol="")
-    assert (
-        "symbol" in exc_info.value.message.lower()
-        or "必填" in exc_info.value.message
-    )
+    assert "symbol" in exc_info.value.message.lower() or "必填" in exc_info.value.message
 
     with pytest.raises(BadRequestException):
         await svc.run(symbol="   ")
@@ -135,10 +131,7 @@ async def test_empty_finance_records_raises_bad_request():
 
     with pytest.raises(BadRequestException) as exc_info:
         await svc.run(symbol="000001.SZ")
-    assert (
-        "无财务数据" in exc_info.value.message
-        or "无数据" in exc_info.value.message
-    )
+    assert "无财务数据" in exc_info.value.message or "无数据" in exc_info.value.message
 
 
 @pytest.mark.asyncio
@@ -217,8 +210,7 @@ async def test_full_flow_returns_valuation_result_with_all_fields():
     )
     mock_data.get_valuation_dailies.return_value = [
         ValuationDailyInput(
-            trade_date=date(2023, 1, 1)
-            + __import__("datetime").timedelta(days=i * 3),
+            trade_date=date(2023, 1, 1) + __import__("datetime").timedelta(days=i * 3),
             close=10.0,
             pe_ttm=5.0,
             pb=0.6,
@@ -271,10 +263,9 @@ async def test_full_flow_returns_valuation_result_with_all_fields():
         user_prompt="test user prompt",
     )
 
-    from src.modules.research.infrastructure.valuation_snapshot.\
-        snapshot_builder import (
-            ValuationSnapshotBuilderImpl,
-        )
+    from src.modules.research.infrastructure.valuation_snapshot.snapshot_builder import (
+        ValuationSnapshotBuilderImpl,
+    )
 
     svc = ValuationModelerService(
         valuation_data_port=mock_data,

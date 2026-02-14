@@ -106,9 +106,7 @@ def create_debate_node(
             return {"debate_outcome": {}}
 
         try:
-            outcome = await debate_gateway.run_debate(
-                symbol=symbol, expert_results=results
-            )
+            outcome = await debate_gateway.run_debate(symbol=symbol, expert_results=results)
             return {"debate_outcome": outcome}
         except Exception as e:
             logger.warning("辩论节点执行失败，降级为空结果: %s", e)
@@ -134,9 +132,7 @@ def create_judge_node(
             return {"verdict": {}}
 
         try:
-            verdict = await judge_gateway.run_verdict(
-                symbol=symbol, debate_outcome=debate_outcome
-            )
+            verdict = await judge_gateway.run_verdict(symbol=symbol, debate_outcome=debate_outcome)
             return {"verdict": verdict}
         except Exception as e:
             logger.warning("裁决节点执行失败，降级为空结果: %s", e)

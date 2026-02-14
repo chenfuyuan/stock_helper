@@ -16,9 +16,7 @@ class BullArgument(BaseModel):
     supporting_arguments: list[str]  # 各维度支持论点
     acknowledged_risks: list[str]  # 承认的风险
     price_catalysts: list[str]  # 识别的价格催化剂
-    narrative_report: str = (
-        ""  # 面向人类的中文叙述性报告：核心结论、论据、风险、置信度
-    )
+    narrative_report: str = ""  # 面向人类的中文叙述性报告：核心结论、论据、风险、置信度
 
 
 class BearArgument(BaseModel):
@@ -30,6 +28,4 @@ class BearArgument(BaseModel):
     supporting_arguments: list[str]  # 各维度支持论点
     acknowledged_strengths: list[str]  # 承认的多头优势
     risk_triggers: list[str]  # 风险触发条件
-    narrative_report: str = (
-        ""  # 面向人类的中文叙述性报告：核心结论、论据、风险、置信度
-    )
+    narrative_report: str = ""  # 面向人类的中文叙述性报告：核心结论、论据、风险、置信度

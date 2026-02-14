@@ -24,9 +24,7 @@ class SessionDetailQuery:
         session = await self._repo.get_session_by_id(session_id)
         if session is None:
             return None
-        executions = await self._repo.get_node_executions_by_session(
-            session_id
-        )
+        executions = await self._repo.get_node_executions_by_session(session_id)
         return SessionDetailDTO(
             id=str(session.id),
             symbol=session.symbol,

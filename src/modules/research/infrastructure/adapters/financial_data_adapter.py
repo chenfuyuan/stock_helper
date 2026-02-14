@@ -51,8 +51,6 @@ class FinancialDataAdapter(IFinancialDataPort):
     def __init__(self, get_finance_use_case: GetFinanceForTickerUseCase):
         self._get_finance = get_finance_use_case
 
-    async def get_finance_records(
-        self, ticker: str, limit: int = 5
-    ) -> List[FinanceRecordInput]:
+    async def get_finance_records(self, ticker: str, limit: int = 5) -> List[FinanceRecordInput]:
         dto_list = await self._get_finance.execute(ticker=ticker, limit=limit)
         return [_to_finance_record(d) for d in dto_list]

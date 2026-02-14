@@ -119,9 +119,7 @@ class ValuationDataAdapter(IValuationDataPort):
         self._get_valuation_dailies = get_valuation_dailies_use_case
         self._get_finance = get_finance_use_case
 
-    async def get_stock_overview(
-        self, symbol: str
-    ) -> Optional[StockOverviewInput]:
+    async def get_stock_overview(self, symbol: str) -> Optional[StockOverviewInput]:
         """
         获取股票基础信息与最新市场估值数据。
         返回 None 表示标的不存在。

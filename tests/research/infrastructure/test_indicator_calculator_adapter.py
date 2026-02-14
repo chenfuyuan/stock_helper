@@ -6,10 +6,9 @@ Spec Scenario：通过 Port 获取指标快照；实现可依赖第三方库。
 from datetime import date
 
 from src.modules.research.domain.dtos.daily_bar_input import DailyBarInput
-from src.modules.research.infrastructure.indicators.\
-        indicator_calculator_adapter import (
-            IndicatorCalculatorAdapter,
-        )
+from src.modules.research.infrastructure.indicators.indicator_calculator_adapter import (
+    IndicatorCalculatorAdapter,
+)
 
 
 def test_indicator_calculator_adapter_empty_bars_returns_empty_snapshot():
@@ -57,8 +56,7 @@ def test_indicator_calculator_insufficient_data_returns_none_for_indicators():
     # 仅 10 根 K 线：不足 RSI(14+1)、MACD(26)、布林(20)、ATR(14+1)、ADX(14+1)
     bars = [
         DailyBarInput(
-            trade_date=date(2024, 1, 1)
-            + __import__("datetime").timedelta(days=i),
+            trade_date=date(2024, 1, 1) + __import__("datetime").timedelta(days=i),
             open=10.0,
             high=11.0,
             low=9.0,

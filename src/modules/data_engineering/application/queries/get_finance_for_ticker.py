@@ -53,9 +53,7 @@ class FinanceIndicatorDTO(BaseModel):
     assets_turn: Optional[float] = Field(None, description="总资产周转率")
 
     # 用于 YoY 增速计算
-    total_revenue_ps: Optional[float] = Field(
-        None, description="每股营业总收入"
-    )
+    total_revenue_ps: Optional[float] = Field(None, description="每股营业总收入")
     fcff: Optional[float] = Field(None, description="企业自由现金流量")
 
     model_config = {"frozen": True}
@@ -108,10 +106,8 @@ class GetFinanceForTickerUseCase:
         执行查询。ticker 为第三方代码（如 000001.SZ）。
         返回按 end_date 降序的财务指标 DTO 列表（最新期在前）。
         """
-        finances: List[StockFinance] = (
-            await self._repo.get_by_third_code_recent(
-                third_code=ticker,
-                limit=limit,
-            )
+        finances: List[StockFinance] = await self._repo.get_by_third_code_recent(
+            third_code=ticker,
+            limit=limit,
         )
         return [_to_dto(f) for f in finances]

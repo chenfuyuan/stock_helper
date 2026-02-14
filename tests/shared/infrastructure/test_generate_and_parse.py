@@ -122,9 +122,7 @@ class TestRetryPromptContent:
 class TestMultipleRetries:
     @pytest.mark.asyncio
     async def test_two_retries_third_succeeds(self):
-        mock_llm = AsyncMock(
-            side_effect=[_INVALID_JSON, _INVALID_JSON, _VALID_JSON]
-        )
+        mock_llm = AsyncMock(side_effect=[_INVALID_JSON, _INVALID_JSON, _VALID_JSON])
         result = await generate_and_parse(
             mock_llm,
             _SimpleDTO,
@@ -200,9 +198,7 @@ class TestLLMConnectionErrorPassthrough:
 class TestConnectionErrorDuringRetry:
     @pytest.mark.asyncio
     async def test_connection_error_during_retry_propagates(self):
-        mock_llm = AsyncMock(
-            side_effect=[_INVALID_JSON, _FakeLLMConnectionError("网络中断")]
-        )
+        mock_llm = AsyncMock(side_effect=[_INVALID_JSON, _FakeLLMConnectionError("网络中断")])
         with pytest.raises(_FakeLLMConnectionError):
             await generate_and_parse(
                 mock_llm,

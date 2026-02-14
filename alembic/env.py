@@ -8,14 +8,30 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 from alembic import context
 from src.shared.config import settings
 from src.shared.infrastructure.db.base import Base
-from src.modules.data_engineering.infrastructure.persistence.models.stock_model import StockModel  # noqa
-from src.modules.data_engineering.infrastructure.persistence.models.daily_bar_model import StockDailyModel  # noqa
-from src.modules.data_engineering.infrastructure.persistence.models.finance_model import StockFinanceModel  # noqa
-from src.modules.llm_platform.infrastructure.persistence.models.llm_config_model import LLMConfigModel  # noqa
-from src.modules.coordinator.infrastructure.persistence.research_session_model import ResearchSessionModel  # noqa
-from src.modules.coordinator.infrastructure.persistence.node_execution_model import NodeExecutionModel  # noqa
-from src.modules.llm_platform.infrastructure.persistence.models.llm_call_log_model import LLMCallLogModel  # noqa
-from src.shared.infrastructure.persistence.external_api_call_log_model import ExternalAPICallLogModel  # noqa
+from src.modules.data_engineering.infrastructure.persistence.models.stock_model import (
+    StockModel,
+)  # noqa
+from src.modules.data_engineering.infrastructure.persistence.models.daily_bar_model import (
+    StockDailyModel,
+)  # noqa
+from src.modules.data_engineering.infrastructure.persistence.models.finance_model import (
+    StockFinanceModel,
+)  # noqa
+from src.modules.llm_platform.infrastructure.persistence.models.llm_config_model import (
+    LLMConfigModel,
+)  # noqa
+from src.modules.coordinator.infrastructure.persistence.research_session_model import (
+    ResearchSessionModel,
+)  # noqa
+from src.modules.coordinator.infrastructure.persistence.node_execution_model import (
+    NodeExecutionModel,
+)  # noqa
+from src.modules.llm_platform.infrastructure.persistence.models.llm_call_log_model import (
+    LLMCallLogModel,
+)  # noqa
+from src.shared.infrastructure.persistence.external_api_call_log_model import (
+    ExternalAPICallLogModel,
+)  # noqa
 
 # Alembic 配置对象，提供对 .ini 文件的访问
 config = context.config
@@ -35,9 +51,11 @@ target_metadata = Base.metadata
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
 
+
 def get_url():
     """从应用配置中获取数据库连接 URL"""
     return settings.SQLALCHEMY_DATABASE_URI
+
 
 def run_migrations_offline() -> None:
     """
@@ -76,7 +94,7 @@ async def run_migrations_online() -> None:
     """
     configuration = config.get_section(config.config_ini_section)
     configuration["sqlalchemy.url"] = get_url()
-    
+
     # 创建异步 Engine
     connectable = async_engine_from_config(
         configuration,

@@ -44,10 +44,7 @@ async def test_missing_symbol_raises_bad_request():
 
     with pytest.raises(BadRequestException) as exc_info:
         await svc.run(symbol="")
-    assert (
-        "symbol" in exc_info.value.message.lower()
-        or "必填" in exc_info.value.message
-    )
+    assert "symbol" in exc_info.value.message.lower() or "必填" in exc_info.value.message
 
     with pytest.raises(BadRequestException):
         await svc.run(symbol="   ")
@@ -70,10 +67,7 @@ async def test_empty_finance_records_raises_bad_request():
 
     with pytest.raises(BadRequestException) as exc_info:
         await svc.run(symbol="000001.SZ")
-    assert (
-        "无财务数据" in exc_info.value.message
-        or "无数据" in exc_info.value.message
-    )
+    assert "无财务数据" in exc_info.value.message or "无数据" in exc_info.value.message
 
 
 @pytest.mark.asyncio
@@ -90,10 +84,7 @@ async def test_limit_out_of_range_raises_bad_request():
 
     with pytest.raises(BadRequestException) as exc_info:
         await svc.run(symbol="000001.SZ", limit=0)
-    assert (
-        "limit" in exc_info.value.message.lower()
-        or "1" in exc_info.value.message
-    )
+    assert "limit" in exc_info.value.message.lower() or "1" in exc_info.value.message
 
     with pytest.raises(BadRequestException):
         await svc.run(symbol="000001.SZ", limit=21)

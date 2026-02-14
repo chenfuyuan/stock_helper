@@ -25,10 +25,7 @@ from src.modules.research.infrastructure.prompt_loader import (
 )
 
 _MACRO_INTELLIGENCE_PROMPTS_DIR = (
-    Path(__file__).resolve().parent.parent
-    / "agents"
-    / "macro_intelligence"
-    / "prompts"
+    Path(__file__).resolve().parent.parent / "agents" / "macro_intelligence" / "prompts"
 )
 
 
@@ -72,12 +69,8 @@ class MacroIntelligenceAgentAdapter(IMacroIntelligenceAgentPort):
             LLMError: LLM 调用失败时
         """
         # 1. 加载 Prompt 模板
-        system_prompt = load_macro_intelligence_system_prompt(
-            self._prompts_dir
-        )
-        user_template = load_macro_intelligence_user_template(
-            self._prompts_dir
-        )
+        system_prompt = load_macro_intelligence_system_prompt(self._prompts_dir)
+        user_template = load_macro_intelligence_user_template(self._prompts_dir)
 
         # 2. 填充占位符
         user_prompt = fill_macro_intelligence_user_prompt(

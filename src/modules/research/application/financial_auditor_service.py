@@ -39,13 +39,9 @@ class FinancialAuditorService:
         if not symbol or not str(symbol).strip():
             raise BadRequestException(message="symbol 为必填")
         if limit < 1 or limit > 20:
-            raise BadRequestException(
-                message=f"limit 须在 1～20 之间，当前为 {limit}。"
-            )
+            raise BadRequestException(message=f"limit 须在 1～20 之间，当前为 {limit}。")
 
-        records = await self._financial_data.get_finance_records(
-            ticker=symbol, limit=limit
-        )
+        records = await self._financial_data.get_finance_records(ticker=symbol, limit=limit)
         if not records:
             raise BadRequestException(
                 message=(
@@ -54,9 +50,7 @@ class FinancialAuditorService:
             )
 
         snapshot = self._snapshot_builder.build(records)
-        agent_result = await self._auditor_agent.audit(
-            symbol=symbol, snapshot=snapshot
-        )
+        agent_result = await self._auditor_agent.audit(symbol=symbol, snapshot=snapshot)
 
         result_dto = agent_result.result
         return {
@@ -64,9 +58,7 @@ class FinancialAuditorService:
             "signal": result_dto.signal,
             "confidence": result_dto.confidence,
             "summary_reasoning": result_dto.summary_reasoning,
-            "dimension_analyses": [
-                d.model_dump() for d in result_dto.dimension_analyses
-            ],
+            "dimension_analyses": [d.model_dump() for d in result_dto.dimension_analyses],
             "key_risks": result_dto.key_risks,
             "risk_warning": result_dto.risk_warning,
             "narrative_report": result_dto.narrative_report,

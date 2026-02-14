@@ -52,9 +52,7 @@ from src.modules.data_engineering.infrastructure.external_apis.tushare.converter
 from src.shared.domain.exceptions import AppException
 
 
-class TushareClient(
-    IStockBasicProvider, IMarketQuoteProvider, IFinancialDataProvider
-):
+class TushareClient(IStockBasicProvider, IMarketQuoteProvider, IFinancialDataProvider):
     """
     Tushare Client Adapter (Infrastructure Layer)
     Implements all data provider interfaces.
@@ -62,10 +60,7 @@ class TushareClient(
 
     def __init__(self):
         # 初始化 Tushare Pro 接口
-        if (
-            not de_config.TUSHARE_TOKEN
-            or de_config.TUSHARE_TOKEN == "your_tushare_token_here"
-        ):
+        if not de_config.TUSHARE_TOKEN or de_config.TUSHARE_TOKEN == "your_tushare_token_here":
             logger.warning("Tushare Token 未配置，可能无法获取数据")
 
         try:
@@ -113,9 +108,7 @@ class TushareClient(
         获取财报披露计划
         """
         try:
-            logger.info(
-                f"开始从 Tushare 获取财报披露计划: actual_date={actual_date}"
-            )
+            logger.info(f"开始从 Tushare 获取财报披露计划: actual_date={actual_date}")
             fields = "ts_code,ann_date,end_date,pre_date,actual_date"
 
             df = await self._rate_limited_call(
@@ -125,9 +118,7 @@ class TushareClient(
             )
 
             if df is None or df.empty:
-                logger.warning(
-                    f"Tushare 财报披露计划为空: actual_date={actual_date}"
-                )
+                logger.warning(f"Tushare 财报披露计划为空: actual_date={actual_date}")
                 return []
 
             return StockDisclosureAssembler.to_domain_list(df)
@@ -227,7 +218,9 @@ class TushareClient(
             )
             # 1. 获取基础行情 (daily)
             # fields: ts_code, trade_date, open, high, low, close, pre_close, change, pct_chg, vol, amount
-            daily_fields = "ts_code,trade_date,open,high,low,close,pre_close,change,pct_chg,vol,amount"
+            daily_fields = (
+                "ts_code,trade_date,open,high,low,close,pre_close,change,pct_chg,vol,amount"
+            )
             df_daily = await self._rate_limited_call(
                 self.pro.daily,
                 ts_code=third_code,
@@ -238,9 +231,7 @@ class TushareClient(
             )
 
             if df_daily is None or df_daily.empty:
-                logger.warning(
-                    f"Tushare 日线数据为空: code={third_code}, date={trade_date}"
-                )
+                logger.warning(f"Tushare 日线数据为空: code={third_code}, date={trade_date}")
                 return []
 
             # 2. 获取复权因子 (adj_factor)
@@ -278,24 +269,16 @@ class TushareClient(
             # 4. 数据合并 (ETL)
             # 预处理：去重，防止因数据源重复导致 merge 后数据膨胀
             if df_daily is not None and not df_daily.empty:
-                df_daily = df_daily.drop_duplicates(
-                    subset=["ts_code", "trade_date"]
-                )
+                df_daily = df_daily.drop_duplicates(subset=["ts_code", "trade_date"])
 
             result_df = df_daily
 
             if df_adj is not None and not df_adj.empty:
-                df_adj = df_adj.drop_duplicates(
-                    subset=["ts_code", "trade_date"]
-                )
-                result_df = pd.merge(
-                    result_df, df_adj, on=["ts_code", "trade_date"], how="left"
-                )
+                df_adj = df_adj.drop_duplicates(subset=["ts_code", "trade_date"])
+                result_df = pd.merge(result_df, df_adj, on=["ts_code", "trade_date"], how="left")
 
             if df_basic is not None and not df_basic.empty:
-                df_basic = df_basic.drop_duplicates(
-                    subset=["ts_code", "trade_date"]
-                )
+                df_basic = df_basic.drop_duplicates(subset=["ts_code", "trade_date"])
                 result_df = pd.merge(
                     result_df,
                     df_basic,

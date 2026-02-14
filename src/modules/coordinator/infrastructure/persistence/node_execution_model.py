@@ -29,9 +29,7 @@ class NodeExecutionModel(Base):
         comment="关联 research_sessions",
     )
     node_type = Column(String(50), nullable=False, comment="节点类型")
-    status = Column(
-        String(20), nullable=False, comment="success / failed / skipped"
-    )
+    status = Column(String(20), nullable=False, comment="success / failed / skipped")
     result_data = Column(JSONB, nullable=True, comment="结构化业务结果")
     narrative_report = Column(Text, nullable=True, comment="文字报告")
     error_type = Column(String(100), nullable=True, comment="异常类名")

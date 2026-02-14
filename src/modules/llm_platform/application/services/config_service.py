@@ -66,9 +66,7 @@ class ConfigService:
             raise DuplicateConfigException(config.alias)
 
         saved = await self.repo.save(config)
-        logger.info(
-            f"Config created successfully: {saved.alias}, refreshing registry..."
-        )
+        logger.info(f"Config created successfully: {saved.alias}, refreshing registry...")
         await self.registry.refresh()  # Hot reload
         return saved
 
@@ -83,9 +81,7 @@ class ConfigService:
         Raises:
             ConfigNotFoundException: 当配置不存在时抛出
         """
-        logger.info(
-            f"Updating LLM config: {alias} with updates: {updates.keys()}"
-        )
+        logger.info(f"Updating LLM config: {alias} with updates: {updates.keys()}")
         existing = await self.repo.get_by_alias(alias)
         if not existing:
             logger.warning(f"Config not found for update: {alias}")
@@ -97,9 +93,7 @@ class ConfigService:
                 setattr(existing, k, v)
 
         saved = await self.repo.save(existing)
-        logger.info(
-            f"Config updated successfully: {alias}, refreshing registry..."
-        )
+        logger.info(f"Config updated successfully: {alias}, refreshing registry...")
         await self.registry.refresh()
         return saved
 
@@ -120,9 +114,7 @@ class ConfigService:
             raise ConfigNotFoundException(alias)
 
         await self.repo.delete_by_alias(alias)
-        logger.info(
-            f"Config deleted successfully: {alias}, refreshing registry..."
-        )
+        logger.info(f"Config deleted successfully: {alias}, refreshing registry...")
         await self.registry.refresh()
 
     async def refresh_registry(self):

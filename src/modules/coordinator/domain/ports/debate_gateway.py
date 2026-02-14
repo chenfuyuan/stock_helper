@@ -12,9 +12,7 @@ class IDebateGateway(ABC):
     """辩论网关抽象接口。"""
 
     @abstractmethod
-    async def run_debate(
-        self, symbol: str, expert_results: dict[str, Any]
-    ) -> dict[str, Any]:
+    async def run_debate(self, symbol: str, expert_results: dict[str, Any]) -> dict[str, Any]:
         """
         执行辩论，返回辩论结果的 dict 序列化。
 

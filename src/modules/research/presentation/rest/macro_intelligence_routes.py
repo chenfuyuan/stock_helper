@@ -50,9 +50,9 @@ class MacroIntelligenceApiResponse(BaseModel):
     估值建模师（valuation_indicators）结构对称。
     """
 
-    macro_environment: Literal[
-        "Favorable (有利)", "Neutral (中性)", "Unfavorable (不利)"
-    ] = Field(..., description="宏观环境综合判定（三值之一）")
+    macro_environment: Literal["Favorable (有利)", "Neutral (中性)", "Unfavorable (不利)"] = Field(
+        ..., description="宏观环境综合判定（三值之一）"
+    )
     confidence_score: float = Field(..., description="置信度评分（0.0-1.0）")
     macro_summary: str = Field(..., description="宏观环境综合判断")
     dimension_analyses: list[dict[str, Any]] = Field(
@@ -60,9 +60,7 @@ class MacroIntelligenceApiResponse(BaseModel):
     )
     key_opportunities: list[str] = Field(..., description="宏观层面的机会列表")
     key_risks: list[str] = Field(..., description="宏观层面的风险列表")
-    information_sources: list[str] = Field(
-        ..., description="引用的信息来源 URL 列表"
-    )
+    information_sources: list[str] = Field(..., description="引用的信息来源 URL 列表")
     input: str = Field(..., description="送入大模型的 user prompt")
     macro_indicators: dict[str, Any] = Field(
         ...,
@@ -83,9 +81,7 @@ class MacroIntelligenceApiResponse(BaseModel):
 )
 async def run_macro_intelligence(
     symbol: str = Query(..., description="股票代码，如 000001.SZ"),
-    service: MacroIntelligenceService = Depends(
-        get_macro_intelligence_service
-    ),
+    service: MacroIntelligenceService = Depends(get_macro_intelligence_service),
 ) -> MacroIntelligenceApiResponse:
     """
     对单个标的运行宏观情报分析。

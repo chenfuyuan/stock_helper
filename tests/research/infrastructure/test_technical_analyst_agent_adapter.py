@@ -15,10 +15,9 @@ from src.modules.research.domain.dtos.technical_analysis_dtos import (
 )
 from src.modules.research.domain.exceptions import LLMOutputParseError
 from src.modules.research.domain.ports.llm import ILLMPort
-from src.modules.research.infrastructure.adapters.\
-        technical_analyst_agent_adapter import (
-            TechnicalAnalystAgentAdapter,
-        )
+from src.modules.research.infrastructure.adapters.technical_analyst_agent_adapter import (
+    TechnicalAnalystAgentAdapter,
+)
 
 
 @pytest.mark.asyncio

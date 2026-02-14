@@ -54,9 +54,7 @@ def compute_ttl_seconds(freshness: Optional[str]) -> int:
     return hours * 3600
 
 
-def compute_expires_at(
-    created_at: datetime, freshness: Optional[str]
-) -> datetime:
+def compute_expires_at(created_at: datetime, freshness: Optional[str]) -> datetime:
     """
     根据创建时间和 freshness 计算过期时间。
 

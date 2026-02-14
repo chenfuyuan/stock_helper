@@ -59,9 +59,7 @@ class PgExternalAPICallLogRepository(IExternalAPICallLogRepository):
         self._session.add(model)
         await self._session.commit()
 
-    async def get_by_session_id(
-        self, session_id: UUID
-    ) -> list[ExternalAPICallLog]:
+    async def get_by_session_id(self, session_id: UUID) -> list[ExternalAPICallLog]:
         result = await self._session.execute(
             select(ExternalAPICallLogModel)
             .where(ExternalAPICallLogModel.session_id == session_id)

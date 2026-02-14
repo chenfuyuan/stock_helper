@@ -19,9 +19,7 @@ from src.modules.coordinator.infrastructure.orchestration.langgraph_orchestrator
 def mock_research_gateway():
     """所有专家返回成功。"""
     g = AsyncMock(spec=IResearchExpertGateway)
-    g.run_expert = AsyncMock(
-        return_value={"signal": "NEUTRAL", "confidence": 0.8}
-    )
+    g.run_expert = AsyncMock(return_value={"signal": "NEUTRAL", "confidence": 0.8})
     return g
 
 
@@ -94,9 +92,7 @@ async def test_all_experts_fail_debate_skipped():
     gateway = AsyncMock(spec=IResearchExpertGateway)
     gateway.run_expert = AsyncMock(side_effect=RuntimeError("专家失败"))
     debate_gw = AsyncMock(spec=IDebateGateway)
-    orchestrator = LangGraphResearchOrchestrator(
-        gateway, debate_gateway=debate_gw
-    )
+    orchestrator = LangGraphResearchOrchestrator(gateway, debate_gateway=debate_gw)
     request = ResearchRequest(
         symbol="000001.SZ",
         experts=[ExpertType.TECHNICAL_ANALYST],

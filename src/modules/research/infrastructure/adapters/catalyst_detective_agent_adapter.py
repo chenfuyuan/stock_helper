@@ -36,9 +36,7 @@ class CatalystDetectiveAgentAdapter(ICatalystDetectiveAgentPort):
             self.prompts_dir = prompts_dir
         else:
             base_dir = Path(prompt_loader.__file__).resolve().parent
-            self.prompts_dir = (
-                base_dir / "agents" / "catalyst_detective" / "prompts"
-            )
+            self.prompts_dir = base_dir / "agents" / "catalyst_detective" / "prompts"
 
     async def analyze(
         self, symbol: str, catalyst_context: CatalystContextDTO
@@ -47,12 +45,8 @@ class CatalystDetectiveAgentAdapter(ICatalystDetectiveAgentPort):
         调用 LLM 对催化剂上下文进行分析，返回结构化结果
         """
         # Load prompts
-        system_prompt = prompt_loader.load_catalyst_detective_system_prompt(
-            self.prompts_dir
-        )
-        user_template = prompt_loader.load_catalyst_detective_user_template(
-            self.prompts_dir
-        )
+        system_prompt = prompt_loader.load_catalyst_detective_system_prompt(self.prompts_dir)
+        user_template = prompt_loader.load_catalyst_detective_user_template(self.prompts_dir)
 
         if not system_prompt or not user_template:
             logger.error(

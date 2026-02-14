@@ -33,26 +33,22 @@ class MacroIntelligenceResultDTO(BaseModel):
     该 DTO 对应 LLM 返回的 JSON 结构，需要通过 output_parser 从 LLM 输出中解析。
     """
 
-    macro_environment: Literal[
-        "Favorable (有利)", "Neutral (中性)", "Unfavorable (不利)"
-    ] = Field(..., description="宏观环境综合判定（三值之一）")
+    macro_environment: Literal["Favorable (有利)", "Neutral (中性)", "Unfavorable (不利)"] = Field(
+        ..., description="宏观环境综合判定（三值之一）"
+    )
     confidence_score: float = Field(
         ...,
         ge=0.0,
         le=1.0,
         description="置信度评分（0.0-1.0），基于证据充分性与一致性",
     )
-    macro_summary: str = Field(
-        ..., description="宏观环境综合判断，须引用搜索证据"
-    )
+    macro_summary: str = Field(..., description="宏观环境综合判断，须引用搜索证据")
     dimension_analyses: List[MacroDimensionAnalysis] = Field(
         ..., description="四个维度的详细分析（货币、政策、经济、行业）"
     )
     key_opportunities: List[str] = Field(..., description="宏观层面的机会列表")
     key_risks: List[str] = Field(..., description="宏观层面的风险列表")
-    information_sources: List[str] = Field(
-        ..., description="引用的信息来源 URL 列表，用于溯源审计"
-    )
+    information_sources: List[str] = Field(..., description="引用的信息来源 URL 列表，用于溯源审计")
     narrative_report: str = Field(
         "",
         description="面向人类的中文叙述性报告：核心结论、论据、风险、置信度",
@@ -76,9 +72,7 @@ class MacroIntelligenceResultDTO(BaseModel):
             ValueError: 维度数量不为 4 时
         """
         if len(v) != 4:
-            raise ValueError(
-                f"dimension_analyses 必须包含 4 个维度的分析，实际包含 {len(v)} 个"
-            )
+            raise ValueError(f"dimension_analyses 必须包含 4 个维度的分析，实际包含 {len(v)} 个")
         return v
 
     @field_validator("key_opportunities", "key_risks", "information_sources")
@@ -109,12 +103,6 @@ class MacroIntelligenceAgentResult(BaseModel):
     便于调试、审计和问题追溯。
     """
 
-    result: MacroIntelligenceResultDTO = Field(
-        ..., description="解析后的宏观分析结果"
-    )
-    raw_llm_output: str = Field(
-        ..., description="LLM 原始返回字符串（未解析前）"
-    )
-    user_prompt: str = Field(
-        ..., description="发送给 LLM 的 user prompt（已填充占位符）"
-    )
+    result: MacroIntelligenceResultDTO = Field(..., description="解析后的宏观分析结果")
+    raw_llm_output: str = Field(..., description="LLM 原始返回字符串（未解析前）")
+    user_prompt: str = Field(..., description="发送给 LLM 的 user prompt（已填充占位符）")

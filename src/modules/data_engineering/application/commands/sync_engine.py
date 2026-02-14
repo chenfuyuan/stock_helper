@@ -65,9 +65,7 @@ class SyncEngine:
         self.quote_provider = quote_provider
         self.finance_provider = finance_provider
 
-    async def run_history_sync(
-        self, job_type: SyncJobType, config: Dict[str, Any]
-    ) -> SyncTask:
+    async def run_history_sync(self, job_type: SyncJobType, config: Dict[str, Any]) -> SyncTask:
         """
         执行历史全量同步
 
@@ -83,18 +81,12 @@ class SyncEngine:
         Returns:
             完成或失败的 SyncTask
         """
-        logger.info(
-            f"开始执行历史同步：job_type={job_type.value}, config={config}"
-        )
+        logger.info(f"开始执行历史同步：job_type={job_type.value}, config={config}")
 
         # 1. 检查是否存在正在运行的同类型任务（互斥）
-        latest_task = await self.sync_task_repo.get_latest_by_job_type(
-            job_type
-        )
+        latest_task = await self.sync_task_repo.get_latest_by_job_type(job_type)
         if latest_task and latest_task.status == SyncTaskStatus.RUNNING:
-            logger.warning(
-                f"已存在正在运行的 {job_type.value} 任务，拒绝启动新任务"
-            )
+            logger.warning(f"已存在正在运行的 {job_type.value} 任务，拒绝启动新任务")
             return latest_task
 
         # 2. 判断是否需要恢复任务（断点续跑）
@@ -109,9 +101,7 @@ class SyncEngine:
             await self.sync_task_repo.update(task)
         else:
             # 3. 创建新任务
-            batch_size = config.get(
-                "batch_size"
-            ) or self._get_default_batch_size(job_type)
+            batch_size = config.get("batch_size") or self._get_default_batch_size(job_type)
             task = SyncTask(
                 job_type=job_type,
                 status=SyncTaskStatus.PENDING,
@@ -133,11 +123,7 @@ class SyncEngine:
                 result = await self._execute_batch(job_type, task)
 
                 # 判断是否完成
-                processed_count = (
-                    result.get("synced_stocks")
-                    or result.get("batch_size")
-                    or 0
-                )
+                processed_count = result.get("synced_stocks") or result.get("batch_size") or 0
                 if processed_count == 0:
                     logger.info(f"本批未处理任何股票，标记任务为 COMPLETED")
                     task.complete()
@@ -161,14 +147,10 @@ class SyncEngine:
             await self.sync_task_repo.update(task)
             raise
 
-        logger.info(
-            f"历史同步完成：task_id={task.id}, total_processed={task.total_processed}"
-        )
+        logger.info(f"历史同步完成：task_id={task.id}, total_processed={task.total_processed}")
         return task
 
-    async def _execute_batch(
-        self, job_type: SyncJobType, task: SyncTask
-    ) -> Dict[str, Any]:
+    async def _execute_batch(self, job_type: SyncJobType, task: SyncTask) -> Dict[str, Any]:
         """
         执行单批同步（内部方法）
 
@@ -191,10 +173,7 @@ class SyncEngine:
                 finance_repo=self.finance_repo,
                 data_provider=self.finance_provider,
             )
-            start_date = (
-                task.config.get("start_date")
-                or de_config.SYNC_FINANCE_HISTORY_START_DATE
-            )
+            start_date = task.config.get("start_date") or de_config.SYNC_FINANCE_HISTORY_START_DATE
             end_date = task.config.get("end_date") or ""
             return await use_case.execute(
                 start_date=start_date,
@@ -206,9 +185,7 @@ class SyncEngine:
         else:
             raise ValueError(f"不支持的 job_type: {job_type}")
 
-    async def run_incremental_daily_sync(
-        self, target_date: Optional[str] = None
-    ) -> Dict[str, Any]:
+    async def run_incremental_daily_sync(self, target_date: Optional[str] = None) -> Dict[str, Any]:
         """
         执行日线增量同步（含遗漏检测与自动补偿）
 
@@ -236,9 +213,7 @@ class SyncEngine:
         latest_trade_date = await self.daily_repo.get_latest_trade_date()
 
         if not latest_trade_date:
-            logger.warning(
-                "数据库中无日线数据，建议先执行历史全量同步。仅同步目标日期。"
-            )
+            logger.warning("数据库中无日线数据，建议先执行历史全量同步。仅同步目标日期。")
             use_case = SyncDailyByDateUseCase(
                 daily_repo=self.daily_repo,
                 data_provider=self.quote_provider,
@@ -252,9 +227,7 @@ class SyncEngine:
             }
 
         # 计算需要补偿的日期区间
-        missing_dates = self._calculate_missing_dates(
-            latest_trade_date, target_date_obj
-        )
+        missing_dates = self._calculate_missing_dates(latest_trade_date, target_date_obj)
 
         if not missing_dates:
             logger.info(f"无遗漏日期，仅同步目标日期 {target_date}")
@@ -288,9 +261,7 @@ class SyncEngine:
                 result = await use_case.execute(trade_date=date_str)
                 synced_dates.append(date_str)
                 total_count += result.get("count", 0)
-                logger.info(
-                    f"成功同步 {date_str}，{result.get('count', 0)} 条记录"
-                )
+                logger.info(f"成功同步 {date_str}，{result.get('count', 0)} 条记录")
             except Exception as e:
                 logger.error(f"同步 {date_str} 失败：{str(e)}")
                 # 单日失败不中断，继续后续日期
@@ -303,9 +274,7 @@ class SyncEngine:
             "message": f"成功补偿 {len(synced_dates)} 个交易日，共 {total_count} 条记录",
         }
 
-    def _calculate_missing_dates(
-        self, latest_date: date, target_date: date
-    ) -> List[date]:
+    def _calculate_missing_dates(self, latest_date: date, target_date: date) -> List[date]:
         """
         计算缺失的日期区间
 

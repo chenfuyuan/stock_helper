@@ -8,9 +8,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-FinancialSignal = Literal[
-    "STRONG_BULLISH", "BULLISH", "NEUTRAL", "BEARISH", "STRONG_BEARISH"
-]
+FinancialSignal = Literal["STRONG_BULLISH", "BULLISH", "NEUTRAL", "BEARISH", "STRONG_BEARISH"]
 
 
 class DimensionAnalysisDTO(BaseModel):
@@ -19,9 +17,7 @@ class DimensionAnalysisDTO(BaseModel):
     dimension: str = Field(..., description="维度名称")
     score: float = Field(..., description="该维度评分")
     assessment: str = Field(..., description="简评")
-    key_findings: list[str] = Field(
-        default_factory=list, description="关键发现列表"
-    )
+    key_findings: list[str] = Field(default_factory=list, description="关键发现列表")
 
 
 class FinancialAuditResultDTO(BaseModel):
@@ -30,25 +26,19 @@ class FinancialAuditResultDTO(BaseModel):
     用于 LLM 输出解析与 Application 层返回，不暴露内部领域模型。
     """
 
-    financial_score: int = Field(
-        ..., ge=0, le=100, description="整体财务健康评分 0–100"
-    )
+    financial_score: int = Field(..., ge=0, le=100, description="整体财务健康评分 0–100")
     signal: FinancialSignal = Field(
         ...,
         description="STRONG_BULLISH/BULLISH/NEUTRAL/BEARISH/STRONG_BEARISH",
     )
     confidence: float = Field(..., ge=0.0, le=1.0, description="置信度 0~1")
-    summary_reasoning: str = Field(
-        ..., description="审计逻辑摘要，须引用输入中的财务指标读数"
-    )
+    summary_reasoning: str = Field(..., description="审计逻辑摘要，须引用输入中的财务指标读数")
     dimension_analyses: list[DimensionAnalysisDTO] = Field(
         ...,
         description="5 个维度的分析结果",
         min_length=1,
     )
-    key_risks: list[str] = Field(
-        default_factory=list, description="主要风险标记"
-    )
+    key_risks: list[str] = Field(default_factory=list, description="主要风险标记")
     risk_warning: str = Field(..., description="评估被证伪时的关键条件描述")
     narrative_report: str = Field(
         "",
@@ -62,10 +52,6 @@ class FinancialAuditAgentResult(BaseModel):
     供 Application/API 层组装响应体时填入 input、output 等字段（代码侧塞入，非大模型拼接）。
     """
 
-    result: FinancialAuditResultDTO = Field(
-        ..., description="解析后的财务审计结果"
-    )
+    result: FinancialAuditResultDTO = Field(..., description="解析后的财务审计结果")
     raw_llm_output: str = Field(..., description="大模型原始返回字符串")
-    user_prompt: str = Field(
-        ..., description="送入大模型的 user prompt（填充后的模板）"
-    )
+    user_prompt: str = Field(..., description="送入大模型的 user prompt（填充后的模板）")

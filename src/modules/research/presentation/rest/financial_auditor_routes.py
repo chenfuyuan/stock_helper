@@ -33,14 +33,10 @@ class FinancialAuditApiResponse(BaseModel):
     """财务审计接口响应：解析结果 + input、financial_indicators、output（与技术分析师一致）。"""
 
     financial_score: int
-    signal: Literal[
-        "STRONG_BULLISH", "BULLISH", "NEUTRAL", "BEARISH", "STRONG_BEARISH"
-    ]
+    signal: Literal["STRONG_BULLISH", "BULLISH", "NEUTRAL", "BEARISH", "STRONG_BEARISH"]
     confidence: float
     summary_reasoning: str
-    dimension_analyses: list[dict[str, Any]] = Field(
-        ..., description="5D 维度分析结果"
-    )
+    dimension_analyses: list[dict[str, Any]] = Field(..., description="5D 维度分析结果")
     key_risks: list[str] = Field(..., description="主要风险标记")
     risk_warning: str
     input: str = Field(..., description="送入大模型的 user prompt")
@@ -60,9 +56,7 @@ class FinancialAuditApiResponse(BaseModel):
 )
 async def run_financial_audit(
     symbol: str = Query(..., description="股票代码，如 000001.SZ"),
-    limit: int = Query(
-        5, ge=1, le=20, description="取最近几期财务数据，默认 5 期"
-    ),
+    limit: int = Query(5, ge=1, le=20, description="取最近几期财务数据，默认 5 期"),
     service: FinancialAuditorService = Depends(get_financial_auditor_service),
 ) -> FinancialAuditApiResponse:
     """

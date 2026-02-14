@@ -34,15 +34,9 @@ class SyncFailureRecordModel(Base):
         comment="失败的股票代码（Tushare ts_code 格式）",
     )
     error_message = Column(String(500), nullable=True, comment="错误信息")
-    retry_count = Column(
-        Integer, nullable=False, default=0, comment="当前重试次数"
-    )
-    max_retries = Column(
-        Integer, nullable=False, default=3, comment="最大重试次数"
-    )
-    last_attempt_at = Column(
-        DateTime, nullable=True, comment="最后一次尝试时间"
-    )
+    retry_count = Column(Integer, nullable=False, default=0, comment="当前重试次数")
+    max_retries = Column(Integer, nullable=False, default=3, comment="最大重试次数")
+    last_attempt_at = Column(DateTime, nullable=True, comment="最后一次尝试时间")
     resolved_at = Column(
         DateTime,
         nullable=True,

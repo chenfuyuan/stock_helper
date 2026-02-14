@@ -30,9 +30,7 @@ async def sync_history_daily_data_job():
                 "batch_size": de_config.SYNC_DAILY_HISTORY_BATCH_SIZE,
             }
 
-            task = await engine.run_history_sync(
-                job_type=SyncJobType.DAILY_HISTORY, config=config
-            )
+            task = await engine.run_history_sync(job_type=SyncJobType.DAILY_HISTORY, config=config)
 
             logger.info(
                 f"历史日线同步完成：task_id={task.id}, "
@@ -50,17 +48,13 @@ async def sync_daily_data_job(target_date: str | None = None):
     Args:
         target_date: 目标日期 (YYYYMMDD)，默认为当天
     """
-    logger.info(
-        f"开始执行日线增量同步任务... 目标日期: {target_date or '今天'}"
-    )
+    logger.info(f"开始执行日线增量同步任务... 目标日期: {target_date or '今天'}")
 
     try:
         async with SyncUseCaseFactory.create_sync_engine() as engine:
             date_str = target_date or datetime.now().strftime("%Y%m%d")
 
-            result = await engine.run_incremental_daily_sync(
-                target_date=date_str
-            )
+            result = await engine.run_incremental_daily_sync(target_date=date_str)
 
             logger.info(
                 f"日线增量同步完成：synced_dates={result.get('synced_dates')}, "
@@ -114,14 +108,10 @@ async def sync_incremental_finance_job(target_date: str | None = None):
     Args:
         target_date: 目标日期 (YYYYMMDD)，默认为当天
     """
-    logger.info(
-        f"开始执行财务增量同步任务... 基准日期: {target_date or '今天'}"
-    )
+    logger.info(f"开始执行财务增量同步任务... 基准日期: {target_date or '今天'}")
 
     try:
-        async with (
-            SyncUseCaseFactory.create_incremental_finance_use_case() as use_case
-        ):
+        async with SyncUseCaseFactory.create_incremental_finance_use_case() as use_case:
             result = await use_case.execute(actual_date=target_date)
 
             logger.info(

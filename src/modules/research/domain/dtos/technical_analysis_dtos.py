@@ -25,12 +25,8 @@ class TechnicalAnalysisResultDTO(BaseModel):
 
     signal: TechnicalSignal = Field(..., description="BULLISH/BEARISH/NEUTRAL")
     confidence: float = Field(..., ge=0.0, le=1.0, description="置信度 0~1")
-    summary_reasoning: str = Field(
-        ..., description="简练分析逻辑，须引用输入指标"
-    )
-    key_technical_levels: KeyTechnicalLevelsDTO = Field(
-        ..., description="关键支撑/阻力"
-    )
+    summary_reasoning: str = Field(..., description="简练分析逻辑，须引用输入指标")
+    key_technical_levels: KeyTechnicalLevelsDTO = Field(..., description="关键支撑/阻力")
     risk_warning: str = Field(..., description="观点被证伪时的关键点位描述")
     narrative_report: str = Field(
         "",
@@ -44,10 +40,6 @@ class TechnicalAnalysisAgentResult(BaseModel):
     供 Application/API 层组装响应体时填入 input、output 等字段（代码侧塞入，非大模型拼接）。
     """
 
-    result: TechnicalAnalysisResultDTO = Field(
-        ..., description="解析后的技术分析结果"
-    )
+    result: TechnicalAnalysisResultDTO = Field(..., description="解析后的技术分析结果")
     raw_llm_output: str = Field(..., description="大模型原始返回字符串")
-    user_prompt: str = Field(
-        ..., description="送入大模型的 user prompt（填充后的模板）"
-    )
+    user_prompt: str = Field(..., description="送入大模型的 user prompt（填充后的模板）")

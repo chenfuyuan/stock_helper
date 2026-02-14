@@ -44,9 +44,7 @@ class LLMRegistry:
         这是一个全量刷新操作，会清除旧的实例。
         """
         if not self._repo:
-            logger.warning(
-                "Repository not set for LLMRegistry, cannot refresh from DB"
-            )
+            logger.warning("Repository not set for LLMRegistry, cannot refresh from DB")
             return
 
         logger.info("Starting LLM Registry refresh...")
@@ -81,9 +79,7 @@ class LLMRegistry:
             bool: 注册成功返回 True，失败返回 False
         """
         try:
-            logger.debug(
-                f"Registering LLM provider: {config.alias} ({config.provider_type})"
-            )
+            logger.debug(f"Registering LLM provider: {config.alias} ({config.provider_type})")
             if config.provider_type.lower() == "openai":
                 provider = OpenAIProvider(
                     api_key=config.api_key,

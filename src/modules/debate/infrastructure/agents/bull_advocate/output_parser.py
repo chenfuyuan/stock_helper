@@ -24,9 +24,7 @@ def _normalize_supporting_arguments(val: Any) -> list[str]:
         elif isinstance(item, dict):
             arg = item.get("argument") or item.get("evidence") or ""
             dim = item.get("dimension", "")
-            result.append(
-                f"{dim}: {arg}".strip() if dim and arg else (arg or dim)
-            )
+            result.append(f"{dim}: {arg}".strip() if dim and arg else (arg or dim))
         else:
             result.append(str(item))
     return result
@@ -43,15 +41,9 @@ def _normalize_string_list(val: Any) -> list[str]:
 
 def _normalize_bull_fields(data: dict) -> dict:
     """归一化多头辩护人特有字段：对象数组→字符串列表，补充 narrative_report 默认值。"""
-    data["supporting_arguments"] = _normalize_supporting_arguments(
-        data.get("supporting_arguments")
-    )
-    data["acknowledged_risks"] = _normalize_string_list(
-        data.get("acknowledged_risks")
-    )
-    data["price_catalysts"] = _normalize_string_list(
-        data.get("price_catalysts")
-    )
+    data["supporting_arguments"] = _normalize_supporting_arguments(data.get("supporting_arguments"))
+    data["acknowledged_risks"] = _normalize_string_list(data.get("acknowledged_risks"))
+    data["price_catalysts"] = _normalize_string_list(data.get("price_catalysts"))
     data.setdefault("narrative_report", "")
     return data
 

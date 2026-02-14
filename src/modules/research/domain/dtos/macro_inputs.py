@@ -34,9 +34,7 @@ class MacroSearchResultItem(BaseModel):
     title: str = Field(..., description="搜索结果标题")
     url: str = Field(..., description="搜索结果 URL")
     snippet: str = Field(..., description="搜索结果摘要片段")
-    summary: Optional[str] = Field(
-        None, description="AI 生成的摘要（由搜索 API 提供）"
-    )
+    summary: Optional[str] = Field(None, description="AI 生成的摘要（由搜索 API 提供）")
     site_name: Optional[str] = Field(None, description="来源站点名称")
     published_date: Optional[str] = Field(None, description="发布日期")
 
@@ -49,9 +47,7 @@ class MacroSearchResult(BaseModel):
     每个维度的搜索结果独立存储，便于后续按维度构建上下文。
     """
 
-    dimension_topic: str = Field(
-        ..., description="宏观维度主题（如'货币与流动性'、'产业政策'等）"
-    )
+    dimension_topic: str = Field(..., description="宏观维度主题（如'货币与流动性'、'产业政策'等）")
     items: List[MacroSearchResultItem] = Field(
         default_factory=list, description="该维度下的搜索结果条目列表"
     )

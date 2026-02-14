@@ -65,9 +65,7 @@ async def test_get_valuation_dailies_returns_dto_list_with_valuation_fields():
     ]
 
     use_case = GetValuationDailiesForTickerUseCase(mock_repo)
-    result = await use_case.execute(
-        ticker=ticker, start_date=start_date, end_date=end_date
-    )
+    result = await use_case.execute(ticker=ticker, start_date=start_date, end_date=end_date)
 
     assert isinstance(result, list)
     assert len(result) == 2
@@ -120,9 +118,7 @@ async def test_get_valuation_dailies_calls_correct_repo_method():
     mock_repo.get_valuation_dailies.return_value = []
 
     use_case = GetValuationDailiesForTickerUseCase(mock_repo)
-    await use_case.execute(
-        ticker=ticker, start_date=start_date, end_date=end_date
-    )
+    await use_case.execute(ticker=ticker, start_date=start_date, end_date=end_date)
 
     # 验证调用了正确的 repository 方法
     mock_repo.get_valuation_dailies.assert_called_once_with(

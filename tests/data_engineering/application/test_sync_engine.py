@@ -43,14 +43,10 @@ def sync_engine(mock_repositories):
 
 
 @pytest.mark.asyncio
-async def test_sync_engine_creates_new_task_when_none_exists(
-    sync_engine, mock_repositories
-):
+async def test_sync_engine_creates_new_task_when_none_exists(sync_engine, mock_repositories):
     """测试 SyncEngine 创建新任务（任务 9.2 的一部分）"""
     # Mock: 没有已存在的任务
-    mock_repositories["sync_task_repo"].get_latest_by_job_type.return_value = (
-        None
-    )
+    mock_repositories["sync_task_repo"].get_latest_by_job_type.return_value = None
 
     # Mock: 创建任务返回新任务
     new_task = SyncTask(
@@ -61,9 +57,7 @@ async def test_sync_engine_creates_new_task_when_none_exists(
     mock_repositories["sync_task_repo"].create.return_value = new_task
 
     # Mock: 每批返回 0，立即完成
-    with patch.object(
-        sync_engine, "_execute_batch", new_callable=AsyncMock
-    ) as mock_execute:
+    with patch.object(sync_engine, "_execute_batch", new_callable=AsyncMock) as mock_execute:
         mock_execute.return_value = {"synced_stocks": 0}
 
         result = await sync_engine.run_history_sync(
@@ -78,9 +72,7 @@ async def test_sync_engine_creates_new_task_when_none_exists(
 
 
 @pytest.mark.asyncio
-async def test_sync_engine_rejects_when_running_task_exists(
-    sync_engine, mock_repositories
-):
+async def test_sync_engine_rejects_when_running_task_exists(sync_engine, mock_repositories):
     """测试 SyncEngine 同类型任务互斥（任务 9.3）"""
     # Mock: 已存在 RUNNING 状态的同类型任务
     existing_task = SyncTask(
@@ -88,9 +80,7 @@ async def test_sync_engine_rejects_when_running_task_exists(
         status=SyncTaskStatus.RUNNING,
         batch_size=50,
     )
-    mock_repositories["sync_task_repo"].get_latest_by_job_type.return_value = (
-        existing_task
-    )
+    mock_repositories["sync_task_repo"].get_latest_by_job_type.return_value = existing_task
 
     result = await sync_engine.run_history_sync(
         job_type=SyncJobType.DAILY_HISTORY, config={"batch_size": 50}
@@ -115,15 +105,11 @@ async def test_sync_engine_resumes_paused_task(sync_engine, mock_repositories):
         current_offset=100,
         total_processed=100,
     )
-    mock_repositories["sync_task_repo"].get_latest_by_job_type.return_value = (
-        paused_task
-    )
+    mock_repositories["sync_task_repo"].get_latest_by_job_type.return_value = paused_task
     mock_repositories["sync_task_repo"].update.return_value = paused_task
 
     # Mock: 下一批返回 0，完成
-    with patch.object(
-        sync_engine, "_execute_batch", new_callable=AsyncMock
-    ) as mock_execute:
+    with patch.object(sync_engine, "_execute_batch", new_callable=AsyncMock) as mock_execute:
         mock_execute.return_value = {"synced_stocks": 0}
 
         result = await sync_engine.run_history_sync(

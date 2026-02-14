@@ -16,9 +16,7 @@ class NodeExecution(BaseModel):
 
     id: UUID
     session_id: UUID
-    node_type: (
-        str  # technical_analyst / financial_auditor / ... / debate / judge
-    )
+    node_type: str  # technical_analyst / financial_auditor / ... / debate / judge
     status: Literal["success", "failed", "skipped"] = "success"
     result_data: dict[str, Any] | None = None
     narrative_report: str | None = None

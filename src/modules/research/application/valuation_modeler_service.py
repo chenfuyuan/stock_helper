@@ -57,10 +57,8 @@ class ValuationModelerService:
         # 获取历史估值日线（默认 3 年）
         end_date = date.today()
         start_date = end_date - timedelta(days=DEFAULT_HISTORICAL_YEARS * 365)
-        historical_valuations = (
-            await self._valuation_data.get_valuation_dailies(
-                ticker=symbol, start_date=start_date, end_date=end_date
-            )
+        historical_valuations = await self._valuation_data.get_valuation_dailies(
+            ticker=symbol, start_date=start_date, end_date=end_date
         )
         if not historical_valuations:
             logger.warning(
@@ -87,9 +85,7 @@ class ValuationModelerService:
         )
 
         # 调用估值 Agent
-        agent_result = await self._modeler_agent.analyze(
-            symbol=symbol, snapshot=snapshot
-        )
+        agent_result = await self._modeler_agent.analyze(symbol=symbol, snapshot=snapshot)
 
         # 组装完整响应（含 narrative_report，供 coordinator 持久化 NodeExecution 与展示）
         result_dto = agent_result.result

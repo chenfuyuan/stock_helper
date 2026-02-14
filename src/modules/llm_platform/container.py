@@ -67,9 +67,7 @@ class LLMPlatformContainer:
     def config_service(self) -> ConfigService:
         """获取配置管理服务（需在构造时传入 session）。"""
         if self._session is None:
-            raise RuntimeError(
-                "LLMPlatformContainer 需要 session 才能提供 config_service"
-            )
+            raise RuntimeError("LLMPlatformContainer 需要 session 才能提供 config_service")
         repo = PgLLMConfigRepository(self._session)
         registry = LLMRegistry()
         registry.set_repository(repo)
@@ -87,15 +85,11 @@ class LLMPlatformContainer:
         )
         if self._session is not None:
             cache_repo = PgWebSearchCacheRepository(self._session)
-            adapter = CachingWebSearchProvider(
-                inner=adapter, cache_repo=cache_repo
-            )
+            adapter = CachingWebSearchProvider(inner=adapter, cache_repo=cache_repo)
             from src.shared.infrastructure.persistence.external_api_call_log_repository import (
                 PgExternalAPICallLogRepository,
             )
 
             api_call_log_repo = PgExternalAPICallLogRepository(self._session)
-            return WebSearchService(
-                provider=adapter, api_call_log_repository=api_call_log_repo
-            )
+            return WebSearchService(provider=adapter, api_call_log_repository=api_call_log_repo)
         return WebSearchService(provider=adapter)

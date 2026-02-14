@@ -3,10 +3,10 @@ import pytest
 from src.modules.market_data.application.use_cases.get_stock_basic_info import (
     GetStockBasicInfoUseCase,
 )
-from src.modules.market_data.infrastructure.adapters.persistence.repositories.stock_daily_repository import (
+from src.modules.market_data.infrastructure.adapters.persistence.repositories.stock_daily_repository import (  # noqa: E501
     StockDailyRepositoryImpl,
 )
-from src.modules.market_data.infrastructure.adapters.persistence.repositories.stock_repository import (
+from src.modules.market_data.infrastructure.adapters.persistence.repositories.stock_repository import (  # noqa: E501
     StockRepositoryImpl,
 )
 
@@ -38,14 +38,13 @@ class TestStockFetchIntegration:
         # 4. 验证行情数据 (如果存在)
         if result.daily:
             print(
-                f"\n[Verified] {symbol} latest price: {result.daily.close} at {result.daily.trade_date}"
+                f"\n[Verified] {symbol} latest price: {result.daily.close} "
+                f"at {result.daily.trade_date}"
             )
             assert result.daily.close > 0
             assert result.daily.trade_date is not None
         else:
-            print(
-                f"\n[Warning] {symbol} info found but daily data is missing."
-            )
+            print(f"\n[Warning] {symbol} info found but daily data is missing.")
 
     async def test_fetch_by_third_code_directly(self, db_session):
         # 直接验证 Repository 层通过 third_code 获取

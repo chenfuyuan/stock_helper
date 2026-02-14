@@ -40,9 +40,7 @@ def get_llm_service() -> LLMService:
 
 
 @router.post("/generate", response_model=ChatResponse)
-async def generate_text(
-    request: ChatRequest, service: LLMService = Depends(get_llm_service)
-):
+async def generate_text(request: ChatRequest, service: LLMService = Depends(get_llm_service)):
     """
     调用大模型生成文本接口。
 
@@ -58,9 +56,7 @@ async def generate_text(
     异常:
     - 500: 内部服务错误（如无可用模型、API 调用失败）。
     """
-    logger.info(
-        f"API: generate_text called. Alias={request.alias}, Tags={request.tags}"
-    )
+    logger.info(f"API: generate_text called. Alias={request.alias}, Tags={request.tags}")
     try:
         result = await service.generate(
             prompt=request.prompt,

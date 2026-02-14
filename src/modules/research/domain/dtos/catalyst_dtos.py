@@ -34,18 +34,14 @@ class CatalystDetectiveResultDTO(BaseModel):
     催化剂侦探分析结果 (Output DTO)
     """
 
-    catalyst_assessment: Literal[
-        "Positive (正面催化)", "Neutral (中性)", "Negative (负面催化)"
-    ]
+    catalyst_assessment: Literal["Positive (正面催化)", "Neutral (中性)", "Negative (负面催化)"]
     confidence_score: float  # 0.0 - 1.0
     catalyst_summary: str
     dimension_analyses: List[CatalystDimensionAnalysis]
     positive_catalysts: List[CatalystEvent]
     negative_catalysts: List[CatalystEvent]
     information_sources: List[str]
-    narrative_report: str = (
-        ""  # 面向人类的中文叙述性报告：核心结论、论据、风险、置信度
-    )
+    narrative_report: str = ""  # 面向人类的中文叙述性报告：核心结论、论据、风险、置信度
 
 
 class CatalystDetectiveAgentResult(BaseModel):

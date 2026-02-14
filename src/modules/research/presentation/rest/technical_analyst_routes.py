@@ -65,14 +65,8 @@ async def run_technical_analysis(
     对单个标的运行技术分析；响应体包含解析结果及 input、technical_indicators、output（由代码填入）。
     """
     try:
-        date_obj = (
-            date.fromisoformat(analysis_date)
-            if analysis_date
-            else date.today()
-        )
-        result = await service.run(
-            ticker=ticker.strip(), analysis_date=date_obj
-        )
+        date_obj = date.fromisoformat(analysis_date) if analysis_date else date.today()
+        result = await service.run(ticker=ticker.strip(), analysis_date=date_obj)
         return TechnicalAnalysisApiResponse(**result)
     except BadRequestException as e:
         raise HTTPException(status_code=400, detail=e.message)

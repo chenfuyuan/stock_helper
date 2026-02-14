@@ -24,9 +24,7 @@ class IMacroDataPort(ABC):
     """
 
     @abstractmethod
-    async def get_stock_overview(
-        self, symbol: str
-    ) -> Optional[MacroStockOverview]:
+    async def get_stock_overview(self, symbol: str) -> Optional[MacroStockOverview]:
         """
         获取股票基础信息（名称、行业、代码），用于宏观分析的上下文构建。
 
@@ -43,9 +41,7 @@ class IMacroDataPort(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def search_macro_context(
-        self, industry: str, stock_name: str
-    ) -> List[MacroSearchResult]:
+    async def search_macro_context(self, industry: str, stock_name: str) -> List[MacroSearchResult]:
         """
         基于行业与公司上下文，执行四个维度的宏观搜索。
 

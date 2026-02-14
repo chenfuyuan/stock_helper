@@ -23,9 +23,7 @@ class IValuationDataPort(ABC):
     """
 
     @abstractmethod
-    async def get_stock_overview(
-        self, symbol: str
-    ) -> Optional[StockOverviewInput]:
+    async def get_stock_overview(self, symbol: str) -> Optional[StockOverviewInput]:
         """
         获取股票基础信息与最新市场估值数据。
         返回 None 表示标的不存在。

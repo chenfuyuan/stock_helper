@@ -30,9 +30,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["debate"])
 
 
-def _expert_results_to_debate_input(
-    symbol: str, expert_results: dict[str, Any]
-) -> DebateInput:
+def _expert_results_to_debate_input(symbol: str, expert_results: dict[str, Any]) -> DebateInput:
     """
     将 REST 请求中的 expert_results（dict[str, dict]）转为 DebateInput。
     仅当 value 为 dict 且包含可映射字段时构造 ExpertSummary，否则跳过该专家。
@@ -43,14 +41,10 @@ def _expert_results_to_debate_input(
             continue
         # 使用与 DebateGatewayAdapter 一致的归一化：若请求方已给 signal/confidence/reasoning/risk_warning 则直接用
         signal = (
-            data.get("signal")
-            or data.get("valuation_verdict")
-            or data.get("macro_environment")
+            data.get("signal") or data.get("valuation_verdict") or data.get("macro_environment")
         )
         if isinstance(signal, dict):
-            signal = str(
-                signal.get("result", {}).get("catalyst_assessment", "")
-            )
+            signal = str(signal.get("result", {}).get("catalyst_assessment", ""))
         if signal is None:
             signal = ""
         else:
@@ -72,12 +66,7 @@ def _expert_results_to_debate_input(
         if not reasoning and isinstance(data.get("result"), dict):
             reasoning = data["result"].get("catalyst_summary") or ""
         reasoning = str(reasoning) if reasoning is not None else ""
-        risk = (
-            data.get("risk_warning")
-            or data.get("risk_factors")
-            or data.get("key_risks")
-            or ""
-        )
+        risk = data.get("risk_warning") or data.get("risk_factors") or data.get("key_risks") or ""
         if not risk and isinstance(data.get("result"), dict):
             neg = data["result"].get("negative_catalysts")
             risk = ", ".join(neg) if isinstance(neg, list) else str(neg or "")
@@ -112,9 +101,7 @@ async def post_debate_run(
     if not body.symbol or not str(body.symbol).strip():
         raise HTTPException(status_code=400, detail="symbol 为必填")
     if not body.expert_results:
-        raise HTTPException(
-            status_code=400, detail="expert_results 为必填且不能为空"
-        )
+        raise HTTPException(status_code=400, detail="expert_results 为必填且不能为空")
     try:
         debate_input = _expert_results_to_debate_input(
             symbol=body.symbol.strip(),

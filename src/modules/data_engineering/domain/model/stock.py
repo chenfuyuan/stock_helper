@@ -19,9 +19,7 @@ class StockInfo(BaseEntity):
     """
 
     id: Optional[int] = Field(None, description="ID")
-    third_code: str = Field(
-        ..., description="第三方系统代码 (如 Tushare 的 ts_code)"
-    )
+    third_code: str = Field(..., description="第三方系统代码 (如 Tushare 的 ts_code)")
     symbol: str = Field(..., description="股票代码 (如 000001)")
     name: str = Field(..., description="股票名称")
     area: Optional[str] = Field(None, description="所在地域")
@@ -43,9 +41,7 @@ class StockInfo(BaseEntity):
     source: Optional[str] = Field("tushare", description="数据来源")
 
     # 财务数据同步状态
-    last_finance_sync_date: Optional[date] = Field(
-        None, description="上次财务数据同步时间"
-    )
+    last_finance_sync_date: Optional[date] = Field(None, description="上次财务数据同步时间")
 
     def is_active(self) -> bool:
         """是否处于上市状态"""

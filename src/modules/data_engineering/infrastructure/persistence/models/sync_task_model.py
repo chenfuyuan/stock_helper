@@ -39,15 +39,9 @@ class SyncTaskModel(Base):
         default=0,
         comment="当前同步偏移量（用于分批处理）",
     )
-    batch_size = Column(
-        Integer, nullable=False, default=50, comment="每批处理的股票数量"
-    )
-    total_processed = Column(
-        Integer, nullable=False, default=0, comment="已处理总条数"
-    )
+    batch_size = Column(Integer, nullable=False, default=50, comment="每批处理的股票数量")
+    total_processed = Column(Integer, nullable=False, default=0, comment="已处理总条数")
     started_at = Column(DateTime, nullable=True, comment="任务启动时间")
     updated_at = Column(DateTime, nullable=True, comment="最后更新时间")
     completed_at = Column(DateTime, nullable=True, comment="任务完成时间")
-    config = Column(
-        JSON, nullable=True, comment="任务特定配置（start_date、end_date 等）"
-    )
+    config = Column(JSON, nullable=True, comment="任务特定配置（start_date、end_date 等）")

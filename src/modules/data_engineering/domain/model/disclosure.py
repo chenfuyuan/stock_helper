@@ -12,9 +12,7 @@ class StockDisclosure(BaseEntity):
     Stock Financial Report Disclosure Plan Entity
     """
 
-    third_code: str = Field(
-        ..., description="第三方系统代码 (如 Tushare 的 ts_code)"
-    )
+    third_code: str = Field(..., description="第三方系统代码 (如 Tushare 的 ts_code)")
     ann_date: Optional[date] = Field(None, description="最新披露公告日")
     end_date: date = Field(..., description="报告期")
     pre_date: Optional[date] = Field(None, description="预计披露日期")

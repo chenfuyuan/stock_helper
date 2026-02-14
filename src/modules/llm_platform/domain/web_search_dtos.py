@@ -67,9 +67,7 @@ class WebSearchResponse(BaseModel):
         for i, item in enumerate(self.results, 1):
             # 优先使用 summary，如果没有则使用 snippet
             content = item.summary if item.summary else item.snippet
-            date_info = (
-                f" ({item.published_date})" if item.published_date else ""
-            )
+            date_info = f" ({item.published_date})" if item.published_date else ""
             source = item.site_name if item.site_name else "Unknown Source"
 
             context_parts.append(

@@ -119,9 +119,7 @@ class TestBochaWebSearchAdapter:
             mock_post.return_value.json = Mock(return_value=mock_response_data)
             mock_client.return_value.__aenter__.return_value.post = mock_post
 
-            request = WebSearchRequest(
-                query="测试", freshness="oneWeek", summary=False, count=20
-            )
+            request = WebSearchRequest(query="测试", freshness="oneWeek", summary=False, count=20)
             await adapter.search(request)
 
             # 验证请求参数
@@ -141,9 +139,7 @@ class TestBochaWebSearchAdapter:
             mock_post = AsyncMock()
             mock_post.return_value.status_code = 500
             mock_post.return_value.text = "Internal Server Error"
-            mock_post.return_value.json = Mock(
-                return_value={"error": "服务器错误"}
-            )
+            mock_post.return_value.json = Mock(return_value={"error": "服务器错误"})
             mock_client.return_value.__aenter__.return_value.post = mock_post
 
             request = WebSearchRequest(query="测试")
@@ -158,9 +154,7 @@ class TestBochaWebSearchAdapter:
         adapter = BochaWebSearchAdapter(api_key="test_key")
 
         with patch("httpx.AsyncClient") as mock_client:
-            mock_post = AsyncMock(
-                side_effect=httpx.TimeoutException("Timeout")
-            )
+            mock_post = AsyncMock(side_effect=httpx.TimeoutException("Timeout"))
             mock_client.return_value.__aenter__.return_value.post = mock_post
 
             request = WebSearchRequest(query="测试")
@@ -169,7 +163,9 @@ class TestBochaWebSearchAdapter:
 
     @pytest.mark.asyncio
     async def test_empty_api_key_raises_config_error(self):
-        """测试 API Key 未配置抛出 WebSearchConfigError（对应 Scenario: API Key 未配置时抛出 WebSearchConfigError）"""
+        """测试 API Key 未配置抛出 WebSearchConfigError
+        （对应 Scenario: API Key 未配置时抛出 WebSearchConfigError）
+        """
         adapter = BochaWebSearchAdapter(api_key="")
 
         request = WebSearchRequest(query="测试")
@@ -205,9 +201,7 @@ class TestWebSearchService:
     async def test_service_delegates_to_provider(self):
         """测试服务委托 Provider 执行搜索（对应 Scenario: 正常搜索调用）"""
         mock_provider = AsyncMock()
-        mock_response = WebSearchResponse(
-            query="测试", total_matches=10, results=[]
-        )
+        mock_response = WebSearchResponse(query="测试", total_matches=10, results=[])
         mock_provider.search.return_value = mock_response
 
         service = WebSearchService(provider=mock_provider)
@@ -224,11 +218,7 @@ class TestWebSearchService:
         mock_response = WebSearchResponse(
             query="测试",
             total_matches=5,
-            results=[
-                WebSearchResultItem(
-                    title="测试", url="http://test.com", snippet="测试"
-                )
-            ],
+            results=[WebSearchResultItem(title="测试", url="http://test.com", snippet="测试")],
         )
         mock_provider.search.return_value = mock_response
 

@@ -36,9 +36,7 @@ class JobDetail(BaseModel):
     name: str = Field(..., description="任务名称")
     next_run_time: Optional[datetime] = Field(None, description="下次运行时间")
     trigger: str = Field(..., description="触发器描述")
-    kwargs: Dict[str, Any] = Field(
-        default_factory=dict, description="任务参数"
-    )
+    kwargs: Dict[str, Any] = Field(default_factory=dict, description="任务参数")
 
 
 class SchedulerStatusResponse(BaseModel):
@@ -48,9 +46,7 @@ class SchedulerStatusResponse(BaseModel):
 
     is_running: bool = Field(..., description="调度器是否运行中")
     jobs: List[JobDetail] = Field(..., description="当前已调度的任务列表")
-    available_jobs: List[str] = Field(
-        ..., description="系统支持的可注册任务列表"
-    )
+    available_jobs: List[str] = Field(..., description="系统支持的可注册任务列表")
 
 
 @router.get(
@@ -100,18 +96,14 @@ async def get_status():
 )
 async def start_job(
     job_id: str,
-    interval_minutes: int = Body(
-        ..., embed=True, description="执行间隔(分钟)"
-    ),
+    interval_minutes: int = Body(..., embed=True, description="执行间隔(分钟)"),
 ):
     """
     启动一个 Interval 模式的定时任务 (每隔 X 分钟执行一次)
     :param job_id: 任务ID (见 /status 返回的可选列表)
     :param interval_minutes: 间隔分钟数
     """
-    logger.info(
-        f"API: start_job called. JobID={job_id}, Interval={interval_minutes}m"
-    )
+    logger.info(f"API: start_job called. JobID={job_id}, Interval={interval_minutes}m")
 
     if job_id not in JOB_REGISTRY:
         logger.warning(f"API: Job not found: {job_id}")
@@ -246,6 +238,4 @@ async def stop_job(job_id: str):
     else:
         msg = f"任务 '{job_id}' 未运行"
 
-    return BaseResponse(
-        success=True, code="JOB_STOPPED", message=msg, data="stopped"
-    )
+    return BaseResponse(success=True, code="JOB_STOPPED", message=msg, data="stopped")

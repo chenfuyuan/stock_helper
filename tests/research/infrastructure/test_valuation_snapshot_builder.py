@@ -14,10 +14,9 @@ from src.modules.research.domain.dtos.valuation_inputs import (
     StockOverviewInput,
     ValuationDailyInput,
 )
-from src.modules.research.infrastructure.valuation_snapshot.\
-        snapshot_builder import (
-            ValuationSnapshotBuilderImpl,
-        )
+from src.modules.research.infrastructure.valuation_snapshot.snapshot_builder import (
+    ValuationSnapshotBuilderImpl,
+)
 
 
 def _make_overview(
@@ -117,16 +116,14 @@ def test_percentile_skips_negative_and_none_values():
     for i in range(80):
         historical.append(
             _make_valuation_daily(
-                date(2023, 1, 1)
-                + __import__("datetime").timedelta(days=i * 3),
+                date(2023, 1, 1) + __import__("datetime").timedelta(days=i * 3),
                 pe_ttm=3.0 + (i * 5.0 / 80),
             )
         )
     for i in range(20):
         historical.append(
             _make_valuation_daily(
-                date(2024, 1, 1)
-                + __import__("datetime").timedelta(days=i * 3),
+                date(2024, 1, 1) + __import__("datetime").timedelta(days=i * 3),
                 pe_ttm=-10.0 if i % 2 == 0 else None,  # 亏损或缺失
             )
         )

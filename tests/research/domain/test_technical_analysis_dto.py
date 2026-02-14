@@ -18,9 +18,7 @@ def test_result_dto_signal_only_allow_bullish_bearish_neutral():
         signal="BULLISH",
         confidence=0.8,
         summary_reasoning="测试",
-        key_technical_levels=KeyTechnicalLevelsDTO(
-            support=10.0, resistance=11.0
-        ),
+        key_technical_levels=KeyTechnicalLevelsDTO(support=10.0, resistance=11.0),
         risk_warning="跌破10",
     )
     assert valid.signal == "BULLISH"
@@ -30,9 +28,7 @@ def test_result_dto_signal_only_allow_bullish_bearish_neutral():
             signal="INVALID",
             confidence=0.8,
             summary_reasoning="测试",
-            key_technical_levels=KeyTechnicalLevelsDTO(
-                support=10.0, resistance=11.0
-            ),
+            key_technical_levels=KeyTechnicalLevelsDTO(support=10.0, resistance=11.0),
             risk_warning="",
         )
 
@@ -43,18 +39,14 @@ def test_result_dto_confidence_in_zero_one():
         signal="NEUTRAL",
         confidence=0.0,
         summary_reasoning="",
-        key_technical_levels=KeyTechnicalLevelsDTO(
-            support=0.0, resistance=0.0
-        ),
+        key_technical_levels=KeyTechnicalLevelsDTO(support=0.0, resistance=0.0),
         risk_warning="",
     )
     TechnicalAnalysisResultDTO(
         signal="NEUTRAL",
         confidence=1.0,
         summary_reasoning="",
-        key_technical_levels=KeyTechnicalLevelsDTO(
-            support=0.0, resistance=0.0
-        ),
+        key_technical_levels=KeyTechnicalLevelsDTO(support=0.0, resistance=0.0),
         risk_warning="",
     )
     with pytest.raises(ValidationError):
@@ -62,9 +54,7 @@ def test_result_dto_confidence_in_zero_one():
             signal="NEUTRAL",
             confidence=1.5,
             summary_reasoning="",
-            key_technical_levels=KeyTechnicalLevelsDTO(
-                support=0.0, resistance=0.0
-            ),
+            key_technical_levels=KeyTechnicalLevelsDTO(support=0.0, resistance=0.0),
             risk_warning="",
         )
 

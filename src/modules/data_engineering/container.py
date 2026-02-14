@@ -41,9 +41,7 @@ class DataEngineeringContainer:
 
     def get_daily_bars_use_case(self) -> GetDailyBarsForTickerUseCase:
         """组装按标的查询日线的 UseCase。"""
-        return GetDailyBarsForTickerUseCase(
-            market_quote_repo=self._market_quote_repo
-        )
+        return GetDailyBarsForTickerUseCase(market_quote_repo=self._market_quote_repo)
 
     def get_finance_use_case(self) -> GetFinanceForTickerUseCase:
         """组装按标的查询财务数据的 UseCase。"""
@@ -60,6 +58,4 @@ class DataEngineeringContainer:
         self,
     ) -> GetValuationDailiesForTickerUseCase:
         """组装按标的查询估值日线的 UseCase。"""
-        return GetValuationDailiesForTickerUseCase(
-            market_quote_repo=self._market_quote_repo
-        )
+        return GetValuationDailiesForTickerUseCase(market_quote_repo=self._market_quote_repo)

@@ -46,9 +46,7 @@ def app():
 
 
 @pytest.mark.asyncio
-async def test_list_sessions_returns_summaries(
-    app, db_session, session_with_data
-):
+async def test_list_sessions_returns_summaries(app, db_session, session_with_data):
     """GET /coordinator/research/sessions 返回会话摘要列表。"""
 
     async def override():
@@ -74,9 +72,7 @@ async def test_list_sessions_returns_summaries(
 
 
 @pytest.mark.asyncio
-async def test_list_sessions_filter_by_symbol(
-    app, db_session, session_with_data
-):
+async def test_list_sessions_filter_by_symbol(app, db_session, session_with_data):
     """GET /coordinator/research/sessions?symbol=AAPL 仅返回该 symbol 的会话。"""
 
     async def override():
@@ -88,15 +84,11 @@ async def test_list_sessions_filter_by_symbol(
             transport=ASGITransport(app=app),
             base_url="http://test",
         ) as client:
-            resp = await client.get(
-                "/api/v1/coordinator/research/sessions?symbol=AAPL"
-            )
+            resp = await client.get("/api/v1/coordinator/research/sessions?symbol=AAPL")
         assert resp.status_code == 200
         data = resp.json()
         assert all(s["symbol"] == "AAPL" for s in data)
-        resp_other = await client.get(
-            "/api/v1/coordinator/research/sessions?symbol=MSFT"
-        )
+        resp_other = await client.get("/api/v1/coordinator/research/sessions?symbol=MSFT")
         other = resp_other.json()
         assert other == [] or all(s["symbol"] == "MSFT" for s in other)
     finally:
@@ -116,9 +108,7 @@ async def test_list_sessions_pagination(app, db_session, session_with_data):
             transport=ASGITransport(app=app),
             base_url="http://test",
         ) as client:
-            resp = await client.get(
-                "/api/v1/coordinator/research/sessions?skip=0&limit=1"
-            )
+            resp = await client.get("/api/v1/coordinator/research/sessions?skip=0&limit=1")
         assert resp.status_code == 200
         data = resp.json()
         assert len(data) <= 1
@@ -141,9 +131,7 @@ async def test_get_session_detail_returns_detail_and_node_executions(
             transport=ASGITransport(app=app),
             base_url="http://test",
         ) as client:
-            resp = await client.get(
-                f"/api/v1/coordinator/research/sessions/{session_with_data.id}"
-            )
+            resp = await client.get(f"/api/v1/coordinator/research/sessions/{session_with_data.id}")
         assert resp.status_code == 200
         data = resp.json()
         assert data["id"] == str(session_with_data.id)
@@ -168,9 +156,7 @@ async def test_get_session_detail_not_found_returns_404(app, db_session):
             transport=ASGITransport(app=app),
             base_url="http://test",
         ) as client:
-            resp = await client.get(
-                f"/api/v1/coordinator/research/sessions/{uuid4()}"
-            )
+            resp = await client.get(f"/api/v1/coordinator/research/sessions/{uuid4()}")
         assert resp.status_code == 404
         assert "会话不存在" in resp.json().get("detail", "")
     finally:
@@ -191,9 +177,7 @@ async def test_list_sessions_empty_result(app, db_session):
             base_url="http://test",
         ) as client:
             # 使用一个不存在的 symbol 确保空结果
-            resp = await client.get(
-                "/api/v1/coordinator/research/sessions?symbol=__NO_SYMBOL__"
-            )
+            resp = await client.get("/api/v1/coordinator/research/sessions?symbol=__NO_SYMBOL__")
         assert resp.status_code == 200
         assert resp.json() == []
     finally:

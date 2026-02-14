@@ -12,9 +12,7 @@ class IJudgeGateway(ABC):
     """裁决网关抽象接口。"""
 
     @abstractmethod
-    async def run_verdict(
-        self, symbol: str, debate_outcome: dict[str, Any]
-    ) -> dict[str, Any]:
+    async def run_verdict(self, symbol: str, debate_outcome: dict[str, Any]) -> dict[str, Any]:
         """
         执行裁决，返回裁决结果的 dict 序列化。
 

@@ -22,9 +22,7 @@ from src.modules.llm_platform.infrastructure.config import llm_config
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(
-    prefix="/llm-platform/web-search", tags=["LLM Platform - Web Search"]
-)
+router = APIRouter(prefix="/llm-platform/web-search", tags=["LLM Platform - Web Search"])
 
 
 # Presentation DTOs
@@ -132,9 +130,7 @@ async def search_web(
             for item in response.results
         ]
 
-        logger.info(
-            f"API: search_web completed successfully, returned {len(api_results)} results"
-        )
+        logger.info(f"API: search_web completed successfully, returned {len(api_results)} results")
 
         return WebSearchApiResponse(
             query=response.query,

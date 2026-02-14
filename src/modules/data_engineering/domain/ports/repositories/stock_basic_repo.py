@@ -23,15 +23,11 @@ class IStockBasicRepository(ABC):
         pass
 
     @abstractmethod
-    async def get_by_third_codes(
-        self, third_codes: List[str]
-    ) -> List[StockInfo]:
+    async def get_by_third_codes(self, third_codes: List[str]) -> List[StockInfo]:
         pass
 
     @abstractmethod
-    async def get_all(
-        self, skip: int = 0, limit: int = 100
-    ) -> List[StockInfo]:
+    async def get_all(self, skip: int = 0, limit: int = 100) -> List[StockInfo]:
         pass
 
     @abstractmethod
@@ -41,7 +37,5 @@ class IStockBasicRepository(ABC):
         pass
 
     @abstractmethod
-    async def update_last_finance_sync_date(
-        self, third_codes: List[str], sync_date: date
-    ) -> None:
+    async def update_last_finance_sync_date(self, third_codes: List[str], sync_date: date) -> None:
         pass

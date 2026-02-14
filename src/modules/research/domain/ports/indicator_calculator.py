@@ -17,7 +17,5 @@ class IIndicatorCalculator(ABC):
     """入参日线 DTO 列表，出参与 spec 输入契约一致的技术指标快照。"""
 
     @abstractmethod
-    def compute(
-        self, bars: List[DailyBarInput]
-    ) -> TechnicalIndicatorsSnapshot:
+    def compute(self, bars: List[DailyBarInput]) -> TechnicalIndicatorsSnapshot:
         raise NotImplementedError

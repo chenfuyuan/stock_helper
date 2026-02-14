@@ -65,12 +65,8 @@ async def get_session_detail_query(
 async def list_sessions(
     query: SessionListQuery = Depends(get_session_list_query),
     symbol: str | None = Query(None, description="股票代码筛选"),
-    created_after: datetime | None = Query(
-        None, description="创建时间起始（含）"
-    ),
-    created_before: datetime | None = Query(
-        None, description="创建时间截止（含）"
-    ),
+    created_after: datetime | None = Query(None, description="创建时间起始（含）"),
+    created_before: datetime | None = Query(None, description="创建时间截止（含）"),
     skip: int = Query(0, ge=0, description="跳过条数"),
     limit: int = Query(20, ge=1, le=100, description="每页条数"),
 ) -> list[SessionSummaryDTO]:

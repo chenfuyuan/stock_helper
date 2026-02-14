@@ -29,9 +29,7 @@ class StockDailyAssembler:
                 if daily:
                     dailies.append(daily)
             except Exception as e:
-                logger.warning(
-                    f"日线数据转换失败: {row.get('ts_code', 'unknown')} - {str(e)}"
-                )
+                logger.warning(f"日线数据转换失败: {row.get('ts_code', 'unknown')} - {str(e)}")
                 continue
 
         return dailies

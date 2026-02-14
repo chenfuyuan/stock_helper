@@ -44,7 +44,5 @@ class GetStockBasicInfoUseCase:
         if not stock_info:
             return None
 
-        stock_daily = await self.daily_repo.get_latest_by_third_code(
-            stock_info.third_code
-        )
+        stock_daily = await self.daily_repo.get_latest_by_third_code(stock_info.third_code)
         return StockBasicInfoDTO(info=stock_info, daily=stock_daily)

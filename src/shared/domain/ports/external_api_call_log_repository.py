@@ -21,8 +21,6 @@ class IExternalAPICallLogRepository(ABC):
         ...
 
     @abstractmethod
-    async def get_by_session_id(
-        self, session_id: UUID
-    ) -> list[ExternalAPICallLog]:
+    async def get_by_session_id(self, session_id: UUID) -> list[ExternalAPICallLog]:
         """按 session_id 查询调用日志，按 created_at 升序。"""
         ...

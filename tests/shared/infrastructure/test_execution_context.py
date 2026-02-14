@@ -64,9 +64,7 @@ async def test_parallel_tasks_isolated():
     results: list[tuple[str, str | None]] = []
 
     async def task(session_id: str) -> None:
-        token = current_execution_ctx.set(
-            ExecutionContext(session_id=session_id)
-        )
+        token = current_execution_ctx.set(ExecutionContext(session_id=session_id))
         try:
             await asyncio.sleep(0.01)
             ctx = current_execution_ctx.get()

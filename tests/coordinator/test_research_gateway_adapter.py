@@ -34,9 +34,7 @@ def mock_research_container():
     container = MagicMock()
     for expert_type in ExpertType:
         svc = MagicMock()
-        svc.run = AsyncMock(
-            return_value={"result": f"mock_{expert_type.value}"}
-        )
+        svc.run = AsyncMock(return_value={"result": f"mock_{expert_type.value}"})
         method_name = f"{expert_type.value}_service"
         getattr(container, method_name).return_value = svc
     return container

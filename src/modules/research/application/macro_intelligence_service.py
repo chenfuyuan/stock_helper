@@ -80,9 +80,7 @@ class MacroIntelligenceService:
         # 2. 获取股票概览
         overview = await self._macro_data.get_stock_overview(symbol)
         if overview is None:
-            raise BadRequestException(
-                message=f"该标的 {symbol} 不存在。请确认股票代码是否正确。"
-            )
+            raise BadRequestException(message=f"该标的 {symbol} 不存在。请确认股票代码是否正确。")
 
         # 3. 执行四维度宏观搜索
         search_results = await self._macro_data.search_macro_context(
@@ -118,9 +116,7 @@ class MacroIntelligenceService:
             "macro_environment": result_dto.macro_environment,
             "confidence_score": result_dto.confidence_score,
             "macro_summary": result_dto.macro_summary,
-            "dimension_analyses": [
-                d.model_dump() for d in result_dto.dimension_analyses
-            ],
+            "dimension_analyses": [d.model_dump() for d in result_dto.dimension_analyses],
             "key_opportunities": result_dto.key_opportunities,
             "key_risks": result_dto.key_risks,
             "information_sources": result_dto.information_sources,

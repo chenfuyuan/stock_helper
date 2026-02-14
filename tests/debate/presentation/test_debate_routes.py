@@ -35,9 +35,7 @@ def mock_debate_outcome_dto():
             supporting_arguments=[],
             acknowledged_strengths=[],
         ),
-        risk_matrix=[
-            RiskItemDTO(risk="R", probability="中", impact="高", mitigation="")
-        ],
+        risk_matrix=[RiskItemDTO(risk="R", probability="中", impact="高", mitigation="")],
         key_disagreements=[],
         conflict_resolution="中性",
     )

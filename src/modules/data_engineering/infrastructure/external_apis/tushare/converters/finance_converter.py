@@ -27,9 +27,7 @@ class StockFinanceAssembler:
                 if finance:
                     finances.append(finance)
             except Exception as e:
-                logger.warning(
-                    f"财务指标转换失败: {row.get('ts_code', 'unknown')} - {str(e)}"
-                )
+                logger.warning(f"财务指标转换失败: {row.get('ts_code', 'unknown')} - {str(e)}")
                 continue
 
         return finances

@@ -85,9 +85,7 @@ async def get_configs(service: ConfigService = Depends(get_config_service)):
 
 
 @router.get("/{alias}", response_model=LLMConfigResponse)
-async def get_config(
-    alias: str, service: ConfigService = Depends(get_config_service)
-):
+async def get_config(alias: str, service: ConfigService = Depends(get_config_service)):
     """
     根据别名获取大模型配置详情。
     """
@@ -99,12 +97,8 @@ async def get_config(
         raise HTTPException(status_code=404, detail=str(e))
 
 
-@router.post(
-    "", response_model=LLMConfigResponse, status_code=status.HTTP_201_CREATED
-)
-async def create_config(
-    dto: LLMConfigCreate, service: ConfigService = Depends(get_config_service)
-):
+@router.post("", response_model=LLMConfigResponse, status_code=status.HTTP_201_CREATED)
+async def create_config(dto: LLMConfigCreate, service: ConfigService = Depends(get_config_service)):
     """
     创建新的大模型配置。
     """
@@ -130,9 +124,7 @@ async def update_config(
     """
     logger.info(f"API: update_config called with alias={alias}")
     try:
-        result = await service.update_config(
-            alias, dto.dict(exclude_unset=True)
-        )
+        result = await service.update_config(alias, dto.dict(exclude_unset=True))
         logger.info(f"API: Config updated successfully: {alias}")
         return result
     except ConfigNotFoundException as e:
@@ -141,9 +133,7 @@ async def update_config(
 
 
 @router.delete("/{alias}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_config(
-    alias: str, service: ConfigService = Depends(get_config_service)
-):
+async def delete_config(alias: str, service: ConfigService = Depends(get_config_service)):
     """
     删除大模型配置。
     """

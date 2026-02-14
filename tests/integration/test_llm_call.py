@@ -44,9 +44,7 @@ class TestLLMRealCall:
         # 3. 初始化应用服务
         service = LLMService(registry=registry)
 
-        print(
-            f"\n发现 {len(active_configs)} 个激活的模型配置，开始逐一测试..."
-        )
+        print(f"\n发现 {len(active_configs)} 个激活的模型配置，开始逐一测试...")
 
         # 4. 遍历测试每个模型
         success_count = 0
@@ -74,9 +72,7 @@ class TestLLMRealCall:
 
             except Exception as e:
                 print(f"  ❌ 调用失败: {str(e)}")
-                failure_details.append(
-                    f"Model {config.alias} failed: {str(e)}"
-                )
+                failure_details.append(f"Model {config.alias} failed: {str(e)}")
 
         # 5. 总结测试结果
         print(f"\n测试结束: 成功 {success_count}/{len(active_configs)}")

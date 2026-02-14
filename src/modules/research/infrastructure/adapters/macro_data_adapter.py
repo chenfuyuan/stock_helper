@@ -66,9 +66,7 @@ class MacroDataAdapter(IMacroDataPort):
         self._web_search_service = web_search_service
         self._result_filter = result_filter
 
-    async def get_stock_overview(
-        self, symbol: str
-    ) -> Optional[MacroStockOverview]:
+    async def get_stock_overview(self, symbol: str) -> Optional[MacroStockOverview]:
         """
         获取股票基础信息（名称、行业、代码），用于宏观分析的上下文构建。
 
@@ -92,9 +90,7 @@ class MacroDataAdapter(IMacroDataPort):
                 return None
 
             if basic_info.daily is None:
-                logger.warning(
-                    "股票日线数据为空，无法构建宏观概览：symbol=%s", symbol
-                )
+                logger.warning("股票日线数据为空，无法构建宏观概览：symbol=%s", symbol)
                 return None
 
             # 转为 MacroStockOverview
@@ -104,9 +100,7 @@ class MacroDataAdapter(IMacroDataPort):
                 third_code=basic_info.daily.third_code,
             )
 
-            logger.info(
-                f"股票基础信息获取成功：{overview.stock_name}，行业={overview.industry}"
-            )
+            logger.info(f"股票基础信息获取成功：{overview.stock_name}，行业={overview.industry}")
 
             return overview
 
@@ -114,9 +108,7 @@ class MacroDataAdapter(IMacroDataPort):
             logger.error(f"获取股票基础信息失败：symbol={symbol}，错误={e}")
             raise
 
-    async def search_macro_context(
-        self, industry: str, stock_name: str
-    ) -> List[MacroSearchResult]:
+    async def search_macro_context(self, industry: str, stock_name: str) -> List[MacroSearchResult]:
         """
         基于行业与公司上下文，执行四个维度的宏观搜索。
 
@@ -131,9 +123,7 @@ class MacroDataAdapter(IMacroDataPort):
         Returns:
             List[MacroSearchResult]: 四个维度的搜索结果列表
         """
-        logger.info(
-            f"开始执行四维度宏观搜索：行业={industry}，股票={stock_name}"
-        )
+        logger.info(f"开始执行四维度宏观搜索：行业={industry}，股票={stock_name}")
 
         current_year = date.today().year
 
@@ -160,14 +150,10 @@ class MacroDataAdapter(IMacroDataPort):
                     count=config.count,
                 )
 
-                search_response = await self._web_search_service.search(
-                    search_request
-                )
+                search_response = await self._web_search_service.search(search_request)
 
                 # 过滤和排序搜索结果
-                filtered_items = self._result_filter.filter_and_sort(
-                    search_response.results
-                )
+                filtered_items = self._result_filter.filter_and_sort(search_response.results)
 
                 # 记录过滤统计日志
                 logger.info(
@@ -196,9 +182,7 @@ class MacroDataAdapter(IMacroDataPort):
                     )
                 )
 
-                logger.info(
-                    f"维度 {dimension} 搜索成功，返回 {len(items)} 条结果"
-                )
+                logger.info(f"维度 {dimension} 搜索成功，返回 {len(items)} 条结果")
 
             except (
                 WebSearchError,

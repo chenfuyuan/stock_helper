@@ -17,9 +17,7 @@ class IMarketQuoteRepository(ABC):
         """按第三方代码与日期区间查询日线，供 Application 层只读使用。"""
 
     @abstractmethod
-    async def get_latest_by_third_code(
-        self, third_code: str
-    ) -> Optional[StockDaily]:
+    async def get_latest_by_third_code(self, third_code: str) -> Optional[StockDaily]:
         """
         查询指定标的最新的一条日线数据
         :param third_code: 股票代码

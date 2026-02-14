@@ -26,9 +26,7 @@ async def test_get_daily_bars_returns_dto_list_with_ohlcv():
     mock_repo.get_by_third_code_and_date_range.return_value = []
 
     use_case = GetDailyBarsForTickerUseCase(mock_repo)
-    result = await use_case.execute(
-        ticker=ticker, start_date=start_date, end_date=end_date
-    )
+    result = await use_case.execute(ticker=ticker, start_date=start_date, end_date=end_date)
 
     assert isinstance(result, list)
     # 若有数据，每条应为 DailyBarDTO且含开高低收量

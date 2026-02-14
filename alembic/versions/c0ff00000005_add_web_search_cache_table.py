@@ -8,6 +8,7 @@ Revises: c0ff00000004
 Create Date: 2026-02-14
 
 """
+
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
@@ -21,8 +22,15 @@ depends_on = None
 def upgrade() -> None:
     op.create_table(
         "web_search_cache",
-        sa.Column("cache_key", sa.String(length=64), nullable=False, comment="请求参数 SHA-256 哈希，主键"),
-        sa.Column("request_params", postgresql.JSONB(astext_type=sa.Text()), nullable=False, comment="原始请求参数"),
+        sa.Column(
+            "cache_key", sa.String(length=64), nullable=False, comment="请求参数 SHA-256 哈希，主键"
+        ),
+        sa.Column(
+            "request_params",
+            postgresql.JSONB(astext_type=sa.Text()),
+            nullable=False,
+            comment="原始请求参数",
+        ),
         sa.Column("response_data", sa.Text(), nullable=False, comment="WebSearchResponse JSON"),
         sa.Column("created_at", sa.DateTime(), nullable=False, comment="写入时间"),
         sa.Column("expires_at", sa.DateTime(), nullable=False, comment="过期时间"),

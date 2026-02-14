@@ -11,12 +11,7 @@ from src.modules.research.domain.dtos.indicators_snapshot import (
 )
 
 # 默认资源目录：agents 已迁入 infrastructure/agents，相对于本文件定位 technical_analyst/prompts
-_DEFAULT_PROMPTS_DIR = (
-    Path(__file__).resolve().parent
-    / "agents"
-    / "technical_analyst"
-    / "prompts"
-)
+_DEFAULT_PROMPTS_DIR = Path(__file__).resolve().parent / "agents" / "technical_analyst" / "prompts"
 
 
 def load_system_prompt(prompts_dir: Optional[Path] = None) -> str:
@@ -117,23 +112,13 @@ def fill_financial_auditor_user_prompt(template: str, snapshot) -> str:
     """用财务快照 DTO 填充 User Prompt 占位符。snapshot 为 FinancialSnapshotDTO。"""
     # 序列需 JSON 序列化以便模板中的 JSON 块正确
     quarter_list = json.dumps(snapshot.quarter_list, ensure_ascii=False)
-    revenue_growth_series = json.dumps(
-        snapshot.revenue_growth_series, ensure_ascii=False
-    )
-    profit_growth_series = json.dumps(
-        snapshot.profit_growth_series, ensure_ascii=False
-    )
-    gross_margin_series = json.dumps(
-        snapshot.gross_margin_series, ensure_ascii=False
-    )
+    revenue_growth_series = json.dumps(snapshot.revenue_growth_series, ensure_ascii=False)
+    profit_growth_series = json.dumps(snapshot.profit_growth_series, ensure_ascii=False)
+    gross_margin_series = json.dumps(snapshot.gross_margin_series, ensure_ascii=False)
     roic_series = json.dumps(snapshot.roic_series, ensure_ascii=False)
     fcff_series = json.dumps(snapshot.fcff_series, ensure_ascii=False)
-    invturn_days_series = json.dumps(
-        snapshot.invturn_days_series, ensure_ascii=False
-    )
-    arturn_days_series = json.dumps(
-        snapshot.arturn_days_series, ensure_ascii=False
-    )
+    invturn_days_series = json.dumps(snapshot.invturn_days_series, ensure_ascii=False)
+    arturn_days_series = json.dumps(snapshot.arturn_days_series, ensure_ascii=False)
     return template.format(
         symbol=snapshot.symbol,
         report_period=snapshot.report_period,
@@ -286,9 +271,7 @@ def load_catalyst_detective_user_template(prompts_dir: Path) -> str:
     return path.read_text(encoding="utf-8").strip()
 
 
-def fill_catalyst_detective_user_prompt(
-    template: str, catalyst_context
-) -> str:
+def fill_catalyst_detective_user_prompt(template: str, catalyst_context) -> str:
     """
     用催化剂上下文 DTO 填充 User Prompt 占位符。catalyst_context 为 CatalystContextDTO。
 

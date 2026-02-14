@@ -28,9 +28,7 @@ class StockDisclosureAssembler:
                 if disclosure:
                     result.append(disclosure)
             except Exception as e:
-                logger.warning(
-                    f"财报披露计划转换失败: {row.get('ts_code', 'unknown')} - {str(e)}"
-                )
+                logger.warning(f"财报披露计划转换失败: {row.get('ts_code', 'unknown')} - {str(e)}")
                 continue
 
         return result

@@ -14,9 +14,7 @@ from src.modules.data_engineering.infrastructure.persistence.models.daily_bar_mo
 from src.shared.infrastructure.base_repository import BaseRepository
 
 
-class StockDailyRepositoryImpl(
-    BaseRepository[StockDailyModel], IMarketQuoteRepository
-):
+class StockDailyRepositoryImpl(BaseRepository[StockDailyModel], IMarketQuoteRepository):
     def __init__(self, session):
         super().__init__(StockDailyModel, session)
 
@@ -46,11 +44,7 @@ class StockDailyRepositoryImpl(
             stmt = insert(StockDailyModel).values(batch)
             stmt = stmt.on_conflict_do_update(
                 index_elements=["third_code", "trade_date"],
-                set_={
-                    col.name: col
-                    for col in stmt.excluded
-                    if col.name not in ["created_at"]
-                },
+                set_={col.name: col for col in stmt.excluded if col.name not in ["created_at"]},
             )
 
             await self.session.execute(stmt)
@@ -93,9 +87,7 @@ class StockDailyRepositoryImpl(
             for r in rows
         ]
 
-    async def get_latest_by_third_code(
-        self, third_code: str
-    ) -> Optional[StockDaily]:
+    async def get_latest_by_third_code(self, third_code: str) -> Optional[StockDaily]:
         """查询指定标的最新的一条日线数据"""
         stmt = (
             select(StockDailyModel)

@@ -118,9 +118,7 @@ def _bollinger(
     std = (variance**0.5) if variance > 0 else 0.0
     upper = middle + k * std
     lower = middle - k * std
-    bandwidth = (
-        (upper - lower) / middle * 100.0 if middle and middle != 0 else 0.0
-    )
+    bandwidth = (upper - lower) / middle * 100.0 if middle and middle != 0 else 0.0
     return (
         round(upper, 4),
         round(lower, 4),
@@ -156,12 +154,7 @@ def _atr(
 
 def _obv_trend(closes: List[float], vols: List[float], days: int = 5) -> str:
     """OBV 累计后，比较当前与 days 日前，返回 Rising / Falling / Flat。"""
-    if (
-        len(closes) < 2
-        or len(vols) < 2
-        or len(closes) != len(vols)
-        or days < 1
-    ):
+    if len(closes) < 2 or len(vols) < 2 or len(closes) != len(vols) or days < 1:
         return "Flat"
     obv_list: List[float] = [0.0]
     for i in range(1, len(closes)):

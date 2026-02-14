@@ -23,24 +23,16 @@ class BaseRepository(Generic[ModelType]):
 
     async def get(self, id: UUID) -> Optional[ModelType]:
         """根据 ID 获取单个记录"""
-        result = await self.session.execute(
-            select(self.model).where(self.model.id == id)
-        )
+        result = await self.session.execute(select(self.model).where(self.model.id == id))
         obj = result.scalars().first()
         if not obj:
             logger.debug(f"{self.model.__name__} with id {id} not found")
         return obj
 
-    async def get_all(
-        self, skip: int = 0, limit: int = 100
-    ) -> List[ModelType]:
+    async def get_all(self, skip: int = 0, limit: int = 100) -> List[ModelType]:
         """获取分页列表"""
-        logger.debug(
-            f"Fetching {self.model.__name__} list: skip={skip}, limit={limit}"
-        )
-        result = await self.session.execute(
-            select(self.model).offset(skip).limit(limit)
-        )
+        logger.debug(f"Fetching {self.model.__name__} list: skip={skip}, limit={limit}")
+        result = await self.session.execute(select(self.model).offset(skip).limit(limit))
         return result.scalars().all()
 
     async def create(self, obj_in: dict) -> ModelType:
@@ -68,16 +60,12 @@ class BaseRepository(Generic[ModelType]):
     async def delete(self, id: UUID) -> bool:
         """删除记录"""
         logger.debug(f"Deleting {self.model.__name__} with id {id}")
-        result = await self.session.execute(
-            delete(self.model).where(self.model.id == id)
-        )
+        result = await self.session.execute(delete(self.model).where(self.model.id == id))
         await self.session.commit()
         if result.rowcount > 0:
             logger.info(f"Deleted {self.model.__name__} with id {id}")
             return True
-        logger.warning(
-            f"Delete failed: {self.model.__name__} with id {id} not found"
-        )
+        logger.warning(f"Delete failed: {self.model.__name__} with id {id} not found")
         return False
 
     async def upsert_all(
@@ -105,9 +93,7 @@ class BaseRepository(Generic[ModelType]):
         batch_size = 1000
         total_count = 0
 
-        logger.info(
-            f"Starting bulk upsert for {self.model.__name__}, total items: {len(items)}"
-        )
+        logger.info(f"Starting bulk upsert for {self.model.__name__}, total items: {len(items)}")
 
         for i in range(0, len(items), batch_size):
             batch = items[i : i + batch_size]
@@ -115,26 +101,16 @@ class BaseRepository(Generic[ModelType]):
             stmt = insert(self.model).values(batch)
 
             # 构建 update 语句，排除不需要更新的字段
-            update_dict = {
-                col.name: col
-                for col in stmt.excluded
-                if col.name not in exclude_fields
-            }
+            update_dict = {col.name: col for col in stmt.excluded if col.name not in exclude_fields}
 
             if update_dict:
-                stmt = stmt.on_conflict_do_update(
-                    index_elements=unique_fields, set_=update_dict
-                )
+                stmt = stmt.on_conflict_do_update(index_elements=unique_fields, set_=update_dict)
             else:
-                stmt = stmt.on_conflict_do_nothing(
-                    index_elements=unique_fields
-                )
+                stmt = stmt.on_conflict_do_nothing(index_elements=unique_fields)
 
             result = await self.session.execute(stmt)
             total_count += result.rowcount
 
         await self.session.commit()
-        logger.info(
-            f"Bulk upsert completed for {self.model.__name__}: {total_count} rows affected"
-        )
+        logger.info(f"Bulk upsert completed for {self.model.__name__}: {total_count} rows affected")
         return total_count

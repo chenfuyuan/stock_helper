@@ -83,9 +83,7 @@ class SyncIncrementalFinanceDataUseCase:
             actual_date = current_date.strftime("%Y%m%d")
 
         target_period = self._get_target_period(current_date)
-        logger.info(
-            f"开始财务增量同步：当前日期={actual_date}，目标报告期={target_period}"
-        )
+        logger.info(f"开始财务增量同步：当前日期={actual_date}，目标报告期={target_period}")
 
         # 策略 C（前置）: 失败重试（从 DB 读取未解决的失败记录）
         retry_count = 0
@@ -93,21 +91,19 @@ class SyncIncrementalFinanceDataUseCase:
 
         try:
             logger.info("开始重试之前失败的记录...")
-            unresolved_failures = (
-                await self.sync_task_repo.get_unresolved_failures(
-                    job_type=SyncJobType.FINANCE_INCREMENTAL
-                )
+            unresolved_failures = await self.sync_task_repo.get_unresolved_failures(
+                job_type=SyncJobType.FINANCE_INCREMENTAL
             )
             logger.info(f"找到 {len(unresolved_failures)} 条未解决的失败记录")
 
             for failure in unresolved_failures:
                 retry_count += 1
                 try:
-                    logger.info(
-                        f"重试 {failure.third_code}（已重试 {failure.retry_count} 次）"
-                    )
+                    logger.info(f"重试 {failure.third_code}（已重试 {failure.retry_count} 次）")
 
-                    target_date_formatted = f"{target_period[:4]}{target_period[4:6]}{target_period[6:]}"
+                    target_date_formatted = (
+                        f"{target_period[:4]}{target_period[4:6]}{target_period[6:]}"
+                    )
                     finances = await self.data_provider.fetch_fina_indicator(
                         third_code=failure.third_code,
                         end_date=target_date_formatted,
@@ -129,9 +125,7 @@ class SyncIncrementalFinanceDataUseCase:
                     failure.increment_retry()
                     await self.sync_task_repo.update_failure(failure)
 
-            logger.info(
-                f"失败重试完成：总计 {retry_count} 条，成功 {retry_success_count} 条"
-            )
+            logger.info(f"失败重试完成：总计 {retry_count} 条，成功 {retry_success_count} 条")
         except Exception as e:
             logger.error(f"失败重试阶段发生错误：{str(e)}")
 
@@ -141,9 +135,7 @@ class SyncIncrementalFinanceDataUseCase:
         # 策略 A: 获取今日披露名单（高优先级）
         try:
             logger.info(f"获取 {actual_date} 的披露名单...")
-            disclosures = await self.data_provider.fetch_disclosure_date(
-                actual_date=actual_date
-            )
+            disclosures = await self.data_provider.fetch_disclosure_date(actual_date=actual_date)
             for d in disclosures:
                 end_date_str = (
                     d.end_date.strftime("%Y%m%d")
@@ -161,9 +153,7 @@ class SyncIncrementalFinanceDataUseCase:
         limit = de_config.SYNC_INCREMENTAL_MISSING_LIMIT  # 从配置读取
 
         try:
-            logger.info(
-                f"从数据库查询缺失财务数据的股票（上限 {limit} 只）..."
-            )
+            logger.info(f"从数据库查询缺失财务数据的股票（上限 {limit} 只）...")
             missing_stocks = await self.stock_repo.get_missing_finance_stocks(
                 target_period=target_period,
                 check_threshold_date=check_threshold,
@@ -183,7 +173,9 @@ class SyncIncrementalFinanceDataUseCase:
 
         for code in tasks:
             try:
-                target_date_formatted = f"{target_period[:4]}{target_period[4:6]}{target_period[6:]}"
+                target_date_formatted = (
+                    f"{target_period[:4]}{target_period[4:6]}{target_period[6:]}"
+                )
 
                 finances = await self.data_provider.fetch_fina_indicator(
                     third_code=code, end_date=target_date_formatted

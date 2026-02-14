@@ -20,9 +20,7 @@ from src.modules.coordinator.infrastructure.orchestration.langgraph_orchestrator
 def mock_research_gateway():
     """所有专家返回成功。"""
     g = AsyncMock(spec=IResearchExpertGateway)
-    g.run_expert = AsyncMock(
-        return_value={"signal": "NEUTRAL", "confidence": 0.8}
-    )
+    g.run_expert = AsyncMock(return_value={"signal": "NEUTRAL", "confidence": 0.8})
     return g
 
 

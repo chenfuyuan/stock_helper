@@ -202,9 +202,7 @@ def parse_llm_json_output(
 
     # 1. 空值检查
     if not raw or not raw.strip():
-        logger.warning(
-            "{}LLM 返回为空，raw_length={}", prefix, len(raw) if raw else 0
-        )
+        logger.warning("{}LLM 返回为空，raw_length={}", prefix, len(raw) if raw else 0)
         raise LLMJsonParseError(
             message="LLM 返回内容为空",
             details={"raw_length": len(raw) if raw else 0},
@@ -237,9 +235,7 @@ def parse_llm_json_output(
                 pass
 
     if data is None:
-        error_msg = (
-            last_json_error.msg if last_json_error else "未知 JSON 错误"
-        )
+        error_msg = last_json_error.msg if last_json_error else "未知 JSON 错误"
         error_pos = last_json_error.pos if last_json_error else None
         logger.warning(
             "{}LLM 返回非合法 JSON，error={}，LLM 原始输出：{}",

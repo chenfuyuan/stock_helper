@@ -21,9 +21,7 @@ class SearchResultFilter:
     提供规则式过滤和排序功能，提升搜索结果质量。
     """
 
-    def filter_and_sort(
-        self, items: List[WebSearchResultItem]
-    ) -> List[WebSearchResultItem]:
+    def filter_and_sort(self, items: List[WebSearchResultItem]) -> List[WebSearchResultItem]:
         """
         过滤并排序搜索结果。
 
@@ -50,9 +48,7 @@ class SearchResultFilter:
             try:
                 # 标准化 URL（去除 fragment）
                 parsed = urlparse(item.url)
-                normalized_url = (
-                    f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
-                )
+                normalized_url = f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
                 if normalized_url not in seen_urls:
                     seen_urls.add(normalized_url)
                     dedup_items.append(item)
@@ -64,16 +60,13 @@ class SearchResultFilter:
                     dedup_items.append(item)
 
         # 2. 去空标题
-        filtered_items = [
-            item for item in dedup_items if item.title and item.title.strip()
-        ]
+        filtered_items = [item for item in dedup_items if item.title and item.title.strip()]
 
         # 3. 去无内容
         final_items = [
             item
             for item in filtered_items
-            if (item.summary and item.summary.strip())
-            or (item.snippet and item.snippet.strip())
+            if (item.summary and item.summary.strip()) or (item.snippet and item.snippet.strip())
         ]
 
         # 4. 按时效排序

@@ -29,9 +29,7 @@ def _session_model_to_entity(m: ResearchSessionModel) -> ResearchSession:
         id=m.id,
         symbol=m.symbol,
         status=m.status,
-        selected_experts=(
-            list(m.selected_experts) if m.selected_experts else []
-        ),
+        selected_experts=(list(m.selected_experts) if m.selected_experts else []),
         options=dict(m.options) if m.options else {},
         trigger_source=m.trigger_source or "api",
         created_at=m.created_at,
@@ -121,13 +119,9 @@ class PgResearchSessionRepository(IResearchSessionRepository):
         self._session.add(model)
         await self._session.commit()
 
-    async def get_session_by_id(
-        self, session_id: UUID
-    ) -> ResearchSession | None:
+    async def get_session_by_id(self, session_id: UUID) -> ResearchSession | None:
         result = await self._session.execute(
-            select(ResearchSessionModel).where(
-                ResearchSessionModel.id == session_id
-            )
+            select(ResearchSessionModel).where(ResearchSessionModel.id == session_id)
         )
         model = result.scalar_one_or_none()
         return _session_model_to_entity(model) if model else None
@@ -148,18 +142,12 @@ class PgResearchSessionRepository(IResearchSessionRepository):
             q = q.where(ResearchSessionModel.created_at >= created_after)
         if created_before is not None:
             q = q.where(ResearchSessionModel.created_at <= created_before)
-        q = (
-            q.order_by(ResearchSessionModel.created_at.desc())
-            .offset(skip)
-            .limit(limit)
-        )
+        q = q.order_by(ResearchSessionModel.created_at.desc()).offset(skip).limit(limit)
         result = await self._session.execute(q)
         models = result.scalars().all()
         return [_session_model_to_entity(m) for m in models]
 
-    async def get_node_executions_by_session(
-        self, session_id: UUID
-    ) -> list[NodeExecution]:
+    async def get_node_executions_by_session(self, session_id: UUID) -> list[NodeExecution]:
         result = await self._session.execute(
             select(NodeExecutionModel)
             .where(NodeExecutionModel.session_id == session_id)

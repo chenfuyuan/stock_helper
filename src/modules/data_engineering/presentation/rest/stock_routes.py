@@ -95,25 +95,19 @@ async def sync_stocks(
     logger.info("Received request to sync stock list")
     try:
         result = await use_case.execute()
-        logger.info(
-            f"Stock list sync completed: {result['synced_count']} stocks"
-        )
+        logger.info(f"Stock list sync completed: {result['synced_count']} stocks")
         return BaseResponse(
             success=True,
             code="SYNC_SUCCESS",
             message="Stock sync success",
-            data=SyncStockResponse(
-                synced_count=result["synced_count"], message=result["message"]
-            ),
+            data=SyncStockResponse(synced_count=result["synced_count"], message=result["message"]),
         )
     except Exception as e:
         logger.exception(f"Stock sync failed: {str(e)}")
         raise e
 
 
-@router.post(
-    "/sync/daily", response_model=BaseResponse[SyncStockDailyResponse]
-)
+@router.post("/sync/daily", response_model=BaseResponse[SyncStockDailyResponse])
 async def sync_stock_daily(
     limit: int = 10,
     offset: int = 0,
@@ -122,9 +116,7 @@ async def sync_stock_daily(
     """
     同步股票日线历史数据
     """
-    logger.info(
-        f"Received request to sync daily history: limit={limit}, offset={offset}"
-    )
+    logger.info(f"Received request to sync daily history: limit={limit}, offset={offset}")
     try:
         result = await use_case.execute(limit=limit, offset=offset)
         logger.info(

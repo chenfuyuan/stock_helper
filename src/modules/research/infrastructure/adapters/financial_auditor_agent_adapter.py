@@ -26,10 +26,7 @@ from src.modules.research.infrastructure.prompt_loader import (
 )
 
 _FINANCIAL_AUDITOR_PROMPTS_DIR = (
-    Path(__file__).resolve().parent.parent
-    / "agents"
-    / "financial_auditor"
-    / "prompts"
+    Path(__file__).resolve().parent.parent / "agents" / "financial_auditor" / "prompts"
 )
 
 

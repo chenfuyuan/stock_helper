@@ -42,17 +42,13 @@ async def test_run_success(mock_pipeline):
 
     # Mock data port
     data_port.get_stock_overview = AsyncMock(
-        return_value=CatalystStockOverview(
-            stock_name="Test", industry="Ind", third_code="Code"
-        )
+        return_value=CatalystStockOverview(stock_name="Test", industry="Ind", third_code="Code")
     )
     data_port.search_catalyst_context = AsyncMock(
         return_value=[
             CatalystSearchResult(
                 dimension_topic="Topic",
-                items=[
-                    CatalystSearchResultItem(title="T", url="u", snippet="s")
-                ],
+                items=[CatalystSearchResultItem(title="T", url="u", snippet="s")],
             )
         ]
     )
@@ -110,19 +106,14 @@ async def test_stock_not_found_raises_bad_request(mock_pipeline):
 
     with pytest.raises(BadRequestException) as exc_info:
         await service.run("Invalid")
-    assert (
-        "不存在" in exc_info.value.message
-        or "Invalid" in exc_info.value.message
-    )
+    assert "不存在" in exc_info.value.message or "Invalid" in exc_info.value.message
 
 
 @pytest.mark.asyncio
 async def test_search_failed_all_empty_raises_bad_request(mock_pipeline):
     service, data_port, _, _ = mock_pipeline
     data_port.get_stock_overview = AsyncMock(
-        return_value=CatalystStockOverview(
-            stock_name="Test", industry="Ind", third_code="Code"
-        )
+        return_value=CatalystStockOverview(stock_name="Test", industry="Ind", third_code="Code")
     )
     data_port.search_catalyst_context = AsyncMock(
         return_value=[

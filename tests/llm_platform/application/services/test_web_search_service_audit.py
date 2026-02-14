@@ -39,9 +39,7 @@ async def test_web_search_success_writes_log_with_session_id(
 ):
     """搜索成功时写入外部 API 调用日志，session_id 来自 ExecutionContext。"""
     mock_provider.search = AsyncMock(
-        return_value=WebSearchResponse(
-            query="测试", total_matches=0, results=[]
-        )
+        return_value=WebSearchResponse(query="测试", total_matches=0, results=[])
     )
     service = WebSearchService(
         provider=mock_provider,

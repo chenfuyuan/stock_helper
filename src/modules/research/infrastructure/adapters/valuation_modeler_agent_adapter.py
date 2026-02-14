@@ -26,10 +26,7 @@ from src.modules.research.infrastructure.prompt_loader import (
 )
 
 _VALUATION_MODELER_PROMPTS_DIR = (
-    Path(__file__).resolve().parent.parent
-    / "agents"
-    / "valuation_modeler"
-    / "prompts"
+    Path(__file__).resolve().parent.parent / "agents" / "valuation_modeler" / "prompts"
 )
 
 

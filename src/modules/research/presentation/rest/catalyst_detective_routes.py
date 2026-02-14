@@ -41,9 +41,7 @@ class CatalystDetectiveApiResponse(BaseModel):
     stock_name: str
     symbol: str
 
-    catalyst_assessment: Literal[
-        "Positive (正面催化)", "Neutral (中性)", "Negative (负面催化)"
-    ]
+    catalyst_assessment: Literal["Positive (正面催化)", "Neutral (中性)", "Negative (负面催化)"]
     confidence_score: float
     catalyst_summary: str
     dimension_analyses: List[CatalystDimensionAnalysis]
@@ -60,9 +58,7 @@ class CatalystDetectiveApiResponse(BaseModel):
 @router.get("/catalyst-detective", response_model=CatalystDetectiveApiResponse)
 async def get_catalyst_detective_analysis(
     symbol: str,
-    service: CatalystDetectiveService = Depends(
-        get_catalyst_detective_service
-    ),
+    service: CatalystDetectiveService = Depends(get_catalyst_detective_service),
 ):
     try:
         result_dict = await service.run(symbol)
@@ -76,16 +72,9 @@ async def get_catalyst_detective_analysis(
             catalyst_assessment=dto["catalyst_assessment"],
             confidence_score=dto["confidence_score"],
             catalyst_summary=dto["catalyst_summary"],
-            dimension_analyses=[
-                CatalystDimensionAnalysis(**x)
-                for x in dto["dimension_analyses"]
-            ],
-            positive_catalysts=[
-                CatalystEvent(**x) for x in dto["positive_catalysts"]
-            ],
-            negative_catalysts=[
-                CatalystEvent(**x) for x in dto["negative_catalysts"]
-            ],
+            dimension_analyses=[CatalystDimensionAnalysis(**x) for x in dto["dimension_analyses"]],
+            positive_catalysts=[CatalystEvent(**x) for x in dto["positive_catalysts"]],
+            negative_catalysts=[CatalystEvent(**x) for x in dto["negative_catalysts"]],
             information_sources=dto["information_sources"],
             input=result_dict["user_prompt"],
             output=result_dict["raw_llm_output"],
@@ -97,11 +86,7 @@ async def get_catalyst_detective_analysis(
         raise HTTPException(status_code=400, detail=e.message)
     except LLMOutputParseError as e:
         logger.error(f"LLM parse error for {symbol}: {e}")
-        raise HTTPException(
-            status_code=422, detail="AI response parsing failed"
-        )
+        raise HTTPException(status_code=422, detail="AI response parsing failed")
     except Exception:
-        logger.exception(
-            f"Unexpected error in catalyst detective for {symbol}"
-        )
+        logger.exception(f"Unexpected error in catalyst detective for {symbol}")
         raise HTTPException(status_code=500, detail="Internal server error")

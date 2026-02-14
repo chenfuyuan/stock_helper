@@ -62,9 +62,7 @@ def _validate_financial_metric(
     return NA
 
 
-def _calculate_percentile(
-    values: List[Optional[float]], current: Optional[float]
-) -> Any:
+def _calculate_percentile(values: List[Optional[float]], current: Optional[float]) -> Any:
     """
     计算当前值在历史序列中的百分位排名（0–100）。
     跳过 None、负值、0 值；有效数据不足 60 条时返回 N/A。
@@ -84,9 +82,7 @@ def _calculate_percentile(
     return percentile
 
 
-def _calculate_peg(
-    pe_ttm: Optional[float], growth_rate_avg: Optional[float]
-) -> Any:
+def _calculate_peg(pe_ttm: Optional[float], growth_rate_avg: Optional[float]) -> Any:
     """
     计算 PEG 比率：PEG = PE-TTM / growth_rate_avg。
     增速 ≤ 0 或 PE/增速为 None 时返回 N/A。
@@ -98,9 +94,7 @@ def _calculate_peg(
     return round(pe_ttm / growth_rate_avg, 2)
 
 
-def _calculate_graham_number(
-    eps: Optional[float], bps: Optional[float]
-) -> Any:
+def _calculate_graham_number(eps: Optional[float], bps: Optional[float]) -> Any:
     """
     计算格雷厄姆数字：Graham = sqrt(22.5 × EPS × BPS)。
     EPS 或 BPS ≤ 0 或为 None 时返回 N/A。
@@ -114,9 +108,7 @@ def _calculate_graham_number(
         return NA
 
 
-def _calculate_safety_margin(
-    graham_value: Any, current_price: Optional[float]
-) -> Any:
+def _calculate_safety_margin(graham_value: Any, current_price: Optional[float]) -> Any:
     """
     计算安全边际：Safety Margin = (Graham - Price) / Price × 100。
     Graham 为 N/A 或 Price ≤ 0 时返回 N/A。
@@ -227,9 +219,7 @@ class ValuationSnapshotBuilderImpl(IValuationSnapshotBuilder):
         财务记录应按 end_date 降序排列。
         """
         # 确保财务记录按 end_date 降序
-        sorted_finances = sorted(
-            finance_records, key=lambda r: r.end_date, reverse=True
-        )
+        sorted_finances = sorted(finance_records, key=lambda r: r.end_date, reverse=True)
 
         # 股票信息
         stock_name = overview.stock_name
@@ -240,11 +230,7 @@ class ValuationSnapshotBuilderImpl(IValuationSnapshotBuilder):
         # 市场相对估值（来自 overview）
         current_price = overview.current_price
         # total_mv 单位为万元，转为亿元
-        total_mv = (
-            round(overview.total_mv / 10000, 2)
-            if overview.total_mv is not None
-            else NA
-        )
+        total_mv = round(overview.total_mv / 10000, 2) if overview.total_mv is not None else NA
         pe_ttm = overview.pe_ttm if overview.pe_ttm is not None else NA
         pb = overview.pb if overview.pb is not None else NA
         ps_ttm = overview.ps_ttm if overview.ps_ttm is not None else NA
@@ -255,15 +241,9 @@ class ValuationSnapshotBuilderImpl(IValuationSnapshotBuilder):
         historical_pb_values = [v.pb for v in historical_valuations]
         historical_ps_values = [v.ps_ttm for v in historical_valuations]
 
-        pe_percentile = _calculate_percentile(
-            historical_pe_values, overview.pe_ttm
-        )
-        pb_percentile = _calculate_percentile(
-            historical_pb_values, overview.pb
-        )
-        ps_percentile = _calculate_percentile(
-            historical_ps_values, overview.ps_ttm
-        )
+        pe_percentile = _calculate_percentile(historical_pe_values, overview.pe_ttm)
+        pb_percentile = _calculate_percentile(historical_pb_values, overview.pb)
+        ps_percentile = _calculate_percentile(historical_ps_values, overview.ps_ttm)
 
         # 基本面质量体检（来自财务数据，经合理性校验后填入）
         latest_finance = sorted_finances[0] if sorted_finances else None
@@ -303,15 +283,11 @@ class ValuationSnapshotBuilderImpl(IValuationSnapshotBuilder):
 
         # 预计算估值模型
         growth_rate_avg = _calculate_avg_profit_growth(sorted_finances)
-        growth_rate_avg_display = (
-            growth_rate_avg if growth_rate_avg is not None else NA
-        )
+        growth_rate_avg_display = growth_rate_avg if growth_rate_avg is not None else NA
 
         peg_ratio = _calculate_peg(overview.pe_ttm, growth_rate_avg)
         graham_intrinsic_val = _calculate_graham_number(eps, bps)
-        graham_safety_margin = _calculate_safety_margin(
-            graham_intrinsic_val, current_price
-        )
+        graham_safety_margin = _calculate_safety_margin(graham_intrinsic_val, current_price)
 
         return ValuationSnapshotDTO(
             stock_name=stock_name,

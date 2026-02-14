@@ -41,9 +41,7 @@ class CatalystDataAdapter(ICatalystDataPort):
         self.web_search_service = web_search_service
         self.result_filter = result_filter
 
-    async def get_stock_overview(
-        self, symbol: str
-    ) -> Optional[CatalystStockOverview]:
+    async def get_stock_overview(self, symbol: str) -> Optional[CatalystStockOverview]:
         """
         获取股票基础概览信息
         内部调用 data_engineering 的 GetStockBasicInfoUseCase
@@ -51,9 +49,7 @@ class CatalystDataAdapter(ICatalystDataPort):
         try:
             result = await self.stock_info_use_case.execute(symbol)
             if not result or not result.info:
-                logger.warning(
-                    f"Stock basic info not found for symbol: {symbol}"
-                )
+                logger.warning(f"Stock basic info not found for symbol: {symbol}")
                 return None
 
             info = result.info
@@ -105,9 +101,7 @@ class CatalystDataAdapter(ICatalystDataPort):
                 response = await self.web_search_service.search(search_req)
 
                 # 过滤和排序搜索结果
-                filtered_items = self.result_filter.filter_and_sort(
-                    response.results
-                )
+                filtered_items = self.result_filter.filter_and_sort(response.results)
 
                 # 记录过滤统计日志
                 logger.info(
@@ -116,28 +110,20 @@ class CatalystDataAdapter(ICatalystDataPort):
                     f"过滤后={len(filtered_items)}"
                 )
 
-                items = [
-                    self._map_search_item(item) for item in filtered_items
-                ]
+                items = [self._map_search_item(item) for item in filtered_items]
 
-                results.append(
-                    CatalystSearchResult(dimension_topic=topic, items=items)
-                )
+                results.append(CatalystSearchResult(dimension_topic=topic, items=items))
 
             except Exception as e:
                 # Graceful degradation logic as per Decision 6
                 logger.warning(
                     f"Catalyst search failed for dimension '{topic}' query='{query}': {e}"
                 )
-                results.append(
-                    CatalystSearchResult(dimension_topic=topic, items=[])
-                )
+                results.append(CatalystSearchResult(dimension_topic=topic, items=[]))
 
         return results
 
-    def _map_search_item(
-        self, item: WebSearchResultItem
-    ) -> CatalystSearchResultItem:
+    def _map_search_item(self, item: WebSearchResultItem) -> CatalystSearchResultItem:
         return CatalystSearchResultItem(
             title=item.title,
             url=item.url,

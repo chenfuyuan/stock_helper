@@ -12,9 +12,7 @@ from src.modules.judge.container import JudgeContainer
 from src.modules.judge.domain.dtos.judge_input import JudgeInput
 
 
-def _debate_outcome_to_judge_input(
-    symbol: str, debate_outcome: dict[str, Any]
-) -> JudgeInput:
+def _debate_outcome_to_judge_input(symbol: str, debate_outcome: dict[str, Any]) -> JudgeInput:
     """
     从 debate_outcome dict 提取结论级字段，构造 JudgeInput。
     过滤 supporting_arguments、acknowledged_risks、probability/impact/mitigation 等细节。
@@ -23,9 +21,7 @@ def _debate_outcome_to_judge_input(
     bear_case = debate_outcome.get("bear_case") or {}
     risk_matrix = debate_outcome.get("risk_matrix") or []
     risk_factors = [
-        item.get("risk", "")
-        for item in risk_matrix
-        if isinstance(item, dict) and item.get("risk")
+        item.get("risk", "") for item in risk_matrix if isinstance(item, dict) and item.get("risk")
     ]
     return JudgeInput(
         symbol=symbol,
@@ -52,15 +48,11 @@ class JudgeGatewayAdapter(IJudgeGateway):
         """
         self._session_factory = session_factory
 
-    async def run_verdict(
-        self, symbol: str, debate_outcome: dict[str, Any]
-    ) -> dict[str, Any]:
+    async def run_verdict(self, symbol: str, debate_outcome: dict[str, Any]) -> dict[str, Any]:
         """
         debate_outcome 转为 JudgeInput（仅结论级字段），调用 JudgeService.run，返回 .model_dump()。
         """
-        judge_input = _debate_outcome_to_judge_input(
-            symbol=symbol, debate_outcome=debate_outcome
-        )
+        judge_input = _debate_outcome_to_judge_input(symbol=symbol, debate_outcome=debate_outcome)
         container = JudgeContainer()
         service = container.judge_service()
         verdict: VerdictDTO = await service.run(judge_input)

@@ -112,9 +112,7 @@ async def test_run_returns_complete_debate_outcome_dto(
 
 
 @pytest.mark.asyncio
-async def test_bull_agent_failure_propagates(
-    mock_bear_agent, mock_resolution_agent
-):
+async def test_bull_agent_failure_propagates(mock_bear_agent, mock_resolution_agent):
     """Bull Agent 抛异常时 DebateService 将异常向上传播。"""
     bull = AsyncMock()
     bull.advocate = AsyncMock(side_effect=RuntimeError("Bull 执行失败"))
@@ -128,9 +126,7 @@ async def test_bull_agent_failure_propagates(
 
 
 @pytest.mark.asyncio
-async def test_bear_agent_failure_propagates(
-    mock_bull_agent, mock_resolution_agent
-):
+async def test_bear_agent_failure_propagates(mock_bull_agent, mock_resolution_agent):
     """Bear Agent 抛异常时 DebateService 将异常向上传播。"""
     bear = AsyncMock()
     bear.advocate = AsyncMock(side_effect=ValueError("Bear 执行失败"))
@@ -144,9 +140,7 @@ async def test_bear_agent_failure_propagates(
 
 
 @pytest.mark.asyncio
-async def test_resolution_agent_failure_propagates(
-    mock_bull_agent, mock_bear_agent
-):
+async def test_resolution_agent_failure_propagates(mock_bull_agent, mock_bear_agent):
     """Resolution Agent 抛异常时 DebateService 将异常向上传播。"""
     resolution = AsyncMock()
     resolution.resolve = AsyncMock(side_effect=RuntimeError("Resolution 失败"))

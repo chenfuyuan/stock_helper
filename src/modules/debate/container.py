@@ -34,9 +34,7 @@ class DebateContainer:
         self._llm_adapter = LLMAdapter(llm_service=self._llm_service)
         self._bull_agent = BullAdvocateAgentAdapter(llm_port=self._llm_adapter)
         self._bear_agent = BearAdvocateAgentAdapter(llm_port=self._llm_adapter)
-        self._resolution_agent = ResolutionAgentAdapter(
-            llm_port=self._llm_adapter
-        )
+        self._resolution_agent = ResolutionAgentAdapter(llm_port=self._llm_adapter)
         self._debate_service = DebateService(
             bull_agent=self._bull_agent,
             bear_agent=self._bear_agent,

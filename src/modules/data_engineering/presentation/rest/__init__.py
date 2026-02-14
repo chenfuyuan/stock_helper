@@ -5,6 +5,4 @@ from . import scheduler_routes, stock_routes
 
 router = APIRouter()
 router.include_router(stock_routes.router, prefix="/stocks", tags=["stocks"])
-router.include_router(
-    scheduler_routes.router, prefix="/scheduler", tags=["scheduler"]
-)
+router.include_router(scheduler_routes.router, prefix="/scheduler", tags=["scheduler"])

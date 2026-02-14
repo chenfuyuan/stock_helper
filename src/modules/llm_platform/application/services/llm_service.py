@@ -66,9 +66,7 @@ class LLMService(ILLMProvider):
         Raises:
             Exception: 当没有匹配的模型或底层 API 调用失败时抛出。
         """
-        logger.info(
-            "LLM Generation request received. Alias=%s, Tags=%s", alias, tags
-        )
+        logger.info("LLM Generation request received. Alias=%s, Tags=%s", alias, tags)
         ctx = current_execution_ctx.get()
         session_uuid: UUID | None = UUID(ctx.session_id) if ctx else None
         started = time.perf_counter()

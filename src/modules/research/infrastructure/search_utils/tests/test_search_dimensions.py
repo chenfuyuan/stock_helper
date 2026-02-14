@@ -26,11 +26,7 @@ def count_core_keywords(query_template: str) -> int:
     )
 
     # 按空格分割，过滤空字符串和纯数字年份
-    tokens = [
-        token
-        for token in cleaned.split()
-        if token and not token.isdigit() and token != "年"
-    ]
+    tokens = [token for token in cleaned.split() if token and not token.isdigit() and token != "年"]
 
     return len(tokens)
 

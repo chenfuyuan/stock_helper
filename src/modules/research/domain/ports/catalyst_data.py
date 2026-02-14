@@ -9,9 +9,7 @@ from src.modules.research.domain.dtos.catalyst_inputs import (
 
 class ICatalystDataPort(ABC):
     @abstractmethod
-    async def get_stock_overview(
-        self, symbol: str
-    ) -> Optional[CatalystStockOverview]:
+    async def get_stock_overview(self, symbol: str) -> Optional[CatalystStockOverview]:
         """
         获取股票基础概览信息 (名称/行业/代码)
         """

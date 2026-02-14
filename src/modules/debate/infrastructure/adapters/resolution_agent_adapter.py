@@ -36,9 +36,7 @@ def _list_to_detail(items: list[str]) -> str:
 class ResolutionAgentAdapter(IResolutionAgentPort):
     """加载 Prompt、填充 Bull/Bear 论证、调用 LLM、解析 JSON，返回 ResolutionResult。"""
 
-    def __init__(
-        self, llm_port: ILLMPort, prompts_dir: Optional[Path] = None
-    ) -> None:
+    def __init__(self, llm_port: ILLMPort, prompts_dir: Optional[Path] = None) -> None:
         self._llm = llm_port
         self._prompts_dir = prompts_dir or get_prompts_dir("resolution")
 
@@ -63,9 +61,7 @@ class ResolutionAgentAdapter(IResolutionAgentPort):
             bear_core_thesis=bear.core_thesis,
             bear_confidence=bear.confidence,
             bear_arguments_detail=_list_to_detail(bear.supporting_arguments),
-            bear_acknowledged_strengths=_list_to_detail(
-                bear.acknowledged_strengths
-            ),
+            bear_acknowledged_strengths=_list_to_detail(bear.acknowledged_strengths),
             bear_risk_triggers=_list_to_detail(bear.risk_triggers),
         )
         raw = await self._llm.generate(

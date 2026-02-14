@@ -24,9 +24,7 @@ class InterceptHandler(logging.Handler):
             frame = frame.f_back
             depth += 1
 
-        logger.opt(depth=depth, exception=record.exc_info).log(
-            level, record.getMessage()
-        )
+        logger.opt(depth=depth, exception=record.exc_info).log(level, record.getMessage())
 
 
 def setup_logging():
@@ -68,11 +66,7 @@ def setup_logging():
             {
                 "sink": sys.stdout,
                 "serialize": settings.ENVIRONMENT == "prod",
-                "format": (
-                    log_format
-                    if settings.ENVIRONMENT != "prod"
-                    else "{message}"
-                ),
+                "format": (log_format if settings.ENVIRONMENT != "prod" else "{message}"),
             }
         ]
     )

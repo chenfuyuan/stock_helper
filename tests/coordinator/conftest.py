@@ -16,9 +16,7 @@ from src.modules.coordinator.domain.ports.research_expert_gateway import (
 def mock_research_expert_gateway():
     """Mock IResearchExpertGateway，默认所有专家返回成功。"""
     gateway = AsyncMock(spec=IResearchExpertGateway)
-    gateway.run_expert = AsyncMock(
-        return_value={"signal": "NEUTRAL", "confidence": 0.8}
-    )
+    gateway.run_expert = AsyncMock(return_value={"signal": "NEUTRAL", "confidence": 0.8})
     return gateway
 
 

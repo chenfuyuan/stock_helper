@@ -23,15 +23,9 @@ class ExternalAPICallLogModel(Base):
         default=uuid.uuid4,
         comment="记录唯一标识",
     )
-    session_id = Column(
-        UUID(as_uuid=True), nullable=True, index=True, comment="关联 session"
-    )
-    service_name = Column(
-        String(50), nullable=False, comment="服务名（bochai / tushare / ...）"
-    )
-    operation = Column(
-        String(100), nullable=False, comment="操作（web-search / ...）"
-    )
+    session_id = Column(UUID(as_uuid=True), nullable=True, index=True, comment="关联 session")
+    service_name = Column(String(50), nullable=False, comment="服务名（bochai / tushare / ...）")
+    operation = Column(String(100), nullable=False, comment="操作（web-search / ...）")
     request_params = Column(JSONB, nullable=True, comment="请求参数")
     response_data = Column(Text, nullable=True, comment="完整响应")
     status_code = Column(Integer, nullable=True, comment="HTTP 状态码")

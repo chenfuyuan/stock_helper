@@ -103,17 +103,11 @@ def persist_node_execution(
         try:
             result = await node_fn(state)
             completed_at = datetime.utcnow()
-            duration_ms = int(
-                (completed_at - started_at).total_seconds() * 1000
-            )
+            duration_ms = int((completed_at - started_at).total_seconds() * 1000)
 
-            result_data, narrative_report = _extract_result_and_narrative(
-                node_type, result
-            )
+            result_data, narrative_report = _extract_result_and_narrative(node_type, result)
             # 清理 NaN/Inf，避免 PostgreSQL JSONB 写入失败
-            sanitized_result_data = (
-                _sanitize_jsonb(result_data) if result_data else None
-            )
+            sanitized_result_data = _sanitize_jsonb(result_data) if result_data else None
             execution.mark_success(
                 result_data=sanitized_result_data or {},
                 narrative_report=narrative_report,
@@ -127,9 +121,7 @@ def persist_node_execution(
             return result
         except Exception as e:
             completed_at = datetime.utcnow()
-            duration_ms = int(
-                (completed_at - started_at).total_seconds() * 1000
-            )
+            duration_ms = int((completed_at - started_at).total_seconds() * 1000)
             execution.mark_failed(
                 error_type=type(e).__name__,
                 error_message=str(e),
@@ -139,9 +131,7 @@ def persist_node_execution(
             try:
                 await session_repo.save_node_execution(execution)
             except Exception as save_err:
-                logger.warning(
-                    "节点失败记录写入失败，不阻塞主流程: %s", save_err
-                )
+                logger.warning("节点失败记录写入失败，不阻塞主流程: %s", save_err)
             raise
 
     wrapper.__name__ = getattr(node_fn, "__name__", f"persisted_{node_type}")

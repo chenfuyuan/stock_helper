@@ -86,9 +86,7 @@ def _make_mock_session_repo(
     """构造 mock IResearchSessionRepository。"""
     repo = AsyncMock(spec=IResearchSessionRepository)
     repo.get_session_by_id = AsyncMock(return_value=session)
-    repo.get_node_executions_by_session = AsyncMock(
-        return_value=node_executions or []
-    )
+    repo.get_node_executions_by_session = AsyncMock(return_value=node_executions or [])
     repo.save_session = AsyncMock()
     repo.update_session = AsyncMock()
     repo.save_node_execution = AsyncMock()
@@ -193,9 +191,7 @@ async def test_retry_separates_success_and_failed_experts():
             status="success",
             result_data={"signal": "BULLISH", "confidence": 0.85},
         ),
-        _make_node_execution(
-            session.id, "macro_intelligence", status="failed"
-        ),
+        _make_node_execution(session.id, "macro_intelligence", status="failed"),
         _make_node_execution(
             session.id,
             "financial_auditor",
@@ -203,9 +199,7 @@ async def test_retry_separates_success_and_failed_experts():
             result_data={"signal": "NEUTRAL", "confidence": 0.7},
         ),
     ]
-    repo = _make_mock_session_repo(
-        session=session, node_executions=node_executions
-    )
+    repo = _make_mock_session_repo(session=session, node_executions=node_executions)
 
     # 用可记录调用参数的 mock port
     captured_request: list[ResearchRequest] = []
@@ -267,9 +261,7 @@ async def test_orchestrator_pre_populated_results_injected(
     mock_research_expert_gateway,
 ):
     """pre_populated_results 注入图初始状态，仅失败专家被执行。"""
-    pytest.importorskip(
-        "langgraph", reason="langgraph 未安装，跳过编排器集成测试"
-    )
+    pytest.importorskip("langgraph", reason="langgraph 未安装，跳过编排器集成测试")
     from src.modules.coordinator.infrastructure.orchestration.langgraph_orchestrator import (
         LangGraphResearchOrchestrator,
     )
@@ -312,9 +304,7 @@ async def test_orchestrator_no_pre_populated_results(
     mock_research_expert_gateway,
 ):
     """pre_populated_results 为 None 时，行为与改动前一致。"""
-    pytest.importorskip(
-        "langgraph", reason="langgraph 未安装，跳过编排器集成测试"
-    )
+    pytest.importorskip("langgraph", reason="langgraph 未安装，跳过编排器集成测试")
     from src.modules.coordinator.infrastructure.orchestration.langgraph_orchestrator import (
         LangGraphResearchOrchestrator,
     )
@@ -338,9 +328,7 @@ async def test_orchestrator_no_pre_populated_results(
 @pytest.mark.asyncio
 async def test_retry_endpoint_partial_session():
     """对 partial session 重试后返回完整结果。"""
-    pytest.importorskip(
-        "langgraph", reason="langgraph 未安装，跳过端点集成测试"
-    )
+    pytest.importorskip("langgraph", reason="langgraph 未安装，跳过端点集成测试")
     from fastapi import FastAPI
     from httpx import ASGITransport, AsyncClient
 
@@ -359,17 +347,11 @@ async def test_retry_endpoint_partial_session():
             status="success",
             result_data={"signal": "BULLISH", "confidence": 0.85},
         ),
-        _make_node_execution(
-            session.id, "macro_intelligence", status="failed"
-        ),
+        _make_node_execution(session.id, "macro_intelligence", status="failed"),
     ]
-    mock_repo = _make_mock_session_repo(
-        session=session, node_executions=node_executions
-    )
+    mock_repo = _make_mock_session_repo(session=session, node_executions=node_executions)
     mock_port = _make_mock_orchestration_port(overall_status="completed")
-    mock_service = ResearchOrchestrationService(
-        mock_port, session_repo=mock_repo
-    )
+    mock_service = ResearchOrchestrationService(mock_port, session_repo=mock_repo)
 
     async def override_service():
         return mock_service
@@ -378,17 +360,11 @@ async def test_retry_endpoint_partial_session():
         get_research_orchestration_service,
     )
 
-    app.dependency_overrides[get_research_orchestration_service] = (
-        override_service
-    )
+    app.dependency_overrides[get_research_orchestration_service] = override_service
 
     transport = ASGITransport(app=app)
-    async with AsyncClient(
-        transport=transport, base_url="http://test"
-    ) as client:
-        resp = await client.post(
-            f"/api/v1/coordinator/research/{session.id}/retry"
-        )
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        resp = await client.post(f"/api/v1/coordinator/research/{session.id}/retry")
 
     assert resp.status_code == 200
     data = resp.json()
@@ -404,9 +380,7 @@ async def test_retry_endpoint_partial_session():
 @pytest.mark.asyncio
 async def test_retry_endpoint_session_not_found():
     """session 不存在时返回 404。"""
-    pytest.importorskip(
-        "langgraph", reason="langgraph 未安装，跳过端点集成测试"
-    )
+    pytest.importorskip("langgraph", reason="langgraph 未安装，跳过端点集成测试")
     from fastapi import FastAPI
     from httpx import ASGITransport, AsyncClient
 
@@ -420,24 +394,16 @@ async def test_retry_endpoint_session_not_found():
 
     mock_repo = _make_mock_session_repo(session=None)
     mock_port = _make_mock_orchestration_port()
-    mock_service = ResearchOrchestrationService(
-        mock_port, session_repo=mock_repo
-    )
+    mock_service = ResearchOrchestrationService(mock_port, session_repo=mock_repo)
 
     async def override_service():
         return mock_service
 
-    app.dependency_overrides[get_research_orchestration_service] = (
-        override_service
-    )
+    app.dependency_overrides[get_research_orchestration_service] = override_service
 
     transport = ASGITransport(app=app)
-    async with AsyncClient(
-        transport=transport, base_url="http://test"
-    ) as client:
-        resp = await client.post(
-            f"/api/v1/coordinator/research/{uuid4()}/retry"
-        )
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        resp = await client.post(f"/api/v1/coordinator/research/{uuid4()}/retry")
 
     assert resp.status_code == 404
 
@@ -445,9 +411,7 @@ async def test_retry_endpoint_session_not_found():
 @pytest.mark.asyncio
 async def test_retry_endpoint_completed_session_returns_400():
     """completed session 返回 400。"""
-    pytest.importorskip(
-        "langgraph", reason="langgraph 未安装，跳过端点集成测试"
-    )
+    pytest.importorskip("langgraph", reason="langgraph 未安装，跳过端点集成测试")
     from fastapi import FastAPI
     from httpx import ASGITransport, AsyncClient
 
@@ -462,24 +426,16 @@ async def test_retry_endpoint_completed_session_returns_400():
     session = _make_session(status="completed")
     mock_repo = _make_mock_session_repo(session=session)
     mock_port = _make_mock_orchestration_port()
-    mock_service = ResearchOrchestrationService(
-        mock_port, session_repo=mock_repo
-    )
+    mock_service = ResearchOrchestrationService(mock_port, session_repo=mock_repo)
 
     async def override_service():
         return mock_service
 
-    app.dependency_overrides[get_research_orchestration_service] = (
-        override_service
-    )
+    app.dependency_overrides[get_research_orchestration_service] = override_service
 
     transport = ASGITransport(app=app)
-    async with AsyncClient(
-        transport=transport, base_url="http://test"
-    ) as client:
-        resp = await client.post(
-            f"/api/v1/coordinator/research/{session.id}/retry"
-        )
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        resp = await client.post(f"/api/v1/coordinator/research/{session.id}/retry")
 
     assert resp.status_code == 400
 
@@ -487,9 +443,7 @@ async def test_retry_endpoint_completed_session_returns_400():
 @pytest.mark.asyncio
 async def test_retry_endpoint_running_session_returns_409():
     """running session 返回 409。"""
-    pytest.importorskip(
-        "langgraph", reason="langgraph 未安装，跳过端点集成测试"
-    )
+    pytest.importorskip("langgraph", reason="langgraph 未安装，跳过端点集成测试")
     from fastapi import FastAPI
     from httpx import ASGITransport, AsyncClient
 
@@ -504,24 +458,16 @@ async def test_retry_endpoint_running_session_returns_409():
     session = _make_session(status="running")
     mock_repo = _make_mock_session_repo(session=session)
     mock_port = _make_mock_orchestration_port()
-    mock_service = ResearchOrchestrationService(
-        mock_port, session_repo=mock_repo
-    )
+    mock_service = ResearchOrchestrationService(mock_port, session_repo=mock_repo)
 
     async def override_service():
         return mock_service
 
-    app.dependency_overrides[get_research_orchestration_service] = (
-        override_service
-    )
+    app.dependency_overrides[get_research_orchestration_service] = override_service
 
     transport = ASGITransport(app=app)
-    async with AsyncClient(
-        transport=transport, base_url="http://test"
-    ) as client:
-        resp = await client.post(
-            f"/api/v1/coordinator/research/{session.id}/retry"
-        )
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        resp = await client.post(f"/api/v1/coordinator/research/{session.id}/retry")
 
     assert resp.status_code == 409
 
@@ -549,9 +495,7 @@ def test_research_result_has_retry_count():
 
 def test_research_orchestration_response_has_retry_count():
     """ResearchOrchestrationResponse 包含 retry_count 字段。"""
-    pytest.importorskip(
-        "langgraph", reason="langgraph 未安装，跳过响应模型测试"
-    )
+    pytest.importorskip("langgraph", reason="langgraph 未安装，跳过响应模型测试")
     from src.modules.coordinator.presentation.rest.research_routes import (
         ResearchOrchestrationResponse,
     )

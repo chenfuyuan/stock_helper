@@ -77,9 +77,7 @@ def _to_float(val: Any) -> float:
         return 0.0
 
 
-def _expert_result_to_summary(
-    expert_key: str, data: Any
-) -> ExpertSummary | None:
+def _expert_result_to_summary(expert_key: str, data: Any) -> ExpertSummary | None:
     """
     将单专家结果 dict 转为 ExpertSummary。
     仅当 data 为 dict 且能提取出至少 signal 或 reasoning 时返回，否则返回 None。
@@ -118,9 +116,7 @@ class DebateGatewayAdapter(IDebateGateway):
         """
         self._session_factory = session_factory
 
-    async def run_debate(
-        self, symbol: str, expert_results: dict[str, Any]
-    ) -> dict[str, Any]:
+    async def run_debate(self, symbol: str, expert_results: dict[str, Any]) -> dict[str, Any]:
         """
         仅包含成功的专家结果（由调用方保证）；过滤调试字段，按映射表归一化为 ExpertSummary，
         调用 DebateService.run 后返回 .model_dump()。

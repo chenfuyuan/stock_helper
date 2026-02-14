@@ -57,11 +57,7 @@ class CatalystContextBuilderImpl(ICatalystContextBuilder):
 
         # 2. Format URL list
         sorted_urls = sorted(list(all_urls))
-        urls_text = (
-            "\n".join([f"- {url}" for url in sorted_urls])
-            if sorted_urls
-            else "无引用来源"
-        )
+        urls_text = "\n".join([f"- {url}" for url in sorted_urls]) if sorted_urls else "无引用来源"
 
         # 3. Build DTO
         return CatalystContextDTO(
@@ -79,9 +75,7 @@ class CatalystContextBuilderImpl(ICatalystContextBuilder):
     def _format_items(self, items: List[CatalystSearchResultItem]) -> str:
         lines = []
         for i, item in enumerate(items, 1):
-            date_str = (
-                f" ({item.published_date})" if item.published_date else ""
-            )
+            date_str = f" ({item.published_date})" if item.published_date else ""
             source_str = f" - 来源: {item.site_name}" if item.site_name else ""
             summary = item.summary or item.snippet or "无摘要"
 

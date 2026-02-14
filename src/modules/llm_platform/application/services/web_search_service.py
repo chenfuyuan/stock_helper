@@ -132,6 +132,4 @@ class WebSearchService:
         try:
             await self._api_call_log_repository.save(log)
         except Exception as e:
-            logger.warning(
-                "外部 API 调用日志写入失败，不阻塞主流程: %s", str(e)
-            )
+            logger.warning("外部 API 调用日志写入失败，不阻塞主流程: %s", str(e))

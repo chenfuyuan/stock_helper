@@ -38,9 +38,7 @@ def _format_expert_summary(d: DebateInput, key: str) -> str:
 class BearAdvocateAgentAdapter(IBearAdvocateAgentPort):
     """加载 Prompt、填充占位符、调用 LLM、解析 JSON，返回 BearArgument。"""
 
-    def __init__(
-        self, llm_port: ILLMPort, prompts_dir: Optional[Path] = None
-    ) -> None:
+    def __init__(self, llm_port: ILLMPort, prompts_dir: Optional[Path] = None) -> None:
         self._llm = llm_port
         self._prompts_dir = prompts_dir or get_prompts_dir("bear_advocate")
 
@@ -52,21 +50,11 @@ class BearAdvocateAgentAdapter(IBearAdvocateAgentPort):
         user_prompt = fill_bear_user_prompt(
             template=user_template,
             symbol=input_data.symbol,
-            technical_analyst_summary=_format_expert_summary(
-                input_data, "technical_analyst"
-            ),
-            financial_auditor_summary=_format_expert_summary(
-                input_data, "financial_auditor"
-            ),
-            valuation_modeler_summary=_format_expert_summary(
-                input_data, "valuation_modeler"
-            ),
-            macro_intelligence_summary=_format_expert_summary(
-                input_data, "macro_intelligence"
-            ),
-            catalyst_detective_summary=_format_expert_summary(
-                input_data, "catalyst_detective"
-            ),
+            technical_analyst_summary=_format_expert_summary(input_data, "technical_analyst"),
+            financial_auditor_summary=_format_expert_summary(input_data, "financial_auditor"),
+            valuation_modeler_summary=_format_expert_summary(input_data, "valuation_modeler"),
+            macro_intelligence_summary=_format_expert_summary(input_data, "macro_intelligence"),
+            catalyst_detective_summary=_format_expert_summary(input_data, "catalyst_detective"),
         )
         raw = await self._llm.generate(
             prompt=user_prompt,

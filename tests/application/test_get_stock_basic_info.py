@@ -66,9 +66,7 @@ class TestGetStockBasicInfoUseCase:
 
         # Verify repo calls
         mock_stock_repo.get_by_symbol.assert_called_once_with(symbol)
-        mock_daily_repo.get_latest_by_third_code.assert_called_once_with(
-            third_code
-        )
+        mock_daily_repo.get_latest_by_third_code.assert_called_once_with(third_code)
 
     async def test_execute_not_found(self):
         """测试股票不存在的情况"""

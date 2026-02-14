@@ -26,9 +26,7 @@ def _end_date_to_quarter(d: date) -> str:
     return f"{d.year}Q{q}"
 
 
-def _compute_quality_ratio(
-    ocfps: Optional[float], eps: Optional[float]
-) -> Any:
+def _compute_quality_ratio(ocfps: Optional[float], eps: Optional[float]) -> Any:
     """quality_ratio = OCFPS / EPS，EPS 为 0 或 None 时返回 N/A。"""
     if eps is None or eps == 0 or ocfps is None:
         return NA
@@ -81,41 +79,28 @@ class FinancialSnapshotBuilderImpl(IFinancialSnapshotBuilder):
         if not records:
             return FinancialSnapshotDTO()
 
-        sorted_records = sorted(
-            records, key=lambda r: r.end_date, reverse=True
-        )
+        sorted_records = sorted(records, key=lambda r: r.end_date, reverse=True)
         latest = sorted_records[0]
 
         # 派生指标
         quality_ratio = _compute_quality_ratio(latest.ocfps, latest.eps)
         # eps_deducted：无每股扣非 EPS 时用 profit_dedt 作为代理值
-        eps_deducted = (
-            latest.profit_dedt if latest.profit_dedt is not None else NA
-        )
+        eps_deducted = latest.profit_dedt if latest.profit_dedt is not None else NA
 
         # 季度标签
-        quarter_list = [
-            _end_date_to_quarter(r.end_date) for r in sorted_records
-        ]
+        quarter_list = [_end_date_to_quarter(r.end_date) for r in sorted_records]
 
         # 趋势序列（最新在前）
         gross_margin_series = [
-            r.gross_margin if r.gross_margin is not None else NA
-            for r in sorted_records
+            r.gross_margin if r.gross_margin is not None else NA for r in sorted_records
         ]
-        roic_series = [
-            r.roic if r.roic is not None else NA for r in sorted_records
-        ]
-        fcff_series = [
-            r.fcff if r.fcff is not None else NA for r in sorted_records
-        ]
+        roic_series = [r.roic if r.roic is not None else NA for r in sorted_records]
+        fcff_series = [r.fcff if r.fcff is not None else NA for r in sorted_records]
         invturn_days_series = [
-            r.invturn_days if r.invturn_days is not None else NA
-            for r in sorted_records
+            r.invturn_days if r.invturn_days is not None else NA for r in sorted_records
         ]
         arturn_days_series = [
-            r.arturn_days if r.arturn_days is not None else NA
-            for r in sorted_records
+            r.arturn_days if r.arturn_days is not None else NA for r in sorted_records
         ]
 
         # YoY 增速（数据不足时标记 N/A）
@@ -145,13 +130,9 @@ class FinancialSnapshotBuilderImpl(IFinancialSnapshotBuilder):
             symbol=latest.third_code,
             report_period=_end_date_to_quarter(latest.end_date),
             source=latest.source,
-            gross_margin=(
-                latest.gross_margin if latest.gross_margin is not None else NA
-            ),
+            gross_margin=(latest.gross_margin if latest.gross_margin is not None else NA),
             netprofit_margin=(
-                latest.netprofit_margin
-                if latest.netprofit_margin is not None
-                else NA
+                latest.netprofit_margin if latest.netprofit_margin is not None else NA
             ),
             roe_waa=latest.roe_waa if latest.roe_waa is not None else NA,
             roic=latest.roic if latest.roic is not None else NA,
@@ -161,32 +142,14 @@ class FinancialSnapshotBuilderImpl(IFinancialSnapshotBuilder):
             ocfps=latest.ocfps if latest.ocfps is not None else NA,
             fcff_ps=latest.fcff_ps if latest.fcff_ps is not None else NA,
             quality_ratio=quality_ratio,
-            current_ratio=(
-                latest.current_ratio
-                if latest.current_ratio is not None
-                else NA
-            ),
-            quick_ratio=(
-                latest.quick_ratio if latest.quick_ratio is not None else NA
-            ),
-            debt_to_assets=(
-                latest.debt_to_assets
-                if latest.debt_to_assets is not None
-                else NA
-            ),
-            interestdebt=(
-                latest.interestdebt if latest.interestdebt is not None else NA
-            ),
+            current_ratio=(latest.current_ratio if latest.current_ratio is not None else NA),
+            quick_ratio=(latest.quick_ratio if latest.quick_ratio is not None else NA),
+            debt_to_assets=(latest.debt_to_assets if latest.debt_to_assets is not None else NA),
+            interestdebt=(latest.interestdebt if latest.interestdebt is not None else NA),
             netdebt=latest.netdebt if latest.netdebt is not None else NA,
-            invturn_days=(
-                latest.invturn_days if latest.invturn_days is not None else NA
-            ),
-            arturn_days=(
-                latest.arturn_days if latest.arturn_days is not None else NA
-            ),
-            assets_turn=(
-                latest.assets_turn if latest.assets_turn is not None else NA
-            ),
+            invturn_days=(latest.invturn_days if latest.invturn_days is not None else NA),
+            arturn_days=(latest.arturn_days if latest.arturn_days is not None else NA),
+            assets_turn=(latest.assets_turn if latest.assets_turn is not None else NA),
             quarter_list=quarter_list,
             revenue_growth_series=revenue_growth_series,
             profit_growth_series=profit_growth_series,

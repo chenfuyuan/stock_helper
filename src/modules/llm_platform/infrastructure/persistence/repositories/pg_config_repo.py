@@ -45,9 +45,7 @@ class PgLLMConfigRepository(ILLMConfigRepository):
         获取所有激活的 LLM 配置
         """
         try:
-            stmt = select(LLMConfigModel).where(
-                LLMConfigModel.is_active == True
-            )
+            stmt = select(LLMConfigModel).where(LLMConfigModel.is_active == True)
             result = await self.session.execute(stmt)
             return [model.to_entity() for model in result.scalars().all()]
         except Exception as e:

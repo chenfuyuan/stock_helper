@@ -24,9 +24,7 @@ def _normalize_supporting_arguments(val: Any) -> list[str]:
         elif isinstance(item, dict):
             arg = item.get("argument") or item.get("evidence") or ""
             dim = item.get("dimension", "")
-            result.append(
-                f"{dim}: {arg}".strip() if dim and arg else (arg or dim)
-            )
+            result.append(f"{dim}: {arg}".strip() if dim and arg else (arg or dim))
         else:
             result.append(str(item))
     return result
@@ -43,12 +41,8 @@ def _normalize_string_list(val: Any) -> list[str]:
 
 def _normalize_bear_fields(data: dict) -> dict:
     """归一化空头辩护人特有字段：对象数组→字符串列表，补充 narrative_report 默认值。"""
-    data["supporting_arguments"] = _normalize_supporting_arguments(
-        data.get("supporting_arguments")
-    )
-    data["acknowledged_strengths"] = _normalize_string_list(
-        data.get("acknowledged_strengths")
-    )
+    data["supporting_arguments"] = _normalize_supporting_arguments(data.get("supporting_arguments"))
+    data["acknowledged_strengths"] = _normalize_string_list(data.get("acknowledged_strengths"))
     data["risk_triggers"] = _normalize_string_list(data.get("risk_triggers"))
     data.setdefault("narrative_report", "")
     return data

@@ -19,6 +19,4 @@ class ResolutionResult(BaseModel):
     risk_matrix: list[RiskItemDTO]  # 风险矩阵
     key_disagreements: list[str]  # 核心分歧点
     conflict_resolution: str  # 冲突消解结论
-    narrative_report: str = (
-        ""  # 面向人类的中文叙述性报告：核心结论、论据、风险、置信度
-    )
+    narrative_report: str = ""  # 面向人类的中文叙述性报告：核心结论、论据、风险、置信度

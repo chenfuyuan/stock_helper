@@ -202,9 +202,7 @@ class TestNormalizers:
             return data
 
         raw = '{"score": 85, "signal": "Undervalued (低估)"}'
-        result = parse_llm_json_output(
-            raw, _SimpleDTO, normalizers=[normalize_verdict]
-        )
+        result = parse_llm_json_output(raw, _SimpleDTO, normalizers=[normalize_verdict])
         assert result.signal == "Undervalued"
 
     def test_object_array_to_string_list(self):
@@ -216,19 +214,13 @@ class TestNormalizers:
         def normalize_items(data: dict) -> dict:
             raw_items = data.get("items", [])
             data["items"] = [
-                (
-                    item.get("text", str(item))
-                    if isinstance(item, dict)
-                    else str(item)
-                )
+                (item.get("text", str(item)) if isinstance(item, dict) else str(item))
                 for item in raw_items
             ]
             return data
 
         raw = '{"items": [{"text": "arg1"}, {"text": "arg2"}]}'
-        result = parse_llm_json_output(
-            raw, _ListDTO, normalizers=[normalize_items]
-        )
+        result = parse_llm_json_output(raw, _ListDTO, normalizers=[normalize_items])
         assert result.items == ["arg1", "arg2"]
 
     def test_no_normalizers(self):
@@ -272,9 +264,7 @@ class TestContextLabel:
         若 loguru sink 不走 stderr，该测试仍验证不抛非预期异常。
         """
         with pytest.raises(LLMJsonParseError):
-            parse_llm_json_output(
-                "not json", _SimpleDTO, context_label="财务审计员"
-            )
+            parse_llm_json_output("not json", _SimpleDTO, context_label="财务审计员")
         # 基本验证：函数正确抛出了异常即可；日志断言作为可选验证
 
     def test_no_label_does_not_error(self):

@@ -54,18 +54,10 @@ class MacroContextBuilderImpl(IMacroContextBuilder):
         dimension_map = self._group_by_dimension(search_results)
 
         # 2. 格式化各维度的文本上下文
-        monetary_context = self._format_dimension_context(
-            dimension_map.get("货币与流动性", [])
-        )
-        policy_context = self._format_dimension_context(
-            dimension_map.get("产业政策", [])
-        )
-        economic_context = self._format_dimension_context(
-            dimension_map.get("宏观经济", [])
-        )
-        industry_context = self._format_dimension_context(
-            dimension_map.get("行业景气", [])
-        )
+        monetary_context = self._format_dimension_context(dimension_map.get("货币与流动性", []))
+        policy_context = self._format_dimension_context(dimension_map.get("产业政策", []))
+        economic_context = self._format_dimension_context(dimension_map.get("宏观经济", []))
+        industry_context = self._format_dimension_context(dimension_map.get("行业景气", []))
 
         # 3. 收集所有来源 URL（去重）
         all_source_urls = self._collect_source_urls(search_results)
@@ -76,9 +68,7 @@ class MacroContextBuilderImpl(IMacroContextBuilder):
         # 来源 URL 数：每行一个 URL，新行数 + 1；无 URL 时为 0（f-string 表达式中不能含反斜杠，故提前计算）
         newline_char = "\n"
         url_count = (
-            all_source_urls.count(newline_char) + 1
-            if newline_char in all_source_urls
-            else 0
+            all_source_urls.count(newline_char) + 1 if newline_char in all_source_urls else 0
         )
         logger.info(
             f"宏观上下文构建完成：{overview.stock_name}，"
@@ -120,9 +110,7 @@ class MacroContextBuilderImpl(IMacroContextBuilder):
 
         for result in search_results:
             # 将 dimension_topic 映射为标准维度名称（便于后续处理）
-            dimension_key = self._normalize_dimension_name(
-                result.dimension_topic
-            )
+            dimension_key = self._normalize_dimension_name(result.dimension_topic)
             dimension_map[dimension_key] = result.items
 
         return dimension_map
@@ -143,11 +131,7 @@ class MacroContextBuilderImpl(IMacroContextBuilder):
 
         if "货币" in topic_lower or "流动性" in topic_lower:
             return "货币与流动性"
-        elif (
-            "产业" in topic_lower
-            or "政策" in topic_lower
-            or "监管" in topic_lower
-        ):
+        elif "产业" in topic_lower or "政策" in topic_lower or "监管" in topic_lower:
             return "产业政策"
         elif (
             "宏观" in topic_lower
@@ -163,9 +147,7 @@ class MacroContextBuilderImpl(IMacroContextBuilder):
             logger.warning(f"未识别的维度主题：{dimension_topic}，使用原值")
             return dimension_topic
 
-    def _format_dimension_context(
-        self, items: List[MacroSearchResultItem]
-    ) -> str:
+    def _format_dimension_context(self, items: List[MacroSearchResultItem]) -> str:
         """
         格式化单个维度的搜索结果为文本段落。
 
@@ -208,9 +190,7 @@ class MacroContextBuilderImpl(IMacroContextBuilder):
 
         return "\n\n".join(formatted_items)
 
-    def _collect_source_urls(
-        self, search_results: List[MacroSearchResult]
-    ) -> str:
+    def _collect_source_urls(self, search_results: List[MacroSearchResult]) -> str:
         """
         收集所有搜索结果的来源 URL（去重）。
 

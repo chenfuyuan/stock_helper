@@ -12,7 +12,5 @@ class IFinancialDataRepository(ABC):
         pass
 
     @abstractmethod
-    async def get_by_third_code_recent(
-        self, third_code: str, limit: int
-    ) -> List[StockFinance]:
+    async def get_by_third_code_recent(self, third_code: str, limit: int) -> List[StockFinance]:
         """按第三方代码查询最近 N 期财务记录，按 end_date 降序返回。"""

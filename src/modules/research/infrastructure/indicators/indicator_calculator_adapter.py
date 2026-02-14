@@ -21,7 +21,5 @@ from src.modules.research.infrastructure.indicators.calculator import (
 class IndicatorCalculatorAdapter(IIndicatorCalculator):
     """基于日线计算技术指标，实现可依赖第三方库；本实现使用 calculator 模块。"""
 
-    def compute(
-        self, bars: List[DailyBarInput]
-    ) -> TechnicalIndicatorsSnapshot:
+    def compute(self, bars: List[DailyBarInput]) -> TechnicalIndicatorsSnapshot:
         return compute_technical_indicators(bars)

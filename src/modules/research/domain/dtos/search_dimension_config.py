@@ -24,6 +24,6 @@ class SearchDimensionConfig(BaseModel):
     topic: str = Field(..., description="维度主题名称")
     query_template: str = Field(..., description="查询模板，支持占位符")
     count: int = Field(..., ge=4, le=10, description="返回结果条数")
-    freshness: Literal[
-        "oneDay", "oneWeek", "oneMonth", "oneYear", "noLimit"
-    ] = Field(..., description="时效过滤")
+    freshness: Literal["oneDay", "oneWeek", "oneMonth", "oneYear", "noLimit"] = Field(
+        ..., description="时效过滤"
+    )

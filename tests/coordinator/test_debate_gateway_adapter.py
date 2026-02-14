@@ -34,15 +34,9 @@ def mock_debate_container():
         symbol="000001.SZ",
         direction="NEUTRAL",
         confidence=0.6,
-        bull_case=BullCaseDTO(
-            core_thesis="b", supporting_arguments=[], acknowledged_risks=[]
-        ),
-        bear_case=BearCaseDTO(
-            core_thesis="e", supporting_arguments=[], acknowledged_strengths=[]
-        ),
-        risk_matrix=[
-            RiskItemDTO(risk="R", probability="中", impact="高", mitigation="")
-        ],
+        bull_case=BullCaseDTO(core_thesis="b", supporting_arguments=[], acknowledged_risks=[]),
+        bear_case=BearCaseDTO(core_thesis="e", supporting_arguments=[], acknowledged_strengths=[]),
+        risk_matrix=[RiskItemDTO(risk="R", probability="中", impact="高", mitigation="")],
         key_disagreements=[],
         conflict_resolution="ok",
     )

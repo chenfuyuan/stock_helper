@@ -7,6 +7,7 @@ Revises:
 Create Date: 2026-02-11
 
 """
+
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
@@ -35,11 +36,23 @@ def upgrade() -> None:
         sa.Column("cnspell", sa.String(length=50), nullable=True, comment="拼音缩写"),
         sa.Column("exchange", sa.String(length=20), nullable=True, comment="交易所代码"),
         sa.Column("curr_type", sa.String(length=20), nullable=True, comment="交易货币"),
-        sa.Column("list_status", sa.String(length=10), nullable=True, comment="上市状态 L上市 D退市 P暂停上市"),
+        sa.Column(
+            "list_status",
+            sa.String(length=10),
+            nullable=True,
+            comment="上市状态 L上市 D退市 P暂停上市",
+        ),
         sa.Column("delist_date", sa.Date(), nullable=True, comment="退市日期"),
-        sa.Column("is_hs", sa.String(length=10), nullable=True, comment="是否沪深港通标的，N否 H沪股通 S深股通"),
+        sa.Column(
+            "is_hs",
+            sa.String(length=10),
+            nullable=True,
+            comment="是否沪深港通标的，N否 H沪股通 S深股通",
+        ),
         sa.Column("source", sa.String(length=20), nullable=True, comment="数据来源"),
-        sa.Column("last_finance_sync_date", sa.Date(), nullable=True, comment="上次财务数据同步时间"),
+        sa.Column(
+            "last_finance_sync_date", sa.Date(), nullable=True, comment="上次财务数据同步时间"
+        ),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index(op.f("ix_stock_info_id"), "stock_info", ["id"], unique=False)
@@ -157,13 +170,34 @@ def upgrade() -> None:
         sa.Column("roa2_yearly", sa.Float(), nullable=True, comment="年化总资产报酬率"),
         sa.Column("roe_avg", sa.Float(), nullable=True, comment="平均净资产收益率"),
         sa.Column("opincome_of_ebt", sa.Float(), nullable=True, comment="经营活动净收益/利润总额"),
-        sa.Column("investincome_of_ebt", sa.Float(), nullable=True, comment="价值变动净收益/利润总额"),
-        sa.Column("n_op_profit_of_ebt", sa.Float(), nullable=True, comment="营业外收支净额/利润总额"),
+        sa.Column(
+            "investincome_of_ebt", sa.Float(), nullable=True, comment="价值变动净收益/利润总额"
+        ),
+        sa.Column(
+            "n_op_profit_of_ebt", sa.Float(), nullable=True, comment="营业外收支净额/利润总额"
+        ),
         sa.Column("tax_to_ebt", sa.Float(), nullable=True, comment="所得税/利润总额"),
-        sa.Column("dtprofit_to_profit", sa.Float(), nullable=True, comment="扣除非经常损益后的净利润/净利润"),
-        sa.Column("salescash_to_or", sa.Float(), nullable=True, comment="销售商品提供劳务收到的现金/营业收入"),
-        sa.Column("ocf_to_or", sa.Float(), nullable=True, comment="经营活动产生的现金流量净额/营业收入"),
-        sa.Column("ocf_to_opincome", sa.Float(), nullable=True, comment="经营活动产生的现金流量净额/经营活动净收益"),
+        sa.Column(
+            "dtprofit_to_profit",
+            sa.Float(),
+            nullable=True,
+            comment="扣除非经常损益后的净利润/净利润",
+        ),
+        sa.Column(
+            "salescash_to_or",
+            sa.Float(),
+            nullable=True,
+            comment="销售商品提供劳务收到的现金/营业收入",
+        ),
+        sa.Column(
+            "ocf_to_or", sa.Float(), nullable=True, comment="经营活动产生的现金流量净额/营业收入"
+        ),
+        sa.Column(
+            "ocf_to_opincome",
+            sa.Float(),
+            nullable=True,
+            comment="经营活动产生的现金流量净额/经营活动净收益",
+        ),
         sa.Column("capitalized_to_da", sa.Float(), nullable=True, comment="资本支出/折旧和摊销"),
         sa.Column("debt_to_assets", sa.Float(), nullable=True, comment="资产负债率"),
         sa.Column("assets_to_eqt", sa.Float(), nullable=True, comment="权益乘数"),
@@ -172,17 +206,29 @@ def upgrade() -> None:
         sa.Column("nca_to_assets", sa.Float(), nullable=True, comment="非流动资产/总资产"),
         sa.Column("tbassets_to_totalassets", sa.Float(), nullable=True, comment="有形资产/总资产"),
         sa.Column("int_to_talcap", sa.Float(), nullable=True, comment="带息债务/全部投入资本"),
-        sa.Column("eqt_to_talcapital", sa.Float(), nullable=True, comment="归属于母公司的股东权益/全部投入资本"),
+        sa.Column(
+            "eqt_to_talcapital",
+            sa.Float(),
+            nullable=True,
+            comment="归属于母公司的股东权益/全部投入资本",
+        ),
         sa.Column("currentdebt_to_debt", sa.Float(), nullable=True, comment="流动负债/负债合计"),
         sa.Column("longdeb_to_debt", sa.Float(), nullable=True, comment="非流动负债/负债合计"),
-        sa.Column("ocf_to_shortdebt", sa.Float(), nullable=True, comment="经营活动产生的现金流量净额/流动负债"),
+        sa.Column(
+            "ocf_to_shortdebt",
+            sa.Float(),
+            nullable=True,
+            comment="经营活动产生的现金流量净额/流动负债",
+        ),
         sa.Column("debt_to_eqt", sa.Float(), nullable=True, comment="产权比率"),
         sa.Column("source", sa.String(length=20), nullable=True, comment="数据来源"),
         sa.PrimaryKeyConstraint("third_code", "ann_date", "end_date"),
     )
     op.create_index(op.f("ix_stock_finance_ann_date"), "stock_finance", ["ann_date"], unique=False)
     op.create_index(op.f("ix_stock_finance_end_date"), "stock_finance", ["end_date"], unique=False)
-    op.create_index(op.f("ix_stock_finance_third_code"), "stock_finance", ["third_code"], unique=False)
+    op.create_index(
+        op.f("ix_stock_finance_third_code"), "stock_finance", ["third_code"], unique=False
+    )
 
     # ----- llm_configs（llm_platform：LLM 配置） -----
     op.create_table(
@@ -198,8 +244,12 @@ def upgrade() -> None:
         sa.Column("priority", sa.Integer(), nullable=True),
         sa.Column("tags", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
         sa.Column("is_active", sa.Boolean(), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=True),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=True),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=True
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=True
+        ),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index(op.f("ix_llm_configs_alias"), "llm_configs", ["alias"], unique=True)

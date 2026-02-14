@@ -51,14 +51,8 @@ class OpenAIProvider(BaseLLMProvider):
             result = content if content is not None else ""
 
             # 记录响应摘要，便于调试。如果是长文本，只截取前 50 个字符。
-            log_preview = (
-                result.replace("\n", " ")[:50] + "..."
-                if len(result) > 50
-                else result
-            )
-            logger.info(
-                f"LLM 响应成功 | 长度: {len(result)} | 内容预览: {log_preview}"
-            )
+            log_preview = result.replace("\n", " ")[:50] + "..." if len(result) > 50 else result
+            logger.info(f"LLM 响应成功 | 长度: {len(result)} | 内容预览: {log_preview}")
             return result
 
         except (APIConnectionError, RateLimitError) as e:

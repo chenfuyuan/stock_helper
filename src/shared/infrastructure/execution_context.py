@@ -17,6 +17,6 @@ class ExecutionContext(BaseModel):
 
 
 # 默认 None：无研究流水线上下文时（如单测、定时任务）仍可正常调用 LLM/API，只是不关联 session
-current_execution_ctx: contextvars.ContextVar[ExecutionContext | None] = (
-    contextvars.ContextVar("current_execution_ctx", default=None)
+current_execution_ctx: contextvars.ContextVar[ExecutionContext | None] = contextvars.ContextVar(
+    "current_execution_ctx", default=None
 )

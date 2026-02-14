@@ -8,23 +8,20 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from src.modules.data_engineering.application.queries.\
-        get_stock_basic_info import (
-            StockBasicInfoDTO,
-        )
+from src.modules.data_engineering.application.queries.get_stock_basic_info import (
+    StockBasicInfoDTO,
+)
 from src.modules.data_engineering.domain.model.stock import StockInfo
 from src.modules.data_engineering.domain.model.stock_daily import StockDaily
-from src.modules.research.infrastructure.adapters.\
-        catalyst_data_adapter import (
-            CatalystDataAdapter,
-        )
+from src.modules.research.infrastructure.adapters.catalyst_data_adapter import (
+    CatalystDataAdapter,
+)
 from src.modules.research.infrastructure.adapters.macro_data_adapter import (
     MacroDataAdapter,
 )
-from src.modules.research.infrastructure.adapters.\
-        valuation_data_adapter import (
-            ValuationDataAdapter,
-        )
+from src.modules.research.infrastructure.adapters.valuation_data_adapter import (
+    ValuationDataAdapter,
+)
 from src.modules.research.infrastructure.search_utils.result_filter import (
     SearchResultFilter,
 )

@@ -32,29 +32,21 @@ async def get_valuation_modeler_service(
 class IntrinsicValueRangeResponse(BaseModel):
     """内在价值区间响应。"""
 
-    lower_bound: str = Field(
-        ..., description="保守模型推导的价格下界（含推导依据）"
-    )
-    upper_bound: str = Field(
-        ..., description="乐观模型推导的价格上界（含推导依据）"
-    )
+    lower_bound: str = Field(..., description="保守模型推导的价格下界（含推导依据）")
+    upper_bound: str = Field(..., description="乐观模型推导的价格上界（含推导依据）")
 
 
 class ValuationModelApiResponse(BaseModel):
     """估值建模接口响应：解析结果 + input、valuation_indicators、output。"""
 
     valuation_verdict: Literal["Undervalued", "Fair", "Overvalued"]
-    confidence_score: float = Field(
-        ..., ge=0.0, le=1.0, description="置信度 0~1"
-    )
+    confidence_score: float = Field(..., ge=0.0, le=1.0, description="置信度 0~1")
     estimated_intrinsic_value_range: IntrinsicValueRangeResponse
     key_evidence: list[str] = Field(..., min_length=1, description="证据列表")
     risk_factors: list[str] = Field(..., min_length=1, description="风险列表")
     reasoning_summary: str = Field(..., description="专业精炼总结")
     input: str = Field(..., description="送入大模型的 user prompt")
-    valuation_indicators: dict[str, Any] = Field(
-        ..., description="估值指标快照（用于填充 prompt）"
-    )
+    valuation_indicators: dict[str, Any] = Field(..., description="估值指标快照（用于填充 prompt）")
     output: str = Field(..., description="大模型原始返回字符串")
 
 

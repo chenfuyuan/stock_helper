@@ -24,9 +24,7 @@ from src.modules.data_engineering.infrastructure.persistence.models.sync_task_mo
 from src.shared.infrastructure.base_repository import BaseRepository
 
 
-class SyncTaskRepositoryImpl(
-    BaseRepository[SyncTaskModel], ISyncTaskRepository
-):
+class SyncTaskRepositoryImpl(BaseRepository[SyncTaskModel], ISyncTaskRepository):
     """
     同步任务仓储实现
 
@@ -91,9 +89,7 @@ class SyncTaskRepositoryImpl(
         model = result.scalar_one_or_none()
         return self._to_sync_task_domain(model) if model else None
 
-    async def get_latest_by_job_type(
-        self, job_type: SyncJobType
-    ) -> Optional[SyncTask]:
+    async def get_latest_by_job_type(self, job_type: SyncJobType) -> Optional[SyncTask]:
         """查找指定类型的最近一次任务（按 started_at 降序）"""
         result = await self.session.execute(
             select(SyncTaskModel)
@@ -106,9 +102,7 @@ class SyncTaskRepositoryImpl(
 
     # ========== SyncFailureRecord 相关方法 ==========
 
-    async def create_failure(
-        self, record: SyncFailureRecord
-    ) -> SyncFailureRecord:
+    async def create_failure(self, record: SyncFailureRecord) -> SyncFailureRecord:
         """创建失败记录"""
         record_data = {
             "id": record.id,
@@ -128,9 +122,7 @@ class SyncTaskRepositoryImpl(
 
         return self._to_failure_record_domain(model)
 
-    async def update_failure(
-        self, record: SyncFailureRecord
-    ) -> SyncFailureRecord:
+    async def update_failure(self, record: SyncFailureRecord) -> SyncFailureRecord:
         """更新失败记录"""
         stmt = (
             update(SyncFailureRecordModel)
@@ -148,24 +140,19 @@ class SyncTaskRepositoryImpl(
 
         # 重新查询返回最新数据
         result = await self.session.execute(
-            select(SyncFailureRecordModel).where(
-                SyncFailureRecordModel.id == record.id
-            )
+            select(SyncFailureRecordModel).where(SyncFailureRecordModel.id == record.id)
         )
         model = result.scalar_one_or_none()
         return self._to_failure_record_domain(model) if model else None
 
-    async def get_unresolved_failures(
-        self, job_type: SyncJobType
-    ) -> List[SyncFailureRecord]:
+    async def get_unresolved_failures(self, job_type: SyncJobType) -> List[SyncFailureRecord]:
         """查询未解决且可重试的失败记录"""
         result = await self.session.execute(
             select(SyncFailureRecordModel).where(
                 and_(
                     SyncFailureRecordModel.job_type == job_type.value,
                     SyncFailureRecordModel.resolved_at.is_(None),
-                    SyncFailureRecordModel.retry_count
-                    < SyncFailureRecordModel.max_retries,
+                    SyncFailureRecordModel.retry_count < SyncFailureRecordModel.max_retries,
                 )
             )
         )
@@ -202,9 +189,7 @@ class SyncTaskRepositoryImpl(
             config=model.config or {},
         )
 
-    def _to_failure_record_domain(
-        self, model: SyncFailureRecordModel
-    ) -> SyncFailureRecord:
+    def _to_failure_record_domain(self, model: SyncFailureRecordModel) -> SyncFailureRecord:
         """将 ORM 模型转换为 Domain 实体"""
         return SyncFailureRecord(
             id=model.id,

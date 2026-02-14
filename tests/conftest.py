@@ -24,9 +24,7 @@ from src.shared.infrastructure.db.base import Base
 async def db_engine():
     # 注意：这里使用开发数据库，为了避免清空数据，移除了 drop_all
     # 建议在生产环境测试中使用独立的测试数据库
-    engine = create_async_engine(
-        settings.SQLALCHEMY_DATABASE_URI, pool_pre_ping=True
-    )
+    engine = create_async_engine(settings.SQLALCHEMY_DATABASE_URI, pool_pre_ping=True)
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     yield engine

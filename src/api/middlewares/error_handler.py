@@ -18,9 +18,7 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
             return response
         except AppException as e:
             # 处理自定义应用异常
-            logger.error(
-                f"AppException: {e.message} | Path: {request.method} {request.url}"
-            )
+            logger.error(f"AppException: {e.message} | Path: {request.method} {request.url}")
             return JSONResponse(
                 status_code=e.status_code,
                 content={

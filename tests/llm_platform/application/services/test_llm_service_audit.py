@@ -35,9 +35,7 @@ async def test_llm_success_writes_call_log_with_session_id(
 ):
     """成功调用时写入审计日志，且 session_id 来自 ExecutionContext。"""
     llm_service_with_audit.router = AsyncMock()
-    llm_service_with_audit.router.generate = AsyncMock(
-        return_value="模型回复内容"
-    )
+    llm_service_with_audit.router.generate = AsyncMock(return_value="模型回复内容")
 
     token = current_execution_ctx.set(
         ExecutionContext(session_id="aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")
@@ -66,9 +64,7 @@ async def test_llm_failure_writes_call_log_with_failed_status(
 ):
     """LLM 调用抛异常时仍写入审计日志，status=failed，error_message 有值。"""
     llm_service_with_audit.router = AsyncMock()
-    llm_service_with_audit.router.generate = AsyncMock(
-        side_effect=Exception("API 超时")
-    )
+    llm_service_with_audit.router.generate = AsyncMock(side_effect=Exception("API 超时"))
 
     token = current_execution_ctx.set(
         ExecutionContext(session_id="bbbbbbbb-cccc-dddd-eeee-ffffffffffff")

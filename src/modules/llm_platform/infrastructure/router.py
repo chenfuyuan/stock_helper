@@ -16,23 +16,15 @@ class LLMRouter(ILLMProvider):
     def __init__(self, registry):
         self.registry = registry
 
-    def _select_candidates(
-        self, alias: Optional[str], tags: Optional[List[str]]
-    ) -> List:
+    def _select_candidates(self, alias: Optional[str], tags: Optional[List[str]]) -> List:
         configs = self.registry.get_all_configs()
 
         candidates = []
         if alias:
-            candidates = [
-                c for c in configs if c.alias == alias and c.is_active
-            ]
+            candidates = [c for c in configs if c.alias == alias and c.is_active]
         elif tags:
             # Match if config has ALL requested tags
-            candidates = [
-                c
-                for c in configs
-                if c.is_active and all(t in c.tags for t in tags)
-            ]
+            candidates = [c for c in configs if c.is_active and all(t in c.tags for t in tags)]
             candidates.sort(key=lambda x: x.priority)
         else:
             # Default: all active, sorted by priority
@@ -64,16 +56,10 @@ class LLMRouter(ILLMProvider):
                 continue
 
             try:
-                logger.debug(
-                    f"Routing request to LLM: {config.alias} (model: {config.model_name})"
-                )
-                return await provider.generate(
-                    prompt, system_message, temperature
-                )
+                logger.debug(f"Routing request to LLM: {config.alias} (model: {config.model_name})")
+                return await provider.generate(prompt, system_message, temperature)
             except LLMConnectionError as e:
-                logger.warning(
-                    f"LLM {config.alias} failed: {str(e)}. Failing over..."
-                )
+                logger.warning(f"LLM {config.alias} failed: {str(e)}. Failing over...")
                 last_error = e
                 continue
             except Exception as e:
@@ -81,6 +67,4 @@ class LLMRouter(ILLMProvider):
                 last_error = e
                 continue
 
-        raise NoAvailableModelError(
-            f"All candidate models failed. Last error: {str(last_error)}"
-        )
+        raise NoAvailableModelError(f"All candidate models failed. Last error: {str(last_error)}")

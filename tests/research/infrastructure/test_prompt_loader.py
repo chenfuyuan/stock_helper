@@ -57,11 +57,7 @@ def test_fill_user_prompt_none_indicators_become_na():
     )
     assert "N/A" in result
     assert "RSI: N/A" in result or "rsi_value" not in result or "N/A" in result
-    assert (
-        "MACD DIF: N/A" in result
-        or "macd_dif" not in result
-        or "N/A" in result
-    )
+    assert "MACD DIF: N/A" in result or "macd_dif" not in result or "N/A" in result
     assert "VWAP: N/A" in result
     assert "ATR: N/A" in result
     assert "Volume ratio: N/A" in result

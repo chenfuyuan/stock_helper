@@ -67,15 +67,11 @@ class BochaWebSearchAdapter(IWebSearchProvider):
         # 检查 API Key 是否配置
         if not self.api_key or self.api_key.strip() == "":
             logger.error("博查 API Key 未配置")
-            raise WebSearchConfigError(
-                "博查 API Key 未配置，请设置 BOCHA_API_KEY 环境变量"
-            )
+            raise WebSearchConfigError("博查 API Key 未配置，请设置 BOCHA_API_KEY 环境变量")
 
         # 构建请求体
         request_body = self._build_request_body(request)
-        logger.info(
-            f"执行博查搜索，查询词: {request.query}, 请求体: {request_body}"
-        )
+        logger.info(f"执行博查搜索，查询词: {request.query}, 请求体: {request_body}")
 
         try:
             async with httpx.AsyncClient(timeout=self.timeout) as client:
@@ -90,9 +86,7 @@ class BochaWebSearchAdapter(IWebSearchProvider):
 
                 # 处理 HTTP 错误
                 if response.status_code >= 400:
-                    error_msg = (
-                        f"博查 API 返回错误，状态码: {response.status_code}"
-                    )
+                    error_msg = f"博查 API 返回错误，状态码: {response.status_code}"
                     logger.error(error_msg)
                     try:
                         error_detail = response.json()
@@ -147,9 +141,7 @@ class BochaWebSearchAdapter(IWebSearchProvider):
 
         return body
 
-    def _map_response(
-        self, query: str, response_data: Dict[str, Any]
-    ) -> WebSearchResponse:
+    def _map_response(self, query: str, response_data: Dict[str, Any]) -> WebSearchResponse:
         """
         将博查 API 响应映射为标准 WebSearchResponse DTO
 

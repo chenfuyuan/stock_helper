@@ -32,10 +32,7 @@ async def test_symbol_missing_raises_bad_request(mock_research_expert_gateway):
     service = _make_service(mock_research_expert_gateway)
     with pytest.raises(BadRequestException) as exc_info:
         await service.execute(symbol="", experts=["technical_analyst"])
-    assert (
-        "symbol" in exc_info.value.message.lower()
-        or "必填" in exc_info.value.message
-    )
+    assert "symbol" in exc_info.value.message.lower() or "必填" in exc_info.value.message
 
 
 @pytest.mark.asyncio
@@ -44,10 +41,7 @@ async def test_experts_empty_raises_bad_request(mock_research_expert_gateway):
     service = _make_service(mock_research_expert_gateway)
     with pytest.raises(BadRequestException) as exc_info:
         await service.execute(symbol="000001.SZ", experts=[])
-    assert (
-        "experts" in exc_info.value.message.lower()
-        or "必填" in exc_info.value.message
-    )
+    assert "experts" in exc_info.value.message.lower() or "必填" in exc_info.value.message
 
 
 @pytest.mark.asyncio
@@ -61,10 +55,7 @@ async def test_experts_invalid_value_raises_bad_request(
             symbol="000001.SZ",
             experts=["unknown_expert"],
         )
-    assert (
-        "unknown_expert" in exc_info.value.message
-        or "非法" in exc_info.value.message
-    )
+    assert "unknown_expert" in exc_info.value.message or "非法" in exc_info.value.message
 
 
 # ---------- 8.3 按需路由 ----------
@@ -78,9 +69,7 @@ async def test_only_selected_experts_called(mock_research_expert_gateway):
     )
     assert mock_research_expert_gateway.run_expert.call_count == 2
     call_args_list = mock_research_expert_gateway.run_expert.call_args_list
-    expert_types_called = {
-        call.kwargs["expert_type"] for call in call_args_list
-    }
+    expert_types_called = {call.kwargs["expert_type"] for call in call_args_list}
     assert expert_types_called == {
         ExpertType.MACRO_INTELLIGENCE,
         ExpertType.CATALYST_DETECTIVE,
@@ -98,16 +87,12 @@ async def test_single_expert_failure_partial_status(mock_gateway_with_failure):
     )
     assert result.overall_status == "partial"
     ta_item = next(
-        r
-        for r in result.expert_results
-        if r.expert_type == ExpertType.TECHNICAL_ANALYST
+        r for r in result.expert_results if r.expert_type == ExpertType.TECHNICAL_ANALYST
     )
     assert ta_item.status == "failed"
     assert ta_item.error is not None
     mi_item = next(
-        r
-        for r in result.expert_results
-        if r.expert_type == ExpertType.MACRO_INTELLIGENCE
+        r for r in result.expert_results if r.expert_type == ExpertType.MACRO_INTELLIGENCE
     )
     assert mi_item.status == "success"
     assert mi_item.data is not None

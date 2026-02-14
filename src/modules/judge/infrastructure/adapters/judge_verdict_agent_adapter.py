@@ -34,9 +34,7 @@ def _list_to_bullets(items: list[str]) -> str:
 class JudgeVerdictAgentAdapter(IJudgeVerdictAgentPort):
     """加载 Prompt、填充 JudgeInput、调用 LLM、解析 JSON，返回 VerdictResult。"""
 
-    def __init__(
-        self, llm_port: ILLMPort, prompts_dir: Optional[Path] = None
-    ) -> None:
+    def __init__(self, llm_port: ILLMPort, prompts_dir: Optional[Path] = None) -> None:
         self._llm = llm_port
         self._prompts_dir = prompts_dir or get_prompts_dir("verdict")
 

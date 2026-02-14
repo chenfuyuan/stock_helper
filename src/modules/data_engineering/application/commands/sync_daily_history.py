@@ -28,9 +28,7 @@ class SyncDailyHistoryUseCase:
         self.daily_repo = daily_repo
         self.data_provider = data_provider
 
-    async def execute(
-        self, limit: int = 10, offset: int = 0
-    ) -> Dict[str, Any]:
+    async def execute(self, limit: int = 10, offset: int = 0) -> Dict[str, Any]:
         """
         执行同步逻辑（支持分页）
 
@@ -40,18 +38,14 @@ class SyncDailyHistoryUseCase:
         target_stocks = await self.stock_repo.get_all(skip=offset, limit=limit)
 
         if not target_stocks:
-            logger.warning(
-                f"未找到需要同步的股票 (offset={offset}, limit={limit})"
-            )
+            logger.warning(f"未找到需要同步的股票 (offset={offset}, limit={limit})")
             return {
                 "synced_stocks": 0,
                 "total_rows": 0,
                 "message": f"未找到需要同步的股票 (offset={offset}, limit={limit})",
             }
 
-        logger.info(
-            f"开始同步 {len(target_stocks)} 只股票的历史日线数据 (offset={offset})..."
-        )
+        logger.info(f"开始同步 {len(target_stocks)} 只股票的历史日线数据 (offset={offset})...")
 
         synced_stocks_count = 0
         total_rows_saved = 0
@@ -63,23 +57,15 @@ class SyncDailyHistoryUseCase:
                     logger.warning(f"股票 {stock.name} 缺少 third_code，跳过")
                     continue
 
-                logger.info(
-                    f"正在拉取 {stock.third_code} ({stock.name}) 的历史日线数据..."
-                )
-                dailies = await self.data_provider.fetch_daily(
-                    third_code=stock.third_code
-                )
+                logger.info(f"正在拉取 {stock.third_code} ({stock.name}) 的历史日线数据...")
+                dailies = await self.data_provider.fetch_daily(third_code=stock.third_code)
 
                 if dailies:
-                    logger.info(
-                        f"成功拉取 {len(dailies)} 条记录，准备写入数据库..."
-                    )
+                    logger.info(f"成功拉取 {len(dailies)} 条记录，准备写入数据库...")
                     saved_count = await self.daily_repo.save_all(dailies)
                     total_rows_saved += saved_count
                     synced_stocks_count += 1
-                    logger.info(
-                        f"成功保存 {stock.third_code} 的 {saved_count} 条日线记录"
-                    )
+                    logger.info(f"成功保存 {stock.third_code} 的 {saved_count} 条日线记录")
                 else:
                     logger.warning(f"{stock.third_code} 没有返回日线数据")
 

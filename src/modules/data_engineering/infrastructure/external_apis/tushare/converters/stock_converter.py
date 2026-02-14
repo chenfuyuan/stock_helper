@@ -37,9 +37,7 @@ class StockAssembler:
                     stocks.append(stock)
             except Exception as e:
                 # 单条数据转换失败不应中断整个流程，记录日志即可
-                logger.warning(
-                    f"股票数据转换失败: {row.get('ts_code', 'unknown')} - {str(e)}"
-                )
+                logger.warning(f"股票数据转换失败: {row.get('ts_code', 'unknown')} - {str(e)}")
                 continue
 
         logger.info(f"成功转换 {len(stocks)} 条股票数据")

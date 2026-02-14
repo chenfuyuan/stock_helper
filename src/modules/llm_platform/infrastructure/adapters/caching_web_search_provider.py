@@ -53,9 +53,7 @@ class CachingWebSearchProvider(IWebSearchProvider):
             )
             return WebSearchResponse.model_validate_json(entry.response_data)
 
-        logger.info(
-            "博查搜索缓存未命中，查询词: {}，将调用博查 API", request.query
-        )
+        logger.info("博查搜索缓存未命中，查询词: {}，将调用博查 API", request.query)
         response = await self._inner.search(request)
         # 使用 naive UTC 以匹配 DB 的 TIMESTAMP WITHOUT TIME ZONE，避免 asyncpg 的 offset-naive/aware 混用报错
         created_at = datetime.now(timezone.utc).replace(tzinfo=None)

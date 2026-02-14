@@ -16,13 +16,9 @@ class WebSearchCacheModel(Base):
 
     __tablename__ = "web_search_cache"
 
-    cache_key = Column(
-        String(64), primary_key=True, comment="请求参数 SHA-256 哈希"
-    )
+    cache_key = Column(String(64), primary_key=True, comment="请求参数 SHA-256 哈希")
     request_params = Column(JSONB, nullable=False, comment="原始请求参数")
-    response_data = Column(
-        Text, nullable=False, comment="WebSearchResponse JSON"
-    )
+    response_data = Column(Text, nullable=False, comment="WebSearchResponse JSON")
     created_at = Column(DateTime, nullable=False, comment="写入时间")
     expires_at = Column(DateTime, nullable=False, comment="过期时间")
 
