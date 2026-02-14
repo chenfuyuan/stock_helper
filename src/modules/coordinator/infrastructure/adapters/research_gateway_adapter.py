@@ -76,7 +76,9 @@ class ResearchGatewayAdapter(IResearchExpertGateway):
                     expert_opts = opts.get("financial_auditor", {})
                     limit = expert_opts.get("limit", 8)
                     auditor_svc = research.financial_auditor_service()
-                    result = await auditor_svc.run(symbol=symbol, limit=int(limit))
+                    result = await auditor_svc.run(
+                        symbol=symbol, limit=int(limit)
+                    )
                     return result
 
                 case ExpertType.VALUATION_MODELER:

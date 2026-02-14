@@ -1,7 +1,11 @@
 from typing import AsyncGenerator
 
 from loguru import logger
-from sqlalchemy.ext.asyncio import AsyncSession, AsyncEngine, create_async_engine
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    create_async_engine,
+)
 from sqlalchemy.orm import sessionmaker
 
 from src.shared.config import settings

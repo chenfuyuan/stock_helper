@@ -9,13 +9,13 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.modules.coordinator.domain.dtos.research_dtos import (
-    ResearchResult,
-)
 from src.modules.coordinator.application.research_orchestration_service import (
     ResearchOrchestrationService,
 )
 from src.modules.coordinator.container import CoordinatorContainer
+from src.modules.coordinator.domain.dtos.research_dtos import (
+    ResearchResult,
+)
 from src.modules.coordinator.domain.exceptions import (
     AllExpertsFailedError,
     SessionNotFoundError,
