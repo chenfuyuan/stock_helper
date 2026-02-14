@@ -2,10 +2,11 @@
 任务 10.2 + 10.5：估值建模师 Application 输入校验与 E2E mock 测试。
 传入缺失 symbol 时断言被拒绝；mock 数据 Port 返回 None（标的不存在）时断言明确错误；
 mock 财务数据返回空列表时断言明确错误；
-E2E：mock 三个 Port 返回固定数据，断言完整编排返回结果包含 
+E2E：mock 三个 Port 返回固定数据，断言完整编排返回结果包含
 valuation_verdict、input、valuation_indicators、output 等字段。
 """
 
+import pytest
 from datetime import date
 from unittest.mock import AsyncMock
 
@@ -271,9 +272,9 @@ async def test_full_flow_returns_valuation_result_with_all_fields():
     )
 
     from src.modules.research.infrastructure.valuation_snapshot.\
-            snapshot_builder import (
-                ValuationSnapshotBuilderImpl,
-            )
+        snapshot_builder import (
+            ValuationSnapshotBuilderImpl,
+        )
 
     svc = ValuationModelerService(
         valuation_data_port=mock_data,
