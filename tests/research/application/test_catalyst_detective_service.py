@@ -71,7 +71,8 @@ async def test_run_success(mock_pipeline):
     )
     context_builder.build.return_value = context_dto
 
-    # Mock agent（run() 内部会调用 result.model_dump() 与 catalyst_context.model_dump()）
+    # Mock agent（run() 内部会调用
+    # result.model_dump() 与 catalyst_context.model_dump()）
     result_dto = Mock(spec=CatalystDetectiveResultDTO)
     result_dto.model_dump.return_value = {
         "catalyst_assessment": "Neutral (中性)",

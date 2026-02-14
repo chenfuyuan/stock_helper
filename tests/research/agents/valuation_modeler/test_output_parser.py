@@ -8,7 +8,7 @@ import pytest
 
 from src.modules.research.domain.dtos.valuation_dtos import ValuationResultDTO
 from src.modules.research.domain.exceptions import LLMOutputParseError
-from src.modules.research.infrastructure.agents.valuation_modeler.output_parser import (
+from src.modules.research.infrastructure.agents.valuation_modeler.output_parser import (  # noqa: E501
     parse_valuation_result,
 )
 
@@ -37,7 +37,10 @@ def _make_valid_json(
 
 
 def test_parse_valid_json_returns_dto_with_correct_fields():
-    """合法 JSON 解析后字段正确，valuation_verdict、confidence_score、key_evidence 等符合契约。"""
+    """合法 JSON 解析后字段正确，
+    valuation_verdict、confidence_score、
+    key_evidence 等符合契约。
+    """
     raw = _make_valid_json()
     result = parse_valuation_result(raw)
     assert isinstance(result, ValuationResultDTO)
@@ -99,9 +102,17 @@ def test_parse_missing_required_field_raises():
 
 def test_parse_invalid_verdict_value_raises():
     """valuation_verdict 不为三值之一时解析失败。"""
-    raw = """{"valuation_verdict": "INVALID", "confidence_score": 0.8,
-    "estimated_intrinsic_value_range": {"lower_bound": "18", "upper_bound": "25"},
-    "key_evidence": ["test"], "risk_factors": ["test"], "reasoning_summary": "test"}"""
+    raw = """{
+        "valuation_verdict": "INVALID",
+        "confidence_score": 0.8,
+        "estimated_intrinsic_value_range": {
+            "lower_bound": "18",
+            "upper_bound": "25"
+        },
+        "key_evidence": ["test"],
+        "risk_factors": ["test"],
+        "reasoning_summary": "test"
+    }"""
     with pytest.raises(LLMOutputParseError):
         parse_valuation_result(raw)
 
@@ -115,9 +126,17 @@ def test_parse_confidence_out_of_range_raises():
 
 def test_parse_empty_key_evidence_raises():
     """key_evidence 为空列表时解析失败（要求非空）。"""
-    raw = """{"valuation_verdict": "Fair", "confidence_score": 0.7,
-    "estimated_intrinsic_value_range": {"lower_bound": "20", "upper_bound": "25"},
-    "key_evidence": [], "risk_factors": ["test"], "reasoning_summary": "test"}"""
+    raw = """{
+        "valuation_verdict": "Fair",
+        "confidence_score": 0.7,
+        "estimated_intrinsic_value_range": {
+            "lower_bound": "20",
+            "upper_bound": "25"
+        },
+        "key_evidence": [],
+        "risk_factors": ["test"],
+        "reasoning_summary": "test"
+    }"""
     with pytest.raises(LLMOutputParseError):
         parse_valuation_result(raw)
 

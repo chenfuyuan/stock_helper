@@ -103,7 +103,10 @@ async def test_limit_out_of_range_raises_bad_request():
 
 @pytest.mark.asyncio
 async def test_full_flow_returns_audit_result_with_all_fields():
-    """E2E：mock 三个 Port，完整编排返回包含 financial_score、signal、dimension_analyses 等字段。"""
+    """E2E：mock 三个 Port，完整编排返回
+    包含 financial_score、signal、
+    dimension_analyses 等字段。
+    """
     from datetime import date
 
     mock_data = AsyncMock()
@@ -119,7 +122,7 @@ async def test_full_flow_returns_audit_result_with_all_fields():
         )
     ]
 
-    from src.modules.research.infrastructure.financial_snapshot.snapshot_builder import (
+    from src.modules.research.infrastructure.financial_snapshot.snapshot_builder import (  # noqa: E501
         FinancialSnapshotBuilderImpl,
     )
 

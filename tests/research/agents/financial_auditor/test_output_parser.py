@@ -10,7 +10,7 @@ from src.modules.research.domain.dtos.financial_dtos import (
     FinancialAuditResultDTO,
 )
 from src.modules.research.domain.exceptions import LLMOutputParseError
-from src.modules.research.infrastructure.agents.financial_auditor.output_parser import (
+from src.modules.research.infrastructure.agents.financial_auditor.output_parser import (  # noqa: E501
     parse_financial_audit_result,
 )
 
@@ -26,11 +26,36 @@ def _make_valid_json(
         "confidence": {confidence},
         "summary_reasoning": "ROIC 达 18%",
         "dimension_analyses": [
-            {{"dimension": "盈利含金量", "score": 80, "assessment": "好", "key_findings": []}},
-            {{"dimension": "运营效率", "score": 70, "assessment": "中", "key_findings": []}},
-            {{"dimension": "资本回报", "score": 75, "assessment": "好", "key_findings": []}},
-            {{"dimension": "偿债能力", "score": 72, "assessment": "中", "key_findings": []}},
-            {{"dimension": "成长加速度", "score": 78, "assessment": "好", "key_findings": []}}
+            {{
+                "dimension": "盈利含金量",
+                "score": 80,
+                "assessment": "好",
+                "key_findings": []
+            }},
+            {{
+                "dimension": "运营效率",
+                "score": 70,
+                "assessment": "中",
+                "key_findings": []
+            }},
+            {{
+                "dimension": "资本回报",
+                "score": 75,
+                "assessment": "好",
+                "key_findings": []
+            }},
+            {{
+                "dimension": "偿债能力",
+                "score": 72,
+                "assessment": "中",
+                "key_findings": []
+            }},
+            {{
+                "dimension": "成长加速度",
+                "score": 78,
+                "assessment": "好",
+                "key_findings": []
+            }}
         ],
         "key_risks": [],
         "risk_warning": ""
@@ -38,7 +63,10 @@ def _make_valid_json(
 
 
 def test_parse_valid_json_returns_dto_with_correct_fields():
-    """合法 JSON 解析后字段正确，financial_score、signal、confidence、dimension_analyses 符合契约。"""
+    """合法 JSON 解析后字段正确，
+    financial_score、signal、confidence、
+    dimension_analyses 符合契约。
+    """
     raw = _make_valid_json()
     result = parse_financial_audit_result(raw)
     assert isinstance(result, FinancialAuditResultDTO)

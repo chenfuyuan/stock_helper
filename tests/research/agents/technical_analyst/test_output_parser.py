@@ -10,7 +10,7 @@ from src.modules.research.domain.dtos.technical_analysis_dtos import (
     TechnicalAnalysisResultDTO,
 )
 from src.modules.research.domain.exceptions import LLMOutputParseError
-from src.modules.research.infrastructure.agents.technical_analyst.output_parser import (
+from src.modules.research.infrastructure.agents.technical_analyst.output_parser import (  # noqa: E501
     parse_technical_analysis_result,
 )
 
@@ -37,7 +37,15 @@ def test_parse_valid_json_returns_dto_with_correct_fields():
 def test_parse_valid_json_stripped_from_markdown_code_block():
     """Markdown 代码块包裹的 JSON 可正确剥离并解析。"""
     raw = """```json
-{"signal": "NEUTRAL", "confidence": 0.5, "summary_reasoning": "x", "key_technical_levels": {"support": 0, "resistance": 0}, "risk_warning": ""}
+{
+    "signal": "NEUTRAL",
+    "confidence": 0.5,
+    "summary_reasoning": "x",
+    "key_technical_levels": {
+        "support": 0, "resistance": 0
+    },
+    "risk_warning": ""
+}
 ```"""
     result = parse_technical_analysis_result(raw)
     assert result.signal == "NEUTRAL"
@@ -66,14 +74,30 @@ def test_parse_missing_required_field_raises():
 
 def test_parse_invalid_signal_raises():
     """signal 非三值之一时校验失败。"""
-    raw = """{"signal": "INVALID", "confidence": 0.5, "summary_reasoning": "", "key_technical_levels": {"support": 0, "resistance": 0}, "risk_warning": ""}"""
+    raw = """{
+        "signal": "INVALID",
+        "confidence": 0.5,
+        "summary_reasoning": "",
+        "key_technical_levels": {
+            "support": 0, "resistance": 0
+        },
+        "risk_warning": ""
+    }"""
     with pytest.raises(LLMOutputParseError):
         parse_technical_analysis_result(raw)
 
 
 def test_parse_confidence_out_of_range_raises():
     """confidence 超出 [0,1] 时校验失败。"""
-    raw = """{"signal": "NEUTRAL", "confidence": 1.5, "summary_reasoning": "", "key_technical_levels": {"support": 0, "resistance": 0}, "risk_warning": ""}"""
+    raw = """{
+        "signal": "NEUTRAL",
+        "confidence": 1.5,
+        "summary_reasoning": "",
+        "key_technical_levels": {
+            "support": 0, "resistance": 0
+        },
+        "risk_warning": ""
+    }"""
     with pytest.raises(LLMOutputParseError):
         parse_technical_analysis_result(raw)
 
