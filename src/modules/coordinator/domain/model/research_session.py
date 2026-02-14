@@ -22,6 +22,8 @@ class ResearchSession(BaseModel):
     created_at: datetime
     completed_at: datetime | None = None
     duration_ms: int | None = None
+    retry_count: int = 0
+    parent_session_id: UUID | None = None
 
     def complete(self, completed_at: datetime, duration_ms: int) -> None:
         """全部节点成功完成时调用，更新为 completed。"""

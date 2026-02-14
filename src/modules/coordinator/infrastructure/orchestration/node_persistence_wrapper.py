@@ -5,16 +5,35 @@
 """
 import logging
 from collections.abc import Callable
+import math
 from datetime import datetime
 from typing import Any
 from uuid import uuid4
 
-from src.shared.infrastructure.execution_context import current_execution_ctx
+from loguru import logger
+
 from src.modules.coordinator.domain.model.node_execution import NodeExecution
 from src.modules.coordinator.domain.ports.research_session_repository import IResearchSessionRepository
 from src.modules.coordinator.infrastructure.orchestration.graph_state import ResearchGraphState
+from src.shared.infrastructure.execution_context import current_execution_ctx
 
 logger = logging.getLogger(__name__)
+
+
+def _sanitize_jsonb(obj: Any) -> Any:
+    """
+    递归清理 Python 对象中的 NaN/Inf，将其转为 None，避免 PostgreSQL JSONB 写入失败。
+    """
+    if isinstance(obj, float):
+        if math.isnan(obj) or math.isinf(obj):
+            return None
+        return obj
+    elif isinstance(obj, dict):
+        return {k: _sanitize_jsonb(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [_sanitize_jsonb(item) for item in obj]
+    else:
+        return obj
 
 
 def _extract_result_and_narrative(node_type: str, return_value: dict[str, Any]) -> tuple[dict[str, Any] | None, str]:
@@ -77,9 +96,12 @@ def persist_node_execution(
             result = await node_fn(state)
             completed_at = datetime.utcnow()
             duration_ms = int((completed_at - started_at).total_seconds() * 1000)
+
             result_data, narrative_report = _extract_result_and_narrative(node_type, result)
+            # 清理 NaN/Inf，避免 PostgreSQL JSONB 写入失败
+            sanitized_result_data = _sanitize_jsonb(result_data) if result_data else None
             execution.mark_success(
-                result_data=result_data or {},
+                result_data=sanitized_result_data or {},
                 narrative_report=narrative_report,
                 completed_at=completed_at,
                 duration_ms=duration_ms,

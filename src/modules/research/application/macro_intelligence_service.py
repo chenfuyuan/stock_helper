@@ -121,6 +121,7 @@ class MacroIntelligenceService:
             "key_opportunities": result_dto.key_opportunities,
             "key_risks": result_dto.key_risks,
             "information_sources": result_dto.information_sources,
+            "narrative_report": result_dto.narrative_report,
             "input": agent_result.user_prompt,
             "macro_indicators": macro_context.model_dump(),
             "output": agent_result.raw_llm_output,

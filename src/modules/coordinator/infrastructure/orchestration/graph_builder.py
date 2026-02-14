@@ -36,23 +36,19 @@ def create_expert_node(
     """
     专家节点工厂：为指定专家类型生成图节点函数。
 
-    成功时写入 results[expert_type.value]，失败时写入 errors[expert_type.value]。
+    成功时写入 results[expert_type.value]，失败时抛出异常停止整个编排流程。
     """
     node_name = EXPERT_NODE_NAMES[expert_type]
 
     async def expert_node(state: ResearchGraphState) -> dict[str, Any]:
-        try:
-            options = state.get("options") or {}
-            expert_opts = options.get(expert_type.value, {})
-            result = await gateway.run_expert(
-                expert_type=expert_type,
-                symbol=state["symbol"],
-                options=expert_opts,
-            )
-            return {"results": {expert_type.value: result}}
-        except Exception as e:
-            logger.warning("专家 %s 执行失败: %s", expert_type.value, e)
-            return {"errors": {expert_type.value: str(e)}}
+        options = state.get("options") or {}
+        expert_opts = options.get(expert_type.value, {})
+        result = await gateway.run_expert(
+            expert_type=expert_type,
+            symbol=state["symbol"],
+            options=expert_opts,
+        )
+        return {"results": {expert_type.value: result}}
 
     expert_node.__name__ = node_name
     return expert_node
@@ -74,19 +70,11 @@ def route_to_experts(state: ResearchGraphState) -> list[Send]:
 
 
 def create_aggregator_node() -> Callable[[ResearchGraphState], dict[str, Any]]:
-    """聚合节点：根据 results 和 errors 设置 overall_status。"""
+    """聚合节点：根据 results 设置 overall_status。专家失败时流程已停止，无需处理 errors。"""
 
     def aggregator_node(state: ResearchGraphState) -> dict[str, Any]:
         results = state.get("results") or {}
-        errors = state.get("errors") or {}
-
-        if not results:
-            overall_status = "failed"
-        elif not errors:
-            overall_status = "completed"
-        else:
-            overall_status = "partial"
-
+        overall_status = "completed" if results else "failed"
         return {"overall_status": overall_status}
 
     return aggregator_node

@@ -12,13 +12,15 @@
 
 系统 SHALL 在每次研究流水线启动时创建一个 `ResearchSession` 记录，并在流水线结束后更新其最终状态。
 
-`ResearchSession` 包含以下信息：唯一标识（UUID）、股票代码（symbol）、执行状态（running / completed / partial / failed）、选中的专家列表、执行选项、触发来源、创建时间、完成时间、总耗时（毫秒）。
+`ResearchSession` 包含以下信息：唯一标识（UUID）、股票代码（symbol）、执行状态（running / completed / partial / failed）、选中的专家列表、执行选项、触发来源、创建时间、完成时间、总耗时（毫秒）、重试计数（`retry_count`，int，默认 0）、父会话标识（`parent_session_id`，UUID，可为 null）。
 
 - 流水线启动时，状态 MUST 设为 `running`。
 - 所有节点成功完成时，状态 MUST 更新为 `completed`。
 - 部分节点成功、部分失败时，状态 MUST 更新为 `partial`。
 - 所有节点均失败时，状态 MUST 更新为 `failed`。
 - `completed_at` 和 `duration_ms` MUST 在流水线结束后写入。
+- 首次执行时，`retry_count` MUST 为 `0`，`parent_session_id` MUST 为 `null`。
+- 重试执行时，`retry_count` MUST 为源 session 的 `retry_count + 1`，`parent_session_id` MUST 指向被重试的源 session ID。
 
 #### Scenario: 完整成功的研究流水线
 
@@ -34,6 +36,16 @@
 
 - **WHEN** 用户发起研究请求，所有专家均执行失败
 - **THEN** `ResearchSession` 最终 status=failed，completed_at 和 duration_ms 仍被记录
+
+#### Scenario: 首次执行的 session 字段
+
+- **WHEN** 用户首次发起研究请求
+- **THEN** 创建的 `ResearchSession` 中 `retry_count` 为 `0`，`parent_session_id` 为 `null`
+
+#### Scenario: 重试执行的 session 字段
+
+- **WHEN** 用户对已有 session 发起重试，源 session 的 `retry_count` 为 `1`
+- **THEN** 新创建的子 session 中 `retry_count` 为 `2`，`parent_session_id` 指向源 session ID
 
 ### Requirement: NodeExecution 成功记录
 

@@ -76,6 +76,7 @@ class TechnicalAnalystService:
             "summary_reasoning": result_dto.summary_reasoning,
             "key_technical_levels": result_dto.key_technical_levels.model_dump(),
             "risk_warning": result_dto.risk_warning,
+            "narrative_report": result_dto.narrative_report,
             "input": agent_result.user_prompt,
             "technical_indicators": snapshot.model_dump(),
             "output": agent_result.raw_llm_output,

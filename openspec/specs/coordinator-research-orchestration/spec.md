@@ -60,6 +60,8 @@ REST 端点的请求体 SHALL 为 JSON，包含以下字段：
 - `expert_results`（dict[str, object]）：按专家名分组的结果，每个专家的值包含 `status`（`"success"` 或 `"failed"`）、成功时包含 `data`（该专家的原始分析结果 dict）、失败时包含 `error`（错误信息字符串）
 - `debate_outcome`（object | null）：辩论结果。包含 direction、confidence、bull_case、bear_case、risk_matrix、key_disagreements、conflict_resolution。当 `skip_debate=true` 或辩论失败时为 `null`。
 - `verdict`（object | null）：裁决结果。包含 action、position_percent、confidence、entry_strategy、stop_loss、take_profit、time_horizon、risk_warnings、reasoning。当 `skip_debate=true`、辩论失败或裁决失败时为 `null`。
+- `session_id`（str）：研究会话 ID，用于历史查询与审计关联；未启用持久化时为空
+- `retry_count`（int）：重试计数，首次执行为 0，每次重试递增 1
 
 #### Scenario: 请求含完整字段时正确解析
 
@@ -80,6 +82,16 @@ REST 端点的请求体 SHALL 为 JSON，包含以下字段：
 
 - **WHEN** 研究编排执行完成且辩论和裁决阶段均正常完成
 - **THEN** 响应体 SHALL 包含 `verdict` 字段，其中包含 action、position_percent、confidence、entry_strategy、stop_loss、take_profit、time_horizon、risk_warnings、reasoning
+
+#### Scenario: 首次请求响应包含 retry_count 为 0
+
+- **WHEN** 首次发起 `POST /api/v1/coordinator/research` 研究请求并成功返回
+- **THEN** 响应体 SHALL 包含 `retry_count` 字段，值为 `0`
+
+#### Scenario: 响应体包含 session_id
+
+- **WHEN** 研究编排执行完成且启用了持久化
+- **THEN** 响应体 SHALL 包含 `session_id` 字段，值为新创建的会话 ID（UUID 格式）
 
 #### Scenario: skip_debate 为 true 时跳过辩论和裁决
 

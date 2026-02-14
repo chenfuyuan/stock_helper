@@ -75,8 +75,10 @@ class CatalystDetectiveService:
         )
 
         # 6. 归一化为 dict，与其他专家返回类型一致
+        result_dto = agent_result.result
         return {
-            "result": agent_result.result.model_dump(),
+            "result": result_dto.model_dump(),
+            "narrative_report": result_dto.narrative_report,
             "raw_llm_output": agent_result.raw_llm_output,
             "user_prompt": agent_result.user_prompt,
             "catalyst_context": agent_result.catalyst_context.model_dump(),

@@ -64,6 +64,7 @@ class FinancialAuditorService:
             "dimension_analyses": [d.model_dump() for d in result_dto.dimension_analyses],
             "key_risks": result_dto.key_risks,
             "risk_warning": result_dto.risk_warning,
+            "narrative_report": result_dto.narrative_report,
             "input": agent_result.user_prompt,
             "financial_indicators": snapshot.model_dump(),
             "output": agent_result.raw_llm_output,

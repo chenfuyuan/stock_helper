@@ -57,6 +57,8 @@ class LangGraphResearchOrchestrator(IResearchOrchestrationPort):
                 options=request.options,
                 trigger_source="api",
                 created_at=started_at,
+                retry_count=request.retry_count,
+                parent_session_id=request.parent_session_id,
             )
             await self._session_repo.save_session(session)
             token = current_execution_ctx.set(ExecutionContext(session_id=str(session.id)))
@@ -75,17 +77,31 @@ class LangGraphResearchOrchestrator(IResearchOrchestrationPort):
                 "symbol": request.symbol,
                 "selected_experts": [e.value for e in request.experts],
                 "options": request.options,
-                "results": {},
-                "errors": {},
+                "results": request.pre_populated_results or {},
             }
 
             final_state = await graph.ainvoke(initial_state)
 
             results = final_state.get("results") or {}
-            errors = final_state.get("errors") or {}
             overall_status = final_state.get("overall_status") or "failed"
 
             expert_results: list[ExpertResultItem] = []
+
+            # 重试时 pre_populated_results 中的专家不在 request.experts 中，
+            # 需要将其加入 expert_results（标记为 success）
+            pre_populated = request.pre_populated_results or {}
+            for expert_value, data in pre_populated.items():
+                expert_type = ExpertType(expert_value)
+                expert_results.append(
+                    ExpertResultItem(
+                        expert_type=expert_type,
+                        status="success",
+                        data=data,
+                        error=None,
+                    )
+                )
+
+            # 所有请求的专家都应该成功，因为失败会抛异常停止流程
             for expert_type in request.experts:
                 expert_value = expert_type.value
                 if expert_value in results:
@@ -98,12 +114,13 @@ class LangGraphResearchOrchestrator(IResearchOrchestrationPort):
                         )
                     )
                 else:
+                    # 理论上不应该到这里，因为失败会抛异常
                     expert_results.append(
                         ExpertResultItem(
                             expert_type=expert_type,
                             status="failed",
                             data=None,
-                            error=errors.get(expert_value, "未知错误"),
+                            error="专家结果缺失",
                         )
                     )
 
@@ -120,10 +137,8 @@ class LangGraphResearchOrchestrator(IResearchOrchestrationPort):
             if session and self._session_repo is not None:
                 if overall_status == "completed":
                     session.complete(completed_at, duration_ms)
-                elif overall_status == "failed":
-                    session.fail(completed_at, duration_ms)
                 else:
-                    session.mark_partial(completed_at, duration_ms)
+                    session.fail(completed_at, duration_ms)
                 await self._session_repo.update_session(session)
 
             return ResearchResult(
@@ -133,6 +148,7 @@ class LangGraphResearchOrchestrator(IResearchOrchestrationPort):
                 debate_outcome=debate_outcome,
                 verdict=verdict,
                 session_id=str(session.id) if session else "",
+                retry_count=request.retry_count,
             )
         finally:
             if token is not None:

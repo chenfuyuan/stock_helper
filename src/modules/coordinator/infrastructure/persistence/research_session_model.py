@@ -2,7 +2,7 @@
 研究会话 ORM 模型，映射表 research_sessions。
 """
 import uuid
-from sqlalchemy import Column, DateTime, Integer, String
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 
 from src.shared.infrastructure.db.base import Base
@@ -22,3 +22,10 @@ class ResearchSessionModel(Base):
     created_at = Column(DateTime, nullable=False, comment="创建时间")
     completed_at = Column(DateTime, nullable=True, comment="完成时间")
     duration_ms = Column(Integer, nullable=True, comment="总耗时（毫秒）")
+    retry_count = Column(Integer, nullable=False, default=0, server_default="0", comment="重试计数，首次执行为 0")
+    parent_session_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("research_sessions.id"),
+        nullable=True,
+        comment="父会话标识，重试时指向源 session",
+    )

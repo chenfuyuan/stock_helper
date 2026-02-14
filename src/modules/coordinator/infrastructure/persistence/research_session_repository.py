@@ -26,6 +26,8 @@ def _session_model_to_entity(m: ResearchSessionModel) -> ResearchSession:
         created_at=m.created_at,
         completed_at=m.completed_at,
         duration_ms=m.duration_ms,
+        retry_count=m.retry_count or 0,
+        parent_session_id=m.parent_session_id,
     )
 
 
@@ -41,6 +43,8 @@ def _session_entity_to_model(s: ResearchSession) -> ResearchSessionModel:
         created_at=s.created_at,
         completed_at=s.completed_at,
         duration_ms=s.duration_ms,
+        retry_count=s.retry_count,
+        parent_session_id=s.parent_session_id,
     )
 
 
