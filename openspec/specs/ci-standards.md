@@ -169,6 +169,71 @@ find src/ tests/ -name "*.py" -exec sed -i '' 's/ *$//' {} \;
 echo "✅ 代码质量修复完成！"
 ```
 
+### E501行长度问题专项修复
+
+基于实际修复经验，以下是常见的E501问题及修复模式：
+
+#### 1. 导入语句过长修复
+
+```python
+# 问题示例（85字符）：
+from src.modules.research.infrastructure.financial_snapshot.snapshot_builder import (
+    FinancialSnapshotBuilderImpl,
+)
+
+# 修复后：
+from src.modules.research.infrastructure.\
+        financial_snapshot.snapshot_builder import (
+            FinancialSnapshotBuilderImpl,
+        )
+```
+
+**修复要点**：
+- 使用反斜杠(`\`)在合适位置换行
+- continuation line 缩进4个空格
+- 括号内内容缩进8个空格
+
+#### 2. JSON字符串过长修复
+
+```python
+# 问题示例（164字符）：
+valid_json = '{"signal":"BEARISH","confidence":0.6,"summary_reasoning":"RSI 超买","key_technical_levels":{"support":9.0,"resistance":12.0},"risk_warning":"跌破支撑"}'
+
+# 修复后：
+valid_json = (
+    '{"signal":"BEARISH","confidence":0.6,'
+    '"summary_reasoning":"RSI 超买",'
+    '"key_technical_levels":{"support":9.0,"resistance":12.0},'
+    '"risk_warning":"跌破支撑"}'
+)
+```
+
+**修复要点**：
+- 使用括号包裹整个字符串
+- 按逻辑结构换行（如JSON字段）
+- 每行末尾加逗号（除最后一行）
+
+#### 3. 手动修复命令
+
+```bash
+# 检查具体的E501错误
+flake8 --select=E501 src tests
+
+# 针对特定文件修复
+flake8 --select=E501 tests/research/infrastructure/test_*.py
+
+# 验证修复效果
+flake8 src tests --max-line-length=79
+```
+
+#### 4. 历史修复案例
+
+以下文件曾出现E501问题并已修复，可作为参考：
+- `tests/research/infrastructure/test_financial_snapshot_builder.py:11` - 导入语句过长
+- `tests/research/infrastructure/test_indicator_calculator_adapter.py:9` - 导入语句过长
+- `tests/research/infrastructure/test_technical_analyst_agent_adapter.py:18,27` - 导入语句和JSON字符串过长
+- `tests/research/infrastructure/test_valuation_snapshot_builder.py:17` - 导入语句过长
+
 ---
 
 ## 质量门禁标准
@@ -180,6 +245,7 @@ echo "✅ 代码质量修复完成！"
 | flake8  | < 100   | < 50    | 中等     |
 | mypy    | < 50    | < 20    | 严重     |
 | 测试覆盖率 | > 70%  | > 85%   | 严重     |
+| E501行长度 | 0      | 0       | 严重     |
 
 ### 阻塞性问题
 
@@ -193,6 +259,7 @@ echo "✅ 代码质量修复完成！"
 2. **flake8阻塞性错误**：
    - 导入错误（未定义的名称）
    - 语法错误
+   - **E501行长度违规（零容忍）**
    - 大量未使用的导入（> 20个）
 
 3. **测试失败**：
@@ -203,9 +270,9 @@ echo "✅ 代码质量修复完成！"
 
 以下问题会发出警告但**不阻止**合并：
 
-1. **行长度超过79字符**（< 100个）
-2. **空白行格式问题**
-3. **非核心函数的类型注解缺失**
+1. **空白行格式问题**
+2. **非核心函数的类型注解缺失**
+3. **文档字符串缺失**
 
 ---
 
@@ -259,7 +326,29 @@ make check-quality
 python -m flake8 src tests
 python -m mypy src --ignore-missing-imports
 pytest tests/ --cov=src
+
+# E501专项检查（必须为零）
+python -m flake8 --select=E501 src tests
+if [ $? -ne 0 ]; then
+    echo "❌ 发现行长度违规，请修复后再提交"
+    echo "💡 参考 openspec/specs/ci-standards.md 中的修复指南"
+    exit 1
+fi
+
+# 验证修复效果
+python -m flake8 src tests --max-line-length=79
+echo "✅ 所有检查通过，可以提交"
 ```
+
+### 提交前检查清单
+
+- [ ] 运行 `flake8 src tests --max-line-length=79` 无E501错误
+- [ ] 运行 `mypy src tests --ignore-missing-imports` 无关键错误
+- [ ] 运行 `pytest tests/` 所有测试通过
+- [ ] 检查导入语句格式符合规范（使用反斜杠换行）
+- [ ] 检查长字符串已正确换行（使用括号包裹）
+- [ ] 确认代码无未使用的导入
+- [ ] 验证E501专项检查通过（零容忍）
 
 ### IDE配置
 

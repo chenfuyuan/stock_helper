@@ -181,6 +181,26 @@ OpenSpec 变更的实现须保证**可验证**：Spec 与可执行测试一致�
 ### 代码风格标准
 
 - **行长度限制**：79字符（严格遵循PEP 8）
+- **导入语句处理**：
+  - 当导入路径超过79字符时，使用反斜杠(`\`)换行
+  - continuation line 缩进4个空格，括号内内容缩进8个空格
+  - 示例：
+    ```python
+    from src.modules.research.infrastructure.\
+            financial_snapshot.snapshot_builder import (
+                FinancialSnapshotBuilderImpl,
+            )
+    ```
+- **长字符串处理**：
+  - JSON字符串、长文本等使用括号包裹换行
+  - 示例：
+    ```python
+    valid_json = (
+        '{"signal":"BEARISH","confidence":0.6,'
+        '"summary_reasoning":"RSI 超买",'
+        '"key_technical_levels":{"support":9.0,"resistance":12.0}}'
+    )
+    ```
 - **导入顺序**：使用isort自动规范化，遵循black配置
 - **空白行**：禁止空白行包含空格或制表符
 - **未使用导入**：必须清理，避免命名空间污染
@@ -206,9 +226,27 @@ OpenSpec 变更的实现须保证**可验证**：Spec 与可执行测试一致�
    - 测试环境：使用Docker Compose确保环境一致性
 
 3. **代码修复流程**：
-   - 优先使用自动化工具修复（autoflake → isort → black）
+   - **行长度问题修复**：
+     ```bash
+     # 检查具体违规
+     flake8 --select=E501 src tests
+     # 手动修复导入语句（使用反斜杠换行）
+     # 手动修复长字符串（使用括号包裹）
+     ```
+   - **一般修复顺序**：
+     ```bash
+     autoflake --in-place --remove-unused-variables --remove-all-imports src tests
+     isort src tests
+     black src tests
+     ```
    - 手动修复工具无法处理的类型错误
    - 提交前确保本地检查通过
+
+4. **常见E501修复模式**：
+   - **导入语句过长**：使用反斜杠换行，缩进4空格
+   - **JSON字符串过长**：使用括号包裹，按逻辑换行
+   - **函数调用过长**：参数换行，每行一个参数
+   - **条件语句过长**：使用括号包裹逻辑表达式
 
 ### 质量门禁
 
