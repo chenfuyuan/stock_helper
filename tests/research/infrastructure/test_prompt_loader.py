@@ -1,6 +1,7 @@
 """
 技术分析师 Prompt 填充测试。
-覆盖 fill_user_prompt 将 snapshot 中 None 指标转为 N/A 的场景（research-input-robustness 2.5）。
+覆盖 fill_user_prompt 将 snapshot 中 None 指标转为 N/A 的场景
+（research-input-robustness 2.5）。
 """
 
 from src.modules.research.domain.dtos.indicators_snapshot import (

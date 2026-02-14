@@ -22,7 +22,8 @@ from src.modules.research.infrastructure.adapters.technical_analyst_agent_adapte
 
 @pytest.mark.asyncio
 async def test_agent_adapter_valid_json_returns_agent_result():
-    """LLM 返回合法 JSON 时，Agent 解析并返回 TechnicalAnalysisAgentResult（含 result、raw_llm_output、user_prompt）。"""
+    """LLM 返回合法 JSON 时，Agent 解析并返回 TechnicalAnalysisAgentResult
+    （含 result、raw_llm_output、user_prompt）。"""
     valid_json = '{"signal":"BEARISH","confidence":0.6,"summary_reasoning":"RSI 超买","key_technical_levels":{"support":9.0,"resistance":12.0},"risk_warning":"跌破支撑"}'
     mock_llm = AsyncMock(spec=ILLMPort)
     mock_llm.generate.return_value = valid_json
