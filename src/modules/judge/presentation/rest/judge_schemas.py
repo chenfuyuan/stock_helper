@@ -13,7 +13,10 @@ class JudgeVerdictRequest(BaseModel):
     symbol: str = Field(..., description="标的代码")
     debate_outcome: dict[str, Any] = Field(
         ...,
-        description="辩论结果 dict，须包含 direction、confidence、bull_case、bear_case、risk_matrix、key_disagreements、conflict_resolution",
+        description=(  # noqa: E501
+            "辩论结果 dict，须包含 direction、confidence、bull_case、bear_case、"
+            "risk_matrix、key_disagreements、conflict_resolution"
+        ),
     )
 
 

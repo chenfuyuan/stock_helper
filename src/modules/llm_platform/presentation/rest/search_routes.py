@@ -102,7 +102,8 @@ async def search_web(
     - 500: 其他未预期错误
     """
     logger.info(
-        f"API: search_web called. Query={request.query}, Freshness={request.freshness}, Count={request.count}"
+        f"API: search_web called. Query={request.query}, Freshness={request.freshness}, "  # noqa: E501
+        f"Count={request.count}"
     )
 
     try:

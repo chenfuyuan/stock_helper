@@ -28,7 +28,7 @@ from src.modules.llm_platform.infrastructure.config import llm_config
 from src.modules.llm_platform.infrastructure.persistence.repositories.pg_config_repo import (
     PgLLMConfigRepository,
 )
-from src.modules.llm_platform.infrastructure.persistence.repositories.web_search_cache_repository import (
+from src.modules.llm_platform.infrastructure.persistence.repositories.web_search_cache_repository import (  # noqa: E501
     PgWebSearchCacheRepository,
 )
 from src.modules.llm_platform.infrastructure.registry import LLMRegistry
@@ -56,7 +56,7 @@ class LLMPlatformContainer:
         若构造时提供了 session，则注入 PgLLMCallLogRepository 以记录调用审计日志。
         """
         if self._session is not None:
-            from src.modules.llm_platform.infrastructure.persistence.repositories.llm_call_log_repository import (
+            from src.modules.llm_platform.infrastructure.persistence.repositories.llm_call_log_repository import (  # noqa: E501
                 PgLLMCallLogRepository,
             )
 

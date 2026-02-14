@@ -7,10 +7,10 @@ from src.modules.market_data.application.use_cases.get_stock_basic_info import (
 )
 from src.modules.market_data.domain.entities import StockDaily, StockInfo
 from src.modules.market_data.domain.enums import ListStatus, MarketType
-from src.modules.market_data.infrastructure.adapters.persistence.repositories.stock_daily_repository import (
+from src.modules.market_data.infrastructure.adapters.persistence.repositories.stock_daily_repository import (  # noqa: E501
     StockDailyRepositoryImpl,
 )
-from src.modules.market_data.infrastructure.adapters.persistence.repositories.stock_repository import (
+from src.modules.market_data.infrastructure.adapters.persistence.repositories.stock_repository import (  # noqa: E501
     StockRepositoryImpl,
 )
 

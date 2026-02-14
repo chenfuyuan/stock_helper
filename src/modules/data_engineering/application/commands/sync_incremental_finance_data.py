@@ -217,5 +217,8 @@ class SyncIncrementalFinanceDataUseCase:
             "retry_count": retry_count,
             "retry_success_count": retry_success_count,
             "target_period": target_period,
-            "message": f"成功同步 {synced_count} 只股票，失败 {failed_count} 只；重试 {retry_count} 条记录，成功 {retry_success_count} 条",
+            "message": (  # noqa: E501
+                f"成功同步 {synced_count} 只股票，失败 {failed_count} 只；"
+                f"重试 {retry_count} 条记录，成功 {retry_success_count} 条"
+            ),
         }

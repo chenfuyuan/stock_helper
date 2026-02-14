@@ -7,8 +7,6 @@ from datetime import datetime
 from typing import Any
 from uuid import uuid4
 
-logger = logging.getLogger(__name__)
-
 from src.modules.coordinator.domain.dtos.research_dtos import (
     ExpertResultItem,
     ResearchRequest,
@@ -34,6 +32,8 @@ from src.shared.infrastructure.execution_context import (
     ExecutionContext,
     current_execution_ctx,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class LangGraphResearchOrchestrator(IResearchOrchestrationPort):

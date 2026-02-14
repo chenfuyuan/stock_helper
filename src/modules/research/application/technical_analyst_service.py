@@ -56,8 +56,9 @@ class TechnicalAnalystService:
         if not bars:
             raise BadRequestException(
                 message=(
-                    f"该标的 {ticker} 在区间 {start_date.isoformat()} ~ {analysis_date.isoformat()} 内无日线数据，"
-                    "技术指标无法计算。请先通过 POST /api/v1/stocks/sync/daily 同步该标的日线后再进行分析。"
+                    f"该标的 {ticker} 在区间 {start_date.isoformat()} ~ {analysis_date.isoformat()} "  # noqa: E501
+                    "内无日线数据，技术指标无法计算。请先通过 POST /api/v1/stocks/sync/daily "
+                    "同步该标的日线后再进行分析。"
                 )
             )
         if len(bars) < MIN_BARS_REQUIRED:

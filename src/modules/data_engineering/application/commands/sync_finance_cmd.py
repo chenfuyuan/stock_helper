@@ -41,7 +41,8 @@ class SyncFinanceHistoryUseCase:
         :param limit: 每批最多处理 limit 只股票
         """
         logger.info(
-            f"Syncing finance history from {start_date} to {end_date}, offset={offset}, limit={limit}"
+            f"Syncing finance history from {start_date} to {end_date}, "  # noqa: E501
+            f"offset={offset}, limit={limit}"
         )
         stocks = await self.stock_repo.get_all(skip=offset, limit=limit)
         total_synced = 0

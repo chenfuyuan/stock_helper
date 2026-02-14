@@ -1,4 +1,4 @@
-"""judge_node 与编排图测试：辩论成功后裁决写入 verdict、debate 为空跳过裁决、Gateway 异常降级、完整流水线、skip_debate、辩论失败时 verdict 为 null。"""
+"""judge_node 与编排图测试：辩论成功后裁决写入 verdict、debate 为空跳过裁决、Gateway 异常降级、完整流水线、skip_debate、辩论失败时 verdict 为 null。"""  # noqa: E501
 
 from unittest.mock import AsyncMock
 

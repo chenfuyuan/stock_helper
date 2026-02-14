@@ -61,7 +61,7 @@ class TestMacroSearchDimensions:
             # 检查查询模板包含占位符
             assert (
                 "{current_year}" in config.query_template
-            ), f"宏观维度 {config.topic} 的查询模板缺少 {current_year} 占位符"
+            ), f"宏观维度 {config.topic} 的查询模板缺少 {{current_year}} 占位符"
 
     def test_macro_dimensions_unique_topics(self):
         """测试宏观维度主题唯一性"""
@@ -99,10 +99,10 @@ class TestCatalystSearchDimensions:
             # 检查查询模板包含占位符
             assert (
                 "{stock_name}" in config.query_template
-            ), f"催化剂维度 {config.topic} 的查询模板缺少 {stock_name} 占位符"
+            ), f"催化剂维度 {config.topic} 的查询模板缺少 {{stock_name}} 占位符"
             assert (
                 "{current_year}" in config.query_template
-            ), f"催化剂维度 {config.topic} 的查询模板缺少 {current_year} 占位符"
+            ), f"催化剂维度 {config.topic} 的查询模板缺少 {{current_year}} 占位符"
 
     def test_catalyst_dimensions_unique_topics(self):
         """测试催化剂维度主题唯一性"""
@@ -114,4 +114,4 @@ class TestCatalystSearchDimensions:
         for config in CATALYST_SEARCH_DIMENSIONS:
             assert (
                 "{stock_name}" in config.query_template
-            ), f"催化剂维度 {config.topic} 的查询模板必须包含 {stock_name}"
+            ), f"催化剂维度 {config.topic} 的查询模板必须包含 {{stock_name}}"

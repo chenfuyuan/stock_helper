@@ -26,7 +26,7 @@ from src.modules.coordinator.infrastructure.persistence.research_session_reposit
 from src.modules.llm_platform.application.queries.llm_call_log_query_service import (
     LLMCallLogQueryService,
 )
-from src.modules.llm_platform.infrastructure.persistence.repositories.llm_call_log_repository import (
+from src.modules.llm_platform.infrastructure.persistence.repositories.llm_call_log_repository import (  # noqa: E501
     PgLLMCallLogRepository,
 )
 from src.shared.application.queries.external_api_call_log_query_service import (

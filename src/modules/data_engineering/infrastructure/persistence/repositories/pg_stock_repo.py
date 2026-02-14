@@ -50,7 +50,7 @@ class StockRepositoryImpl(BaseRepository[StockModel], IStockBasicRepository):
                 and_(
                     StockModel.third_code.not_in(subquery),
                     or_(
-                        StockModel.last_finance_sync_date == None,
+                        StockModel.last_finance_sync_date is None,
                         StockModel.last_finance_sync_date < check_threshold_date,
                     ),
                 )

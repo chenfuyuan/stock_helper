@@ -116,7 +116,8 @@ class SyncEngine:
         try:
             while True:
                 logger.info(
-                    f"开始处理第 {task.current_offset // task.batch_size + 1} 批，offset={task.current_offset}"
+                    f"开始处理第 {task.current_offset // task.batch_size + 1} 批，"  # noqa: E501
+                    f"offset={task.current_offset}"
                 )
 
                 # 调用对应的 Use Case 执行单批同步
@@ -125,7 +126,7 @@ class SyncEngine:
                 # 判断是否完成
                 processed_count = result.get("synced_stocks") or result.get("batch_size") or 0
                 if processed_count == 0:
-                    logger.info(f"本批未处理任何股票，标记任务为 COMPLETED")
+                    logger.info("本批未处理任何股票，标记任务为 COMPLETED")
                     task.complete()
                     await self.sync_task_repo.update(task)
                     break

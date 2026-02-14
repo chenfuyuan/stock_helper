@@ -1,7 +1,8 @@
 """
 Debate 模块 Composition Root。
 
-装配 LLMAdapter → BullAdvocateAgentAdapter / BearAdvocateAgentAdapter / ResolutionAgentAdapter → DebateService。
+装配 LLMAdapter → BullAdvocateAgentAdapter / BearAdvocateAgentAdapter / ResolutionAgentAdapter →  # noqa: E501
+DebateService。
 """
 
 from src.modules.debate.application.services.debate_service import (

@@ -52,7 +52,8 @@ class TestLLMRealCall:
 
         for config in active_configs:
             print(
-                f"\n[测试模型] Alias: {config.alias} | Vendor: {config.vendor} | Model: {config.model_name}"
+                f"\n[测试模型] Alias: {config.alias} | Vendor: {config.vendor} | "  # noqa: E501
+                f"Model: {config.model_name}"
             )
 
             try:
@@ -63,7 +64,7 @@ class TestLLMRealCall:
                     temperature=0.7,
                 )
 
-                print(f"  ✅ 调用成功！")
+                print("  ✅ 调用成功！")
                 print(f"  💬 模型回复: {response}")
 
                 assert response is not None

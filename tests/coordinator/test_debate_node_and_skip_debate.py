@@ -1,4 +1,5 @@
-"""debate_node 与 skip_debate 测试：正常写入 debate_outcome、全部失败跳过、Gateway 异常降级、skip_debate 时 debate_outcome 为 null。"""
+"""debate_node 与 skip_debate 测试：正常写入 debate_outcome、全部失败跳过、Gateway 异常降级、skip_debate 时
+debate_outcome 为 null。"""  # noqa: E501
 
 from unittest.mock import AsyncMock
 

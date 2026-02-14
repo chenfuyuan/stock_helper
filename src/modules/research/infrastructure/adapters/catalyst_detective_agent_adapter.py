@@ -51,9 +51,9 @@ class CatalystDetectiveAgentAdapter(ICatalystDetectiveAgentPort):
         if not system_prompt or not user_template:
             logger.error(
                 f"Failed to load prompts from {self.prompts_dir}. "
-                f"System: {bool(system_prompt)}, User: {bool(user_template)}"
+                f"System: {bool(system_prompt)}, User: {bool(user_template)}"  # noqa: E501
             )
-            # Maybe raise exception here? But let's let LLM call handle empty prompt or just proceed (likely error later)
+            # Maybe raise exception here? But let's let LLM call handle empty prompt or just proceed (likely error later)  # noqa: E501
             # ILLMPort might handle empty prompt but let's be safe.
 
         # Fill prompts

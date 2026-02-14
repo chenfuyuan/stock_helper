@@ -15,7 +15,7 @@ from src.shared.infrastructure.llm_json_parser import parse_llm_json_output
 
 
 def _score_to_signal(score: int) -> FinancialSignal:
-    """按评分区间映射为 signal。90–100=STRONG_BULLISH，75–89=BULLISH，50–74=NEUTRAL，30–49=BEARISH，0–29=STRONG_BEARISH。"""
+    """按评分区间映射为 signal。90–100=STRONG_BULLISH，75–89=BULLISH，50–74=NEUTRAL，30–49=BEARISH，0–29=STRONG_BEARISH。"""  # noqa: E501
     if score >= 90:
         return "STRONG_BULLISH"
     if score >= 75:
@@ -40,7 +40,6 @@ def _ensure_signal_consistent(
 def _default_narrative_report(data: dict) -> dict:
     """为缺少 narrative_report 字段的数据补充默认空字符串。"""
     data.setdefault("narrative_report", "")
-    return data
 
 
 def parse_financial_audit_result(raw: str) -> FinancialAuditResultDTO:

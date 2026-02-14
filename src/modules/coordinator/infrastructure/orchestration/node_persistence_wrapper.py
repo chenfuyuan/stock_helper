@@ -4,7 +4,6 @@
 写入失败不阻塞主流程，仅记录 error 日志。
 """
 
-import logging
 import math
 from collections.abc import Callable
 from datetime import datetime
@@ -21,8 +20,6 @@ from src.modules.coordinator.infrastructure.orchestration.graph_state import (
     ResearchGraphState,
 )
 from src.shared.infrastructure.execution_context import current_execution_ctx
-
-logger = logging.getLogger(__name__)
 
 
 def _sanitize_jsonb(obj: Any) -> Any:

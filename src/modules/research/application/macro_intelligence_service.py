@@ -93,8 +93,8 @@ class MacroIntelligenceService:
         if total_items == 0:
             raise BadRequestException(
                 message=(
-                    f"宏观搜索全部失败（四个维度均无搜索结果），无法进行宏观分析。"
-                    f"请检查 Web 搜索服务配置（BOCHA_API_KEY）或稍后重试。"
+                    "宏观搜索全部失败（四个维度均无搜索结果），无法进行宏观分析。"
+                    "请检查 Web 搜索服务配置（BOCHA_API_KEY）或稍后重试。"
                 )
             )
 

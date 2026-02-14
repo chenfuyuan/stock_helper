@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
 # 注册 ORM 模型以便 create_all 创建表（集成测试用）
-from src.modules.llm_platform.infrastructure.persistence.models.web_search_cache_model import (  # noqa: F401
+from src.modules.llm_platform.infrastructure.persistence.models.web_search_cache_model import (  # noqa: F401,E501
     WebSearchCacheModel,
 )
 from src.shared.config import settings

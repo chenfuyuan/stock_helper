@@ -92,7 +92,7 @@ class ValuationModelerService:
         return {
             "valuation_verdict": result_dto.valuation_verdict,
             "confidence_score": result_dto.confidence_score,
-            "estimated_intrinsic_value_range": result_dto.estimated_intrinsic_value_range.model_dump(),
+            "estimated_intrinsic_value_range": result_dto.estimated_intrinsic_value_range.model_dump(),  # noqa: E501
             "key_evidence": result_dto.key_evidence,
             "risk_factors": result_dto.risk_factors,
             "reasoning_summary": result_dto.reasoning_summary,

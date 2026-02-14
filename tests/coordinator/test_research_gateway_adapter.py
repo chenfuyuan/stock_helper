@@ -42,9 +42,9 @@ def mock_research_container():
 
 @pytest.fixture
 def adapter(mock_research_container):
-    """Adapter 使用 mock session factory，并 patch ResearchContainer 返回 mock。"""
+    """Adapter 使用 mock session factory，并 patch ResearchContainer 返回 mock。"""  # noqa: E501
     with patch(
-        "src.modules.coordinator.infrastructure.adapters.research_gateway_adapter.ResearchContainer",
+        "src.modules.coordinator.infrastructure.adapters.research_gateway_adapter.ResearchContainer",  # noqa: E501
         return_value=mock_research_container,
     ):
         yield ResearchGatewayAdapter(_mock_session_factory)
@@ -110,7 +110,14 @@ async def test_catalyst_detective_dispatch(adapter, mock_research_container):
     svc.run = AsyncMock(
         return_value={
             "result": {"catalyst_assessment": "Neutral (中性)"},
-            "raw_llm_output": "raw",
+            "raw_llm_output": {
+                "direction": "BULLISH",
+                "confidence": 0.6,
+                "core_thesis": "x",
+                "supporting_arguments": [],
+                "acknowledged_risks": [],
+                "price_catalysts": []  # noqa: E501
+            },
             "user_prompt": "prompt",
             "catalyst_context": {},
         }

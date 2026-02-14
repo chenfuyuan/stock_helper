@@ -49,7 +49,7 @@ def mock_debate_container():
 
 @pytest.mark.asyncio
 async def test_technical_analyst_field_mapping(mock_debate_container):
-    """technical_analyst 结果映射为 ExpertSummary（signal/confidence/summary_reasoning/risk_warning），不含 input/output/indicators。"""
+    """technical_analyst 结果映射为 ExpertSummary（signal/confidence/summary_reasoning/risk_warning），不含 input/output/indicators。"""  # noqa: E501
     with patch(
         "src.modules.coordinator.infrastructure.adapters.debate_gateway_adapter.DebateContainer",
         return_value=mock_debate_container,
@@ -85,7 +85,7 @@ async def test_technical_analyst_field_mapping(mock_debate_container):
 
 @pytest.mark.asyncio
 async def test_valuation_modeler_field_normalization(mock_debate_container):
-    """valuation_modeler 使用 valuation_verdict/confidence_score/reasoning_summary/risk_factors 归一化。"""
+    """valuation_modeler 使用 valuation_verdict/confidence_score/reasoning_summary/risk_factors 归一化。"""  # noqa: E501
     with patch(
         "src.modules.coordinator.infrastructure.adapters.debate_gateway_adapter.DebateContainer",
         return_value=mock_debate_container,
@@ -112,7 +112,7 @@ async def test_valuation_modeler_field_normalization(mock_debate_container):
 
 @pytest.mark.asyncio
 async def test_catalyst_detective_nested_result(mock_debate_container):
-    """catalyst_detective 从 result 内取 catalyst_assessment/confidence_score/catalyst_summary/negative_catalysts。"""
+    """catalyst_detective 从 result 内取 catalyst_assessment/confidence_score/catalyst_summary/negative_catalysts。"""  # noqa: E501
     with patch(
         "src.modules.coordinator.infrastructure.adapters.debate_gateway_adapter.DebateContainer",
         return_value=mock_debate_container,

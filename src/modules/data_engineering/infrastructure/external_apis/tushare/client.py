@@ -6,19 +6,6 @@ import pandas as pd
 import tushare as ts
 from loguru import logger
 
-# Tushare 限速锁：全进程共享，确保 API 调用频率不超过限制
-_tushare_rate_lock: asyncio.Lock | None = None
-_tushare_last_call: float = 0.0
-
-
-def _get_tushare_rate_lock() -> asyncio.Lock:
-    """获取进程内共享的 Tushare 限速锁。"""
-    global _tushare_rate_lock
-    if _tushare_rate_lock is None:
-        _tushare_rate_lock = asyncio.Lock()
-    return _tushare_rate_lock
-
-
 from src.modules.data_engineering.domain.model.disclosure import (
     StockDisclosure,
 )
@@ -37,19 +24,31 @@ from src.modules.data_engineering.domain.ports.providers.stock_basic_provider im
     IStockBasicProvider,
 )
 from src.modules.data_engineering.infrastructure.config import de_config
-from src.modules.data_engineering.infrastructure.external_apis.tushare.converters.finance_converter import (
+from src.modules.data_engineering.infrastructure.external_apis.tushare.converters.finance_converter import (  # noqa: E501
     StockFinanceAssembler,
 )
-from src.modules.data_engineering.infrastructure.external_apis.tushare.converters.quote_converter import (
+from src.modules.data_engineering.infrastructure.external_apis.tushare.converters.quote_converter import (  # noqa: E501
     StockDailyAssembler,
 )
-from src.modules.data_engineering.infrastructure.external_apis.tushare.converters.stock_converter import (
+from src.modules.data_engineering.infrastructure.external_apis.tushare.converters.stock_converter import (  # noqa: E501
     StockAssembler,
 )
-from src.modules.data_engineering.infrastructure.external_apis.tushare.converters.stock_disclosure_assembler import (
+from src.modules.data_engineering.infrastructure.external_apis.tushare.converters.stock_disclosure_assembler import (  # noqa: E501
     StockDisclosureAssembler,
 )
 from src.shared.domain.exceptions import AppException
+
+# Tushare 限速锁：全进程共享，确保 API 调用频率不超过限制
+_tushare_rate_lock: asyncio.Lock | None = None
+_tushare_last_call: float = 0.0
+
+
+def _get_tushare_rate_lock() -> asyncio.Lock:
+    """获取进程内共享的 Tushare 限速锁。"""
+    global _tushare_rate_lock
+    if _tushare_rate_lock is None:
+        _tushare_rate_lock = asyncio.Lock()
+    return _tushare_rate_lock
 
 
 class TushareClient(IStockBasicProvider, IMarketQuoteProvider, IFinancialDataProvider):
@@ -145,7 +144,21 @@ class TushareClient(IStockBasicProvider, IMarketQuoteProvider, IFinancialDataPro
             logger.info(
                 f"开始从 Tushare 获取财务指标: code={third_code}, start={start_date}, end={end_date}"
             )
-            fields = "ts_code,ann_date,end_date,eps,dt_eps,total_revenue_ps,revenue_ps,capital_rese_ps,surplus_rese_ps,undist_profit_ps,extra_item,profit_dedt,gross_margin,current_ratio,quick_ratio,cash_ratio,inv_turn,ar_turn,ca_turn,fa_turn,assets_turn,invturn_days,arturn_days,op_income,valuechange_income,interst_income,daa,ebit,ebitda,fcff,fcfe,current_exint,noncurrent_exint,interestdebt,netdebt,tangible_asset,working_capital,networking_capital,invest_capital,retained_earnings,diluted2_eps,bps,ocfps,retainedps,cfps,ebit_ps,fcff_ps,fcfe_ps,netprofit_margin,grossprofit_margin,cogs_of_sales,expense_of_sales,profit_to_gr,saleexp_to_gr,adminexp_of_gr,finaexp_of_gr,impai_ttm,gc_of_gr,op_of_gr,ebit_of_gr,roe,roe_waa,roe_dt,roa,npta,roic,roe_yearly,roa2_yearly,roe_avg,opincome_of_ebt,investincome_of_ebt,n_op_profit_of_ebt,tax_to_ebt,dtprofit_to_profit,salescash_to_or,ocf_to_or,ocf_to_opincome,capitalized_to_da,debt_to_assets,assets_to_eqt,dp_assets_to_eqt,ca_to_assets,nca_to_assets,tbassets_to_totalassets,int_to_talcap,eqt_to_talcapital,currentdebt_to_debt,longdeb_to_debt,ocf_to_shortdebt,debt_to_eqt"
+            fields = (
+                "ts_code,ann_date,end_date,eps,dt_eps,total_revenue_ps,revenue_ps,capital_rese_ps,"  # noqa: E501
+                "surplus_rese_ps,undist_profit_ps,extra_item,profit_dedt,gross_margin,current_ratio,"  # noqa: E501
+                "quick_ratio,cash_ratio,inv_turn,ar_turn,ca_turn,fa_turn,assets_turn,invturn_days,"  # noqa: E501
+                "arturn_days,op_income,valuechange_income,interst_income,daa,ebit,ebitda,fcff,fcfe,"  # noqa: E501
+                "current_exint,noncurrent_exint,interestdebt,netdebt,tangible_asset,working_capital,"  # noqa: E501
+                "networking_capital,invest_capital,retained_earnings,diluted2_eps,bps,ocfps,retainedps,"  # noqa: E501
+                "cfps,ebit_ps,fcff_ps,fcfe_ps,netprofit_margin,grossprofit_margin,cogs_of_sales,"  # noqa: E501
+                "expense_of_sales,profit_to_gr,saleexp_to_gr,adminexp_of_gr,finaexp_of_gr,impai_ttm,"  # noqa: E501
+                "gc_of_gr,op_of_gr,ebit_of_gr,roe,roe_waa,roe_dt,roa,npta,roic,roe_yearly,roa2_yearly,"  # noqa: E501
+                "roe_avg,opincome_of_ebt,investincome_of_ebt,n_op_profit_of_ebt,tax_to_ebt,dtprofit_to_profit,"  # noqa: E501
+                "salescash_to_or,ocf_to_or,ocf_to_opincome,capitalized_to_da,debt_to_assets,assets_to_eqt,"  # noqa: E501
+                "dp_assets_to_eqt,ca_to_assets,nca_to_assets,tbassets_to_totalassets,int_to_talcap,"  # noqa: E501
+                "eqt_to_talcapital,currentdebt_to_debt,longdeb_to_debt,ocf_to_shortdebt,debt_to_eqt"
+            )
 
             df = await self._rate_limited_call(
                 self.pro.fina_indicator,
@@ -177,8 +190,12 @@ class TushareClient(IStockBasicProvider, IMarketQuoteProvider, IFinancialDataPro
         """
         try:
             logger.info("开始从 Tushare 获取股票基础数据...")
-            # 获取数据字段：ts_code, symbol, name, area, industry, market, list_date, fullname, enname, cnspell, exchange, curr_type, list_status, delist_date, is_hs
-            fields = "ts_code,symbol,name,area,industry,market,list_date,fullname,enname,cnspell,exchange,curr_type,list_status,delist_date,is_hs"
+            # 获取数据字段：ts_code, symbol, name, area, industry, market, list_date, fullname, enname, cnspell,  # noqa: E501
+# exchange, curr_type, list_status, delist_date, is_hs
+            fields = (
+                "ts_code,symbol,name,area,industry,market,list_date,fullname,enname,cnspell,"  # noqa: E501
+                "exchange,curr_type,list_status,delist_date,is_hs"
+            )
 
             df = await self._rate_limited_call(
                 self.pro.stock_basic,
@@ -214,10 +231,11 @@ class TushareClient(IStockBasicProvider, IMarketQuoteProvider, IFinancialDataPro
         """
         try:
             logger.info(
-                f"开始从 Tushare 获取日线数据: code={third_code}, date={trade_date}, start={start_date}, end={end_date}"
+                f"开始从 Tushare 获取日线数据: code={third_code}, date={trade_date}, "  # noqa: E501
+                f"start={start_date}, end={end_date}"
             )
             # 1. 获取基础行情 (daily)
-            # fields: ts_code, trade_date, open, high, low, close, pre_close, change, pct_chg, vol, amount
+            # fields: ts_code, trade_date, open, high, low, close, pre_close, change, pct_chg, vol, amount  # noqa: E501
             daily_fields = (
                 "ts_code,trade_date,open,high,low,close,pre_close,change,pct_chg,vol,amount"
             )
@@ -251,8 +269,12 @@ class TushareClient(IStockBasicProvider, IMarketQuoteProvider, IFinancialDataPro
                 df_adj = pd.DataFrame()
 
             # 3. 获取每日指标 (daily_basic)
-            # fields: ts_code, trade_date, turnover_rate, turnover_rate_f, volume_ratio, pe, pe_ttm, pb, ps, ps_ttm, dv_ratio, dv_ttm, total_share, float_share, free_share, total_mv, circ_mv
-            basic_fields = "ts_code,trade_date,turnover_rate,turnover_rate_f,volume_ratio,pe,pe_ttm,pb,ps,ps_ttm,dv_ratio,dv_ttm,total_share,float_share,free_share,total_mv,circ_mv"
+            # fields: ts_code, trade_date, turnover_rate, turnover_rate_f, volume_ratio, pe, pe_ttm, pb, ps, ps_ttm,  # noqa: E501
+# dv_ratio, dv_ttm, total_share, float_share, free_share, total_mv, circ_mv
+            basic_fields = (
+                "ts_code,trade_date,turnover_rate,turnover_rate_f,volume_ratio,pe,pe_ttm,pb,ps,ps_ttm,"  # noqa: E501
+                "dv_ratio,dv_ttm,total_share,float_share,free_share,total_mv,circ_mv"
+            )
             try:
                 df_basic = await self._rate_limited_call(
                     self.pro.daily_basic,

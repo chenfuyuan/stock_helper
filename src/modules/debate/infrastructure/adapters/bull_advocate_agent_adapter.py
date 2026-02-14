@@ -7,6 +7,7 @@ Bull Advocate Agent Port 的 Infrastructure 实现。
 from pathlib import Path
 from typing import Optional
 
+from src.modules.debate.domain.dtos.bull_bear_argument import BullArgument
 from src.modules.debate.domain.dtos.debate_input import DebateInput
 from src.modules.debate.domain.ports.bull_advocate_agent import (
     IBullAdvocateAgentPort,
@@ -42,7 +43,7 @@ class BullAdvocateAgentAdapter(IBullAdvocateAgentPort):
         self._llm = llm_port
         self._prompts_dir = prompts_dir or get_prompts_dir("bull_advocate")
 
-    async def advocate(self, input_data: DebateInput) -> "BullArgument":
+    async def advocate(self, input_data: DebateInput) -> BullArgument:
         pass
 
         system_prompt = load_system_prompt(self._prompts_dir)

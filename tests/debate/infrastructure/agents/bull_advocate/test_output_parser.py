@@ -32,7 +32,7 @@ def test_parse_valid_json_returns_bull_argument():
 def test_parse_valid_json_in_markdown_code_block():
     """Markdown 代码块包裹的 JSON 可正确剥离并解析。"""
     raw = """```json
-{"direction": "BULLISH", "confidence": 0.6, "core_thesis": "x", "supporting_arguments": [], "acknowledged_risks": [], "price_catalysts": []}
+{"direction": "BULLISH", "confidence": 0.6, "core_thesis": "x", "supporting_arguments": [], "acknowledged_risks": [], "price_catalysts": []}  # noqa: E501
 ```"""
     result = parse_bull_argument(raw)
     assert result.direction == "BULLISH"

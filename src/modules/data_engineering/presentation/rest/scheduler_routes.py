@@ -74,7 +74,8 @@ async def get_status():
         )
 
     logger.debug(
-        f"API: Scheduler status retrieved. Running: {scheduler.running}, Job Count: {len(current_jobs)}"
+        f"API: Scheduler status retrieved. Running: {scheduler.running}, "  # noqa: E501
+        f"Job Count: {len(current_jobs)}"
     )
 
     return BaseResponse(

@@ -52,7 +52,10 @@ class FinancialAuditApiResponse(BaseModel):
     "/financial-audit",
     response_model=FinancialAuditApiResponse,
     summary="对指定股票进行财务审计",
-    description="根据财务指标数据构建快照，并调用大模型生成证据驱动的 5D 财务审计观点。响应体含 input、financial_indicators、output（代码塞入，与技术分析师接口一致）。",
+    description=(  # noqa: E501
+        "根据财务指标数据构建快照，并调用大模型生成证据驱动的 5D 财务审计观点。"
+        "响应体含 input、financial_indicators、output（代码塞入，与技术分析师接口一致）。"
+    ),
 )
 async def run_financial_audit(
     symbol: str = Query(..., description="股票代码，如 000001.SZ"),

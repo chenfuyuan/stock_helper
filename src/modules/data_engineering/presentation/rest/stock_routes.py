@@ -120,7 +120,8 @@ async def sync_stock_daily(
     try:
         result = await use_case.execute(limit=limit, offset=offset)
         logger.info(
-            f"Daily history sync completed: {result['synced_stocks']} stocks, {result['total_rows']} rows"
+            f"Daily history sync completed: {result['synced_stocks']} stocks, "  # noqa: E501
+            f"{result['total_rows']} rows"
         )
 
         return BaseResponse(

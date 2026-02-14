@@ -144,7 +144,7 @@ class ResearchContainer:
         组装宏观情报员服务：宏观数据 Port、宏观上下文构建器、宏观分析 Agent。
 
         依赖：
-        - MacroDataAdapter：注入 GetStockBasicInfoUseCase（从 data_engineering）+ WebSearchService（从 llm_platform）
+        - MacroDataAdapter：注入 GetStockBasicInfoUseCase（从 data_engineering）+ WebSearchService（从 llm_platform）  # noqa: E501
         - MacroContextBuilderImpl：将搜索结果按维度归类并格式化为上下文
         - MacroIntelligenceAgentAdapter：注入 LLMAdapter（包装 llm_platform 的 LLMService）
 

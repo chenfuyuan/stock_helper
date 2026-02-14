@@ -55,7 +55,10 @@ class ValuationModelApiResponse(BaseModel):
     "/valuation-model",
     response_model=ValuationModelApiResponse,
     summary="对指定股票进行估值建模",
-    description='基于基本面数据计算标的的"内在价值"与"安全边际"，剥离市场情绪，仅基于估值模型和财务指标进行判断。响应体含 input、valuation_indicators、output（代码塞入）。',
+    description=(  # noqa: E501
+        '基于基本面数据计算标的的"内在价值"与"安全边际"，剥离市场情绪，仅基于估值模型和财务指标进行判断。'
+        '响应体含 input、valuation_indicators、output（代码塞入）。'
+    ),
 )
 async def run_valuation_model(
     symbol: str = Query(..., description="股票代码，如 000001.SZ"),

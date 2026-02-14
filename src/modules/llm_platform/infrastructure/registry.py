@@ -61,7 +61,8 @@ class LLMRegistry:
                     success_count += 1
 
             logger.info(
-                f"LLM Registry refreshed. Loaded {success_count} providers out of {len(configs)} configs."
+                f"LLM Registry refreshed. Loaded {success_count} providers out of "
+                f"{len(configs)} configs."
             )
         except Exception as e:
             logger.error(f"LLM 注册表刷新失败: {str(e)}")
