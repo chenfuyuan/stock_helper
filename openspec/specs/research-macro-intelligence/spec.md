@@ -101,7 +101,9 @@ Research 模块 SHALL 为宏观情报员暴露 HTTP REST 接口（路由路径�
 3. **宏观经济周期定位**：GDP、CPI、PMI 等宏观经济指标相关
 4. **行业景气与资金流向**：该行业的景气度、发展趋势、市场前景相关
 
-搜索查询 SHALL 由代码根据标的行业（industry）和当前年份动态生成。每个维度的搜索 SHALL 使用时效过滤（如 `freshness=oneMonth`）以获取近期信息，并启用 AI 摘要。
+搜索查询 SHALL 由代码根据标的行业（industry）和当前年份动态生成。每个维度的查询模板 SHALL 遵循 `research-search-quality` 定义的聚焦查询构造规范（核心领域关键词不超过 3 个，禁止关键词堆砌）。每个维度 SHALL 使用独立的 `count` 和 `freshness` 参数（由 `SearchDimensionConfig` 定义），并启用 AI 摘要。
+
+搜索结果 SHALL 在映射为 Domain DTO 之前，经过 `research-search-quality` 定义的规则式过滤（URL 去重、去空标题、去无内容）和按时效排序处理。
 
 #### Scenario: 按四个维度分别搜索
 
@@ -113,10 +115,10 @@ Research 模块 SHALL 为宏观情报员暴露 HTTP REST 接口（路由路径�
 - **WHEN** 标的属于"银行"行业
 - **THEN** 产业政策维度的搜索查询 SHALL 包含"银行"关键词；行业景气维度的搜索查询 SHALL 包含"银行"关键词
 
-#### Scenario: 搜索使用时效过滤
+#### Scenario: 搜索使用维度级参数
 
 - **WHEN** 系统执行宏观搜索
-- **THEN** 搜索请求 SHALL 设置 freshness 参数（如 `oneMonth`），以获取近期宏观信息而非过时数据
+- **THEN** 每个维度的搜索请求 SHALL 使用独立的 `count` 和 `freshness` 参数（由 `SearchDimensionConfig` 定义），以适配不同维度的信息密度和时效要求
 
 ---
 

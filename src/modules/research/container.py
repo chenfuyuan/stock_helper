@@ -39,6 +39,7 @@ from src.modules.research.infrastructure.valuation_snapshot.snapshot_builder imp
 from src.modules.research.infrastructure.macro_context.context_builder import (
     MacroContextBuilderImpl,
 )
+from src.modules.research.infrastructure.search_utils.result_filter import SearchResultFilter
 from src.modules.research.application.catalyst_detective_service import CatalystDetectiveService
 from src.modules.research.infrastructure.adapters.catalyst_data_adapter import CatalystDataAdapter
 from src.modules.research.infrastructure.catalyst_context.context_builder import CatalystContextBuilderImpl
@@ -120,9 +121,11 @@ class ResearchContainer:
             MacroIntelligenceService: 装配好的宏观情报员服务实例
         """
         # 1. 宏观数据 Adapter（获取股票信息 + 执行宏观搜索）
+        result_filter = SearchResultFilter()
         macro_data_adapter = MacroDataAdapter(
             stock_info_usecase=self._de_container.get_stock_basic_info_use_case(),
             web_search_service=self._llm_container.web_search_service(),
+            result_filter=result_filter,
         )
         
         # 2. 宏观上下文构建器（将搜索结果转为 Prompt 上下文）
@@ -146,9 +149,11 @@ class ResearchContainer:
         组装催化剂侦探服务：催化剂数据 Port、上下文构建器、侦探 Agent。
         """
         # 1. 催化剂数据 Adapter
+        result_filter = SearchResultFilter()
         data_adapter = CatalystDataAdapter(
             stock_info_use_case=self._de_container.get_stock_basic_info_use_case(),
             web_search_service=self._llm_container.web_search_service(),
+            result_filter=result_filter,
         )
 
         # 2. 上下文构建器

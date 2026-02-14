@@ -21,6 +21,7 @@ from src.modules.research.infrastructure.adapters.macro_data_adapter import (
 from src.modules.research.infrastructure.adapters.catalyst_data_adapter import (
     CatalystDataAdapter,
 )
+from src.modules.research.infrastructure.search_utils.result_filter import SearchResultFilter
 
 
 def _make_info(name: str = "平安银行", industry: str | None = "银行", third_code: str = "000001.SZ") -> StockInfo:
@@ -126,6 +127,7 @@ async def test_macro_adapter_daily_none_returns_none():
     adapter = MacroDataAdapter(
         stock_info_usecase=use_case,
         web_search_service=AsyncMock(),
+        result_filter=SearchResultFilter(),
     )
     result = await adapter.get_stock_overview("000001.SZ")
     assert result is None
@@ -142,6 +144,7 @@ async def test_macro_adapter_daily_ok_returns_overview():
     adapter = MacroDataAdapter(
         stock_info_usecase=use_case,
         web_search_service=AsyncMock(),
+        result_filter=SearchResultFilter(),
     )
     result = await adapter.get_stock_overview("000001.SZ")
     assert result is not None
@@ -161,6 +164,7 @@ async def test_macro_adapter_industry_none_defaults_to_unknown():
     adapter = MacroDataAdapter(
         stock_info_usecase=use_case,
         web_search_service=AsyncMock(),
+        result_filter=SearchResultFilter(),
     )
     result = await adapter.get_stock_overview("000001.SZ")
     assert result is not None
@@ -181,6 +185,7 @@ async def test_catalyst_adapter_daily_none_still_returns_overview():
     adapter = CatalystDataAdapter(
         stock_info_use_case=use_case,
         web_search_service=AsyncMock(),
+        result_filter=SearchResultFilter(),
     )
     result = await adapter.get_stock_overview("000001.SZ")
     assert result is not None
@@ -199,6 +204,7 @@ async def test_catalyst_adapter_daily_ok_returns_overview():
     adapter = CatalystDataAdapter(
         stock_info_use_case=use_case,
         web_search_service=AsyncMock(),
+        result_filter=SearchResultFilter(),
     )
     result = await adapter.get_stock_overview("000001.SZ")
     assert result is not None
@@ -218,6 +224,7 @@ async def test_catalyst_adapter_industry_none_defaults_to_unknown():
     adapter = CatalystDataAdapter(
         stock_info_use_case=use_case,
         web_search_service=AsyncMock(),
+        result_filter=SearchResultFilter(),
     )
     result = await adapter.get_stock_overview("000001.SZ")
     assert result is not None

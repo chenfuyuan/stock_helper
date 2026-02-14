@@ -10,6 +10,8 @@ from src.modules.research.domain.dtos.catalyst_inputs import (
     CatalystSearchResult,
     CatalystSearchResultItem,
 )
+from src.modules.research.infrastructure.search_utils.result_filter import SearchResultFilter
+from src.modules.research.infrastructure.search_utils.catalyst_search_dimensions import CATALYST_SEARCH_DIMENSIONS
 from src.modules.data_engineering.application.queries.get_stock_basic_info import (
     GetStockBasicInfoUseCase,
 )
@@ -29,9 +31,11 @@ class CatalystDataAdapter(ICatalystDataPort):
         self,
         stock_info_use_case: GetStockBasicInfoUseCase,
         web_search_service: WebSearchService,
+        result_filter: SearchResultFilter,
     ):
         self.stock_info_use_case = stock_info_use_case
         self.web_search_service = web_search_service
+        self.result_filter = result_filter
 
     async def get_stock_overview(self, symbol: str) -> Optional[CatalystStockOverview]:
         """
@@ -69,51 +73,40 @@ class CatalystDataAdapter(ICatalystDataPort):
         """
         current_year = date.today().year
 
-        # Define search dimensions and queries
-        # Dimensions MUST match the keys used in CatalystContextBuilderImpl
-        # (Company Events, Industry Catalysts, Market Sentiment, Earnings Expectations)
-
-        # Mapping topics to query templates
-        # Topic names here align with what ContextBuilder expects (based on design doc)
-        search_configs = [
-            {
-                "topic": "公司重大事件与动态",
-                "template": "{stock_name} 重大事件 并购重组 管理层变动 战略合作 {year}年",
-            },
-            {
-                "topic": "行业催化与竞争格局",
-                "template": "{stock_name} {industry} 竞争格局 技术突破 政策催化 {year}年",
-            },
-            {
-                "topic": "市场情绪与机构动向",
-                "template": "{stock_name} 机构评级 分析师 调研 资金流向 {year}年",
-            },
-            {
-                "topic": "财报预期与业绩催化",
-                "template": "{stock_name} 业绩预告 财报 盈利预测 订单合同 {year}年",
-            },
-        ]
-
         results = []
 
-        for config in search_configs:
-            topic = config["topic"]
-            query = config["template"].format(
-                stock_name=stock_name, industry=industry, year=current_year
+        # 使用配置驱动的搜索循环
+        for config in CATALYST_SEARCH_DIMENSIONS:
+            topic = config.topic
+            # 填充查询模板中的占位符
+            query = config.query_template.format(
+                stock_name=stock_name,
+                industry=industry,
+                current_year=current_year,
             )
 
             try:
-                # Execute search with configured parameters
+                # 调用搜索服务
                 search_req = WebSearchRequest(
                     query=query,
-                    freshness="oneMonth",  # As per design
-                    count=8,  # As per design
-                    summary=True,  # As per design
+                    freshness=config.freshness,
+                    count=config.count,
+                    summary=True,
                 )
 
                 response = await self.web_search_service.search(search_req)
 
-                items = [self._map_search_item(item) for item in response.results]
+                # 过滤和排序搜索结果
+                filtered_items = self.result_filter.filter_and_sort(response.results)
+                
+                # 记录过滤统计日志
+                logger.info(
+                    f"维度 {topic} 过滤统计："
+                    f"过滤前={len(response.results)}，"
+                    f"过滤后={len(filtered_items)}"
+                )
+
+                items = [self._map_search_item(item) for item in filtered_items]
 
                 results.append(CatalystSearchResult(dimension_topic=topic, items=items))
 

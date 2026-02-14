@@ -29,6 +29,8 @@ from src.modules.research.domain.dtos.macro_inputs import (
     MacroSearchResultItem,
 )
 from src.modules.research.domain.ports.macro_data import IMacroDataPort
+from src.modules.research.infrastructure.search_utils.result_filter import SearchResultFilter
+from src.modules.research.infrastructure.search_utils.macro_search_dimensions import MACRO_SEARCH_DIMENSIONS
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +47,7 @@ class MacroDataAdapter(IMacroDataPort):
         self,
         stock_info_usecase: GetStockBasicInfoUseCase,
         web_search_service: WebSearchService,
+        result_filter: SearchResultFilter,
     ):
         """
         初始化宏观数据 Adapter。
@@ -52,9 +55,11 @@ class MacroDataAdapter(IMacroDataPort):
         Args:
             stock_info_usecase: data_engineering 的股票信息查询用例
             web_search_service: llm_platform 的 Web 搜索服务
+            result_filter: 搜索结果过滤器
         """
         self._stock_info_usecase = stock_info_usecase
         self._web_search_service = web_search_service
+        self._result_filter = result_filter
 
     async def get_stock_overview(self, symbol: str) -> Optional[MacroStockOverview]:
         """
@@ -123,32 +128,17 @@ class MacroDataAdapter(IMacroDataPort):
         
         current_year = date.today().year
         
-        # 定义四个维度的搜索查询
-        search_dimensions = [
-            {
-                "dimension": "货币与流动性",
-                "query": f"{current_year}年 中国 央行 货币政策 利率 流动性",
-            },
-            {
-                "dimension": "产业政策",
-                "query": f"{industry} 产业政策 监管政策 {current_year}年",
-            },
-            {
-                "dimension": "宏观经济",
-                "query": f"中国 宏观经济 GDP CPI PMI 经济数据 {current_year}年",
-            },
-            {
-                "dimension": "行业景气",
-                "query": f"{industry} 行业景气 发展趋势 市场前景 {current_year}年",
-            },
-        ]
-        
         results: List[MacroSearchResult] = []
         
-        # 顺序执行四次搜索
-        for dim_config in search_dimensions:
-            dimension = dim_config["dimension"]
-            query = dim_config["query"]
+        # 使用配置驱动的搜索循环
+        for config in MACRO_SEARCH_DIMENSIONS:
+            dimension = config.topic
+            # 填充查询模板中的占位符
+            query = config.query_template.format(
+                industry=industry,
+                stock_name=stock_name,
+                current_year=current_year,
+            )
             
             logger.info(f"执行搜索：维度={dimension}，查询={query}")
             
@@ -156,12 +146,22 @@ class MacroDataAdapter(IMacroDataPort):
                 # 调用搜索服务
                 search_request = WebSearchRequest(
                     query=query,
-                    freshness="oneMonth",
+                    freshness=config.freshness,
                     summary=True,
-                    count=8,
+                    count=config.count,
                 )
                 
                 search_response = await self._web_search_service.search(search_request)
+                
+                # 过滤和排序搜索结果
+                filtered_items = self._result_filter.filter_and_sort(search_response.results)
+                
+                # 记录过滤统计日志
+                logger.info(
+                    f"维度 {dimension} 过滤统计："
+                    f"过滤前={len(search_response.results)}，"
+                    f"过滤后={len(filtered_items)}"
+                )
                 
                 # 转为 MacroSearchResultItem 列表
                 items = [
@@ -173,7 +173,7 @@ class MacroDataAdapter(IMacroDataPort):
                         site_name=item.site_name,
                         published_date=item.published_date,
                     )
-                    for item in search_response.results
+                    for item in filtered_items
                 ]
                 
                 results.append(
