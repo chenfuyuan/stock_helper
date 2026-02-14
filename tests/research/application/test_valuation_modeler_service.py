@@ -10,7 +10,7 @@ import pytest
 from datetime import date
 from unittest.mock import AsyncMock
 
-from src.modules.research.application.services.valuation_modeler_service import (
+from src.modules.research.application.valuation_modeler_service import (
     ValuationModelerService,
 )
 from src.modules.research.domain.dtos.financial_record_input import (

@@ -2,15 +2,16 @@ from datetime import date
 
 import pytest
 
-from src.modules.market_data.application.use_cases.get_stock_basic_info import (
+from src.modules.data_engineering.application.queries.get_stock_basic_info import (
     GetStockBasicInfoUseCase,
 )
-from src.modules.market_data.domain.entities import StockDaily, StockInfo
-from src.modules.market_data.domain.enums import ListStatus, MarketType
-from src.modules.market_data.infrastructure.adapters.persistence.repositories.stock_daily_repository import (  # noqa: E501
+from src.modules.data_engineering.domain.model.stock_daily import StockDaily
+from src.modules.data_engineering.domain.model.stock import StockInfo
+from src.modules.data_engineering.domain.model.enums import ListStatus, MarketType
+from src.modules.data_engineering.infrastructure.persistence.repositories.pg_quote_repo import (  # noqa: E501
     StockDailyRepositoryImpl,
 )
-from src.modules.market_data.infrastructure.adapters.persistence.repositories.stock_repository import (  # noqa: E501
+from src.modules.data_engineering.infrastructure.persistence.repositories.pg_stock_repo import (  # noqa: E501
     StockRepositoryImpl,
 )
 
