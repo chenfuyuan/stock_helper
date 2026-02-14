@@ -2,17 +2,17 @@
 任务 10.2 + 10.5：估值建模师 Application 输入校验与 E2E mock 测试。
 传入缺失 symbol 时断言被拒绝；mock 数据 Port 返回 None（标的不存在）时断言明确错误；
 mock 财务数据返回空列表时断言明确错误；
-E2E：mock 三个 Port 返回固定数据，断言完整编排返回结果包含 valuation_verdict、input、valuation_indicators、output 等字段。
+E2E：mock 三个 Port 返回固定数据，断言完整编排返回结果包含 
+valuation_verdict、input、valuation_indicators、output 等字段。
 """
 
 from datetime import date
 from unittest.mock import AsyncMock
 
-import pytest
-
-from src.modules.research.application.valuation_modeler_service import (
-    ValuationModelerService,
-)
+from src.modules.research.application.services.\
+        valuation_modeler_service import (
+            ValuationModelerService,
+        )
 from src.modules.research.domain.dtos.financial_record_input import (
     FinanceRecordInput,
 )
@@ -200,7 +200,8 @@ async def test_empty_historical_valuations_logs_warning_and_continues():
 
 @pytest.mark.asyncio
 async def test_full_flow_returns_valuation_result_with_all_fields():
-    """E2E：mock 三个 Port，完整编排返回包含 valuation_verdict、input、valuation_indicators、output 等字段。"""
+    """E2E：mock 三个 Port，完整编排返回包含 valuation_verdict、
+    input、valuation_indicators、output 等字段。"""
     mock_data = AsyncMock()
     mock_data.get_stock_overview.return_value = StockOverviewInput(
         stock_name="平安银行",
@@ -258,15 +259,21 @@ async def test_full_flow_returns_valuation_result_with_all_fields():
             key_evidence=["PE 处于历史 15% 分位", "PEG 仅为 0.24"],
             risk_factors=["毛利率同比上升但仍需观察"],
             reasoning_summary="综合三模型显示低估，具有投资价值。",
-            narrative_report="【核心结论】当前估值偏低。【关键论据】PE 分位 15%，PEG 0.24。【风险】毛利率需观察。【置信度】0.85。",
+            narrative_report=(
+                "【核心结论】当前估值偏低。"
+                "【关键论据】PE 分位 15%，PEG 0.24。"
+                "【风险】毛利率需观察。"
+                "【置信度】0.85。"
+            ),
         ),
         raw_llm_output='{"valuation_verdict":"Undervalued"}',
         user_prompt="test user prompt",
     )
 
-    from src.modules.research.infrastructure.valuation_snapshot.snapshot_builder import (
-        ValuationSnapshotBuilderImpl,
-    )
+    from src.modules.research.infrastructure.valuation_snapshot.\
+            snapshot_builder import (
+                ValuationSnapshotBuilderImpl,
+            )
 
     svc = ValuationModelerService(
         valuation_data_port=mock_data,

@@ -74,5 +74,6 @@ def test_result_dto_missing_required_fails():
     with pytest.raises(ValidationError):
         TechnicalAnalysisResultDTO(
             signal="BULLISH",
-            # missing confidence, summary_reasoning, key_technical_levels, risk_warning
+            # missing confidence, summary_reasoning, 
+            # key_technical_levels, risk_warning
         )

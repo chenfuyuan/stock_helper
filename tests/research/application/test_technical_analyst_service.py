@@ -70,8 +70,10 @@ def _make_bars():
 
 
 @pytest.mark.asyncio
-async def test_technical_analyst_accepts_ticker_and_analysis_date_returns_dto():
-    """调用技术分析师 Application 接口，出参含解析结果及 input、technical_indicators、output（代码塞入）。"""
+async def test_technical_analyst_accepts_ticker_and_analysis_date_returns_dto(
+):
+    """调用技术分析师 Application 接口，出参含解析结果及 input、
+    technical_indicators、output（代码塞入）。"""
     mock_market = AsyncMock(spec=IMarketQuotePort)
     mock_market.get_daily_bars.return_value = _make_bars()
 
@@ -200,4 +202,6 @@ async def test_technical_analyst_rejects_missing_analysis_date():
     )
 
     with pytest.raises(BadRequestException):
-        await service.run(ticker="000001.SZ", analysis_date=None)  # type: ignore
+        await service.run(
+            ticker="000001.SZ", analysis_date=None
+        )  # type: ignore

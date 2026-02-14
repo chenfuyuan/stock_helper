@@ -1,6 +1,7 @@
 """
 Task 2.4：FinancialAuditResultDTO 校验的测试。
-financial_score ∈ [0, 100]；signal 为五值之一；confidence ∈ [0, 1]；dimension_analyses 含 5 个维度。
+financial_score ∈ [0, 100]；signal 为五值之一；
+confidence ∈ [0, 1]；dimension_analyses 含 5 个维度。
 """
 
 import pytest
