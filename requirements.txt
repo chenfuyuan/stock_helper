@@ -11,6 +11,7 @@ python-json-logger
 prometheus-client
 pandas
 tushare
+akshare
 APScheduler==3.10.4
 neo4j
 openai

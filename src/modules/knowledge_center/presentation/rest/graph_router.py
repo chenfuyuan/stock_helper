@@ -45,15 +45,19 @@ async def get_graph_service(
     "/stocks/{third_code}/neighbors",
     response_model=list[StockNeighborResponse],
     summary="查询同维度股票",
-    description="根据指定维度（行业/地域/市场/交易所）查询与目标股票共享同一维度的其他股票",
+    description="根据指定维度（行业/地域/市场/交易所/概念）查询与目标股票共享同一维度的其他股票",
 )
 async def get_stock_neighbors(
     third_code: str,
-    dimension: Literal["industry", "area", "market", "exchange"] = Query(
+    dimension: Literal["industry", "area", "market", "exchange", "concept"] = Query(
         ...,
-        description="维度类型：industry（行业）/ area（地域）/ market（市场）/ exchange（交易所）",
+        description="维度类型：industry（行业）/ area（地域）/ market（市场）/ exchange（交易所）/ concept（概念）",
     ),
     limit: int = Query(20, ge=1, le=100, description="返回数量上限"),
+    dimension_name: str | None = Query(
+        None,
+        description="维度名称，当 dimension='concept' 时必填，指定概念名称",
+    ),
     service: GraphService = Depends(get_graph_service),
 ) -> list[StockNeighborResponse]:
     """
@@ -63,16 +67,25 @@ async def get_stock_neighbors(
         third_code: 股票第三方代码
         dimension: 维度类型
         limit: 返回数量上限
+        dimension_name: 维度名称，概念维度必填
         service: 图谱服务实例
     
     Returns:
         同维度股票列表
     """
+    # 校验概念维度必须提供 dimension_name
+    if dimension == "concept" and not dimension_name:
+        raise HTTPException(
+            status_code=422,
+            detail="查询概念维度邻居时必须提供 dimension_name 参数",
+        )
+    
     try:
         neighbors = await service.get_stock_neighbors(
             third_code=third_code,
             dimension=dimension,
             limit=limit,
+            dimension_name=dimension_name,
         )
         
         return [
@@ -174,23 +187,60 @@ async def sync_graph(
         同步结果摘要
     """
     try:
-        if request.mode == "full":
-            result = await service.sync_full_graph(
-                include_finance=request.include_finance,
-                batch_size=request.batch_size,
-                skip=request.skip,
-                limit=request.limit,
+        # 根据 target 参数分发到对应同步命令
+        if request.target == "concept":
+            # 概念同步仅支持全量模式
+            logger.info("执行概念图谱全量同步")
+            result = await service.sync_concept_graph(batch_size=request.batch_size)
+        elif request.target == "all":
+            # 依次执行股票同步和概念同步
+            logger.info("执行全部同步：股票 + 概念")
+            if request.mode == "full":
+                stock_result = await service.sync_full_graph(
+                    include_finance=request.include_finance,
+                    batch_size=request.batch_size,
+                    skip=request.skip,
+                    limit=request.limit,
+                )
+            else:
+                stock_result = await service.sync_incremental_graph(
+                    third_codes=request.third_codes,
+                    include_finance=request.include_finance,
+                    batch_size=request.batch_size,
+                    window_days=request.window_days,
+                    limit=request.limit,
+                )
+            
+            concept_result = await service.sync_concept_graph(batch_size=request.batch_size)
+            
+            # 合并结果
+            result = SyncGraphResponse(
+                total=stock_result.total + concept_result.total,
+                success=stock_result.success + concept_result.success,
+                failed=stock_result.failed + concept_result.failed,
+                duration_ms=stock_result.duration_ms + concept_result.duration_ms,
+                error_details=stock_result.error_details + concept_result.error_details,
             )
-        elif request.mode == "incremental":
-            result = await service.sync_incremental_graph(
-                third_codes=request.third_codes,
-                include_finance=request.include_finance,
-                batch_size=request.batch_size,
-                window_days=request.window_days,
-                limit=request.limit,
-            )
+            return result
         else:
-            raise HTTPException(status_code=400, detail=f"无效的同步模式: {request.mode}")
+            # target="stock" 的默认行为
+            if request.mode == "full":
+                result = await service.sync_full_graph(
+                    include_finance=request.include_finance,
+                    batch_size=request.batch_size,
+                    skip=request.skip,
+                    limit=request.limit,
+                )
+            elif request.mode == "incremental":
+                result = await service.sync_incremental_graph(
+                    third_codes=request.third_codes,
+                    include_finance=request.include_finance,
+                    batch_size=request.batch_size,
+                    window_days=request.window_days,
+                    limit=request.limit,
+                )
+            else:
+                raise HTTPException(status_code=400, detail=f"无效的同步模式: {request.mode}")
         
         return SyncGraphResponse(
             total=result.total,

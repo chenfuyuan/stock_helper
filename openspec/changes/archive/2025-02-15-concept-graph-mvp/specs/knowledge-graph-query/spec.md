@@ -1,8 +1,8 @@
 # Purpose
 
-提供知识图谱查询能力，支持股票同维度邻居查询和个股关系网络查询。
+扩展知识图谱查询能力，支持概念题材维度。
 
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: 查询同维度股票（Neighbors）
 
@@ -55,6 +55,7 @@
 查询 MUST 支持 `depth` 参数（默认值 1），表示关系遍历深度。MVP 阶段仅需支持 `depth = 1`。
 
 返回结果 MUST 包含：
+
 - 中心 Stock 节点及其属性
 - 所有关联的维度节点（Industry / Area / Market / Exchange / **Concept**）
 - 连接它们的关系类型
@@ -72,7 +73,7 @@
 #### Scenario: 股票无某维度关系
 
 - **WHEN** 某股票的 `industry` 为 null（无 BELONGS_TO_INDUSTRY 关系）
-- **THEN** 返回结果中不包含 Industry 节点，但其他维度关系正常返回
+- **THEN** 返回结果中不包含 Industry 节点，但其他维度关系（包括 Concept）正常返回
 
 #### Scenario: 股票不存在时返回 null
 
@@ -84,6 +85,7 @@
 系统 MUST 在 `knowledge_center/domain/ports/graph_repository.py` 中定义 `GraphRepository` ABC 接口。
 
 该接口 MUST 至少包含以下方法：
+
 - `merge_stocks(stocks: list[StockGraphDTO]) -> SyncResult`：批量写入/更新 Stock 节点及维度关系
 - `merge_dimensions(dimensions: list[DimensionDTO]) -> None`：批量写入/更新维度节点
 - `merge_concepts(concepts: list[ConceptGraphSyncDTO]) -> SyncResult`：批量写入/更新 Concept 节点及其与 Stock 的关系
@@ -98,18 +100,6 @@
 - **THEN** 该 ABC 接口 MUST 位于 `src/modules/knowledge_center/domain/ports/graph_repository.py`
 - **THEN** 接口方法的入参和出参 MUST 使用 `domain/dtos/` 中定义的 DTO 类型
 
-### Requirement: GraphService 应用服务
-
-系统 MUST 在 `knowledge_center/application/services/graph_service.py` 中定义 `GraphService`，作为 `knowledge_center` 模块对外暴露的核心应用服务。
-
-`GraphService` MUST 通过依赖注入接收 `GraphRepository` 接口（而非具体实现）。
-
-#### Scenario: GraphService 依赖注入
-
-- **WHEN** 创建 `GraphService` 实例
-- **THEN** MUST 通过构造函数注入 `GraphRepository`
-- **THEN** 不 MUST 直接依赖 Neo4j 驱动或任何基础设施类
-
 ### Requirement: REST API — 查询同维度股票
 
 系统 SHALL 提供 REST 端点：
@@ -119,6 +109,7 @@ GET /api/v1/knowledge-graph/stocks/{third_code}/neighbors?dimension={dimension}&
 ```
 
 参数说明：
+
 - `third_code`（路径参数，必填）：股票代码
 - `dimension`（查询参数，必填）：维度类型，枚举值 `industry | area | market | exchange | concept`
 - `limit`（查询参数，可选）：返回数量上限，默认 20
@@ -158,13 +149,14 @@ GET /api/v1/knowledge-graph/stocks/{third_code}/graph?depth={depth}
 ```
 
 参数说明：
+
 - `third_code`（路径参数，必填）：股票代码
 - `depth`（查询参数，可选）：遍历深度，默认 1
 
 #### Scenario: 正常查询返回 200
 
 - **WHEN** 发送 `GET /api/v1/knowledge-graph/stocks/000001.SZ/graph`
-- **THEN** 返回 HTTP 200 及 JSON 格式的关系网络数据，包含节点和关系信息
+- **THEN** 返回 HTTP 200 及 JSON 格式的关系网络数据，包含节点（含 Concept 节点）和关系信息
 
 #### Scenario: 股票不存在返回 200 空结果
 

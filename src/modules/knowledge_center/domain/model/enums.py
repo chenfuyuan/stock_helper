@@ -15,6 +15,7 @@ class NodeLabel(StrEnum):
     AREA = "AREA"
     MARKET = "MARKET"
     EXCHANGE = "EXCHANGE"
+    CONCEPT = "CONCEPT"
 
 
 class RelationshipType(StrEnum):
@@ -24,3 +25,4 @@ class RelationshipType(StrEnum):
     LOCATED_IN = "LOCATED_IN"
     TRADES_ON = "TRADES_ON"
     LISTED_ON = "LISTED_ON"
+    BELONGS_TO_CONCEPT = "BELONGS_TO_CONCEPT"

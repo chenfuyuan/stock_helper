@@ -9,8 +9,9 @@
 知识中心模块基于 Neo4j 图数据库构建，提供股票实体间的关联关系查询能力。通过 REST API 暴露以下核心功能：
 
 - **图谱数据同步**：将 PostgreSQL 中的股票数据同步到 Neo4j 图谱
-- **同维度股票查询**：查询同行业、同地域、同市场或同交易所的股票
+- **同维度股票查询**：查询同行业、同地域、同市场、同交易所或同概念的股票
 - **个股关系网络**：获取指定股票的完整关联图谱
+- **概念题材查询**：支持概念维度的股票关联分析和板块查询
 
 ### API 基础信息
 
@@ -89,27 +90,50 @@ curl -X POST "http://localhost:8000/api/v1/knowledge-graph/sync" \
 }
 ```
 
-#### 3.1.2 增量同步
+#### 3.1.3 概念数据同步
 
 ```bash
 curl -X POST "http://localhost:8000/api/v1/knowledge-graph/sync" \
   -H "Content-Type: application/json" \
   -d '{
-    "mode": "incremental",
-    "third_codes": ["000001.SZ", "000002.SZ"],
-    "include_finance": true,
-    "batch_size": 100
+    "mode": "full",
+    "target": "concept",
+    "batch_size": 500
   }'
 ```
 
 **请求参数**:
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `mode` | string | 是 | 同步模式，固定值 `"incremental"` |
-| `third_codes` | array | 是 | 股票第三方代码列表 |
-| `include_finance` | boolean | 否 | 是否包含财务快照数据 |
-| `batch_size` | integer | 否 | 批量处理大小 |
+| 参数 | 类型 | 必填 | 说明 | 可选值 |
+|------|------|------|------|--------|
+| `mode` | string | 是 | 同步模式 | `"full"` |
+| `target` | string | 否 | 同步目标 | `"stock"`, `"concept"`, `"all"` |
+| `batch_size` | integer | 否 | 批量处理大小 | `500` |
+
+**响应示例**:
+
+```json
+{
+  "total": 466,
+  "success": 466,
+  "failed": 0,
+  "duration_ms": 1807.94,
+  "error_details": []
+}
+```
+
+#### 3.1.4 全量同步（股票+概念）
+
+```bash
+curl -X POST "http://localhost:8000/api/v1/knowledge-graph/sync" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "mode": "full",
+    "target": "all",
+    "include_finance": false,
+    "batch_size": 500
+  }'
+```
 
 ---
 
@@ -137,10 +161,10 @@ curl -X GET "http://localhost:8000/api/v1/knowledge-graph/stocks/000001.SZ/neigh
 curl -X GET "http://localhost:8000/api/v1/knowledge-graph/stocks/000001.SZ/neighbors?dimension=market&limit=20"
 ```
 
-#### 3.2.4 查询同交易所股票
+#### 3.2.5 查询同概念股票
 
 ```bash
-curl -X GET "http://localhost:8000/api/v1/knowledge-graph/stocks/000001.SZ/neighbors?dimension=exchange&limit=50"
+curl -X GET "http://localhost:8000/api/v1/knowledge-graph/stocks/300008.SZ/neighbors?dimension=concept&dimension_name=船舶制造&limit=10"
 ```
 
 **请求参数**:
@@ -148,8 +172,54 @@ curl -X GET "http://localhost:8000/api/v1/knowledge-graph/stocks/000001.SZ/neigh
 | 参数 | 类型 | 必填 | 说明 | 可选值 |
 |------|------|------|------|--------|
 | `third_code` | string | 是 | 股票第三方代码（路径参数） | — |
-| `dimension` | string | 是 | 查询维度 | `industry`, `area`, `market`, `exchange` |
+| `dimension` | string | 是 | 查询维度 | `industry`, `area`, `market`, `exchange`, `concept` |
+| `dimension_name` | string | 否 | 维度名称（concept 维度必需） | 概念名称 |
 | `limit` | integer | 否 | 返回数量上限 | 1-100，默认 20 |
+
+**响应示例**:
+
+```json
+[
+  {
+    "third_code": "300065.SZ",
+    "name": "海兰信",
+    "industry": null,
+    "area": null,
+    "market": null,
+    "exchange": null
+  },
+  {
+    "third_code": "600482.SH",
+    "name": "中国动力",
+    "industry": null,
+    "area": null,
+    "market": null,
+    "exchange": null
+  }
+]
+```
+
+#### 3.2.6 增量同步
+
+```bash
+curl -X POST "http://localhost:8000/api/v1/knowledge-graph/sync" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "mode": "incremental",
+    "third_codes": ["000001.SZ", "000002.SZ"],
+    "include_finance": true,
+    "batch_size": 100
+  }'
+```
+
+**请求参数**:
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `mode` | string | 是 | 同步模式，固定值 `"incremental"` |
+| `third_codes` | array | 是 | 股票第三方代码列表 |
+| `include_finance` | boolean | 否 | 是否包含财务快照数据 |
+| `batch_size` | integer | 否 | 批量处理大小 |
 
 **响应示例**:
 
@@ -254,6 +324,7 @@ curl -X GET "http://localhost:8000/api/v1/knowledge-graph/stocks/000001.SZ/graph
 | `AREA` | 地域节点 | `name` |
 | `MARKET` | 市场节点 | `name` |
 | `EXCHANGE` | 交易所节点 | `name` |
+| `CONCEPT` | 概念节点 | `code`, `name` |
 
 ### 4.2 关系类型
 
@@ -263,6 +334,7 @@ curl -X GET "http://localhost:8000/api/v1/knowledge-graph/stocks/000001.SZ/graph
 | `LOCATED_IN` | STOCK | AREA | 股票所在地域 |
 | `TRADES_ON` | STOCK | MARKET | 股票交易市场 |
 | `LISTED_ON` | STOCK | EXCHANGE | 股票上市交易所 |
+| `BELONGS_TO_CONCEPT` | STOCK | CONCEPT | 股票所属概念 |
 
 ### 4.3 图谱结构示例
 
@@ -271,6 +343,8 @@ curl -X GET "http://localhost:8000/api/v1/knowledge-graph/stocks/000001.SZ/graph
 (STOCK:000001.SZ) -[:LOCATED_IN]-> (AREA:深圳)
 (STOCK:000001.SZ) -[:TRADES_ON]-> (MARKET:主板)
 (STOCK:000001.SZ) -[:LISTED_ON]-> (EXCHANGE:深交所)
+(STOCK:300008.SZ) -[:BELONGS_TO_CONCEPT]-> (CONCEPT:船舶制造)
+(STOCK:300008.SZ) -[:BELONGS_TO_CONCEPT]-> (CONCEPT:军工)
 ```
 
 ---
@@ -298,7 +372,19 @@ curl -X GET "http://localhost:8000/api/v1/knowledge-graph/stocks/000001.SZ/graph
 curl -X GET "http://localhost:8000/api/v1/knowledge-graph/stocks/000001.SZ/neighbors?dimension=area&limit=50"
 ```
 
-### 5.3 数据初始化
+### 5.3 概念板块分析
+
+**场景**: 分析特定概念题材的股票构成和关联性
+
+```bash
+# 1. 查询"船舶制造"概念的所有股票
+curl -X GET "http://localhost:8000/api/v1/knowledge-graph/stocks/300008.SZ/neighbors?dimension=concept&dimension_name=船舶制造&limit=20"
+
+# 2. 获取包含概念关系的完整图谱
+curl -X GET "http://localhost:8000/api/v1/knowledge-graph/stocks/300008.SZ/graph"
+```
+
+### 5.4 数据初始化
 
 **场景**: 首次部署后初始化图谱数据
 
@@ -308,19 +394,40 @@ curl -X POST "http://localhost:8000/api/v1/knowledge-graph/sync" \
   -H "Content-Type: application/json" \
   -d '{
     "mode": "full",
+    "target": "stock",
     "include_finance": false,
     "batch_size": 1000,
     "limit": 5000
   }'
 
-# 2. 增量同步财务数据（可选）
+# 2. 同步概念数据
 curl -X POST "http://localhost:8000/api/v1/knowledge-graph/sync" \
   -H "Content-Type: application/json" \
   -d '{
     "mode": "full",
+    "target": "concept",
+    "batch_size": 500
+  }'
+
+# 3. 增量同步财务数据（可选）
+curl -X POST "http://localhost:8000/api/v1/knowledge-graph/sync" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "mode": "full",
+    "target": "stock",
     "include_finance": true,
     "batch_size": 500,
     "limit": 1000
+  }'
+
+# 4. 或者一次性同步所有数据
+curl -X POST "http://localhost:8000/api/v1/knowledge-graph/sync" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "mode": "full",
+    "target": "all",
+    "include_finance": false,
+    "batch_size": 500
   }'
 ```
 
@@ -408,9 +515,26 @@ MATCH (n) RETURN count(n) AS total_nodes
 -- 查看关系总数
 MATCH ()-[r]->() RETURN count(r) AS total_relationships
 
+-- 查看概念节点总数
+MATCH (c:CONCEPT) RETURN count(c) AS concept_count
+
+-- 查看概念关系总数
+MATCH ()-[r:BELONGS_TO_CONCEPT]->() RETURN count(r) AS concept_relationships
+
 -- 查看特定股票的关系网络
-MATCH (n:STOCK {id: "000001.SZ"})-[r]->(m)
+MATCH (n:STOCK {third_code: "000001.SZ"})-[r]->(m)
 RETURN n, r, m
+
+-- 查看特定概念的成份股
+MATCH (s:STOCK)-[r:BELONGS_TO_CONCEPT]->(c:CONCEPT {name: "船舶制造"})
+RETURN s.name, c.name
+
+-- 查看跨概念的股票关联
+MATCH (s1:STOCK)-[:BELONGS_TO_CONCEPT]->(c1:CONCEPT)
+<-[:BELONGS_TO_CONCEPT]-(s2:STOCK)
+WHERE s1.third_code = "300008.SZ" AND s1 <> s2
+RETURN s1.name, c1.name, s2.name
+LIMIT 10
 ```
 
 ---
@@ -434,10 +558,19 @@ class KnowledgeCenterClient:
         response.raise_for_status()
         return response.json()
     
-    def get_stock_neighbors(self, third_code: str, dimension: str, limit: int = 20) -> List[Dict]:
+    def get_stock_neighbors(self, third_code: str, dimension: str, dimension_name: str = None, limit: int = 20) -> List[Dict]:
         """查询同维度股票"""
         params = {"dimension": dimension, "limit": limit}
+        if dimension == "concept" and dimension_name:
+            params["dimension_name"] = dimension_name
         response = requests.get(f"{self.base_url}/stocks/{third_code}/neighbors", params=params)
+        response.raise_for_status()
+        return response.json()
+    
+    def sync_concept_data(self, batch_size: int = 500) -> Dict:
+        """同步概念数据"""
+        payload = {"mode": "full", "target": "concept", "batch_size": batch_size}
+        response = requests.post(f"{self.base_url}/sync", json=payload)
         response.raise_for_status()
         return response.json()
     
@@ -454,6 +587,14 @@ client = KnowledgeCenterClient()
 # 查询同行业股票
 neighbors = client.get_stock_neighbors("000001.SZ", "industry", limit=10)
 print(f"同行业股票: {neighbors}")
+
+# 查询同概念股票
+concept_neighbors = client.get_stock_neighbors("300008.SZ", "concept", "船舶制造", limit=10)
+print(f"同概念股票: {concept_neighbors}")
+
+# 同步概念数据
+concept_sync = client.sync_concept_data(batch_size=500)
+print(f"概念同步结果: {concept_sync}")
 
 # 获取关系图谱
 graph = client.get_stock_graph("000001.SZ")
@@ -478,9 +619,22 @@ class KnowledgeCenterAPI {
         return await response.json();
     }
 
-    async getStockNeighbors(thirdCode, dimension, limit = 20) {
+    async getStockNeighbors(thirdCode, dimension, dimensionName = null, limit = 20) {
         const params = new URLSearchParams({ dimension, limit: limit.toString() });
+        if (dimension === 'concept' && dimensionName) {
+            params.append('dimension_name', dimensionName);
+        }
         const response = await fetch(`${this.baseUrl}/stocks/${thirdCode}/neighbors?${params}`);
+        return await response.json();
+    }
+
+    async syncConceptData(batchSize = 500) {
+        const payload = { mode: 'full', target: 'concept', batch_size: batchSize };
+        const response = await fetch(`${this.baseUrl}/sync`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
         return await response.json();
     }
 
@@ -495,9 +649,19 @@ class KnowledgeCenterAPI {
 const api = new KnowledgeCenterAPI();
 
 // 查询同行业股票
-api.getStockNeighbors('000001.SZ', 'industry', 10)
+api.getStockNeighbors('000001.SZ', 'industry', null, 10)
     .then(neighbors => console.log('同行业股票:', neighbors))
     .catch(error => console.error('查询失败:', error));
+
+// 查询同概念股票
+api.getStockNeighbors('300008.SZ', 'concept', '船舶制造', 10)
+    .then(neighbors => console.log('同概念股票:', neighbors))
+    .catch(error => console.error('查询失败:', error));
+
+// 同步概念数据
+api.syncConceptData(500)
+    .then(result => console.log('概念同步结果:', result))
+    .catch(error => console.error('同步失败:', error));
 ```
 
 ---
@@ -516,7 +680,12 @@ api.getStockNeighbors('000001.SZ', 'industry', 10)
 - 在 Neo4j Browser 中执行 `MATCH (n) RETURN count(n)` 确认节点数
 - 检查股票代码格式是否正确（如 "000001.SZ"）
 
-**Q3: 同步任务失败**
+**Q3: 概念查询返回空结果**
+- 确认概念数据已同步：检查概念同步任务的执行结果
+- 验证概念名称是否正确：在 Neo4j Browser 中查询 `MATCH (c:CONCEPT) RETURN c.name LIMIT 10`
+- 检查股票是否属于该概念：`MATCH (s:STOCK)-[:BELONGS_TO_CONCEPT]->(c:CONCEPT {name: "概念名称"}) RETURN s.name`
+
+**Q4: 同步任务失败**
 - 检查 PostgreSQL 中是否有基础数据
 - 查看 `data_engineering` 模块的日志
 - 确认网络连接：应用容器能否访问 PostgreSQL 和 Neo4j
@@ -541,6 +710,7 @@ docker compose logs app | grep "knowledge-graph"
 | 版本 | 日期 | 更新内容 |
 |------|------|----------|
 | v1.0.0 | 2025-02-15 | 初始版本，支持图谱同步、同维度查询、关系网络查询 |
+| v1.1.0 | 2026-02-15 | 新增概念题材维度，支持概念数据同步和概念维度查询 |
 
 ---
 
@@ -548,7 +718,38 @@ docker compose logs app | grep "knowledge-graph"
 
 - [Neo4j 部署与运维指南](./neo4j-deployment.md)
 - [知识中心模块设计文档](../openspec/changes/add-knowledge-center-mvp/)
+- [概念图 MVP 设计文档](../openspec/changes/concept-graph-mvp/)
 - [Stock Helper 整体架构](../openspec/specs/vision-and-modules.md)
+
+---
+
+### 12.1 概念图专项说明
+
+概念图功能为知识中心增加了重要的题材维度，支持以下特性：
+
+- **466+ 概念板块**：覆盖 A 股市场主要题材概念
+- **58,000+ 成份股映射**：完整的概念-股票关联关系
+- **多对多关系**：一只股票可属于多个概念板块
+- **实时同步**：支持从 akshare 数据源定期更新概念数据
+
+### 12.2 概念查询最佳实践
+
+1. **概念发现**：使用 Neo4j Browser 探索概念分布
+   ```cypher
+   MATCH (c:CONCEPT) RETURN c.name ORDER BY c.name LIMIT 20
+   ```
+
+2. **成份股分析**：查询特定概念的股票构成
+   ```bash
+   curl -X GET "http://localhost:8000/api/v1/knowledge-graph/stocks/300008.SZ/neighbors?dimension=concept&dimension_name=军工&limit=50"
+   ```
+
+3. **跨概念关联**：发现共享概念的股票组合
+   ```cypher
+   MATCH (s1:STOCK)-[:BELONGS_TO_CONCEPT]->(c:CONCEPT)<-[:BELONGS_TO_CONCEPT]-(s2:STOCK)
+   WHERE s1.third_code = '300008.SZ' AND s1 <> s2
+   RETURN s1.name, c.name, s2.name LIMIT 10
+   ```
 
 ---
 

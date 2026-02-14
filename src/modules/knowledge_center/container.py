@@ -18,7 +18,11 @@ from src.modules.data_engineering.infrastructure.persistence.repositories.pg_fin
 from src.modules.data_engineering.infrastructure.persistence.repositories.pg_stock_repo import (
     StockRepositoryImpl,
 )
+from src.modules.data_engineering.container import DataEngineeringContainer
 
+from src.modules.knowledge_center.application.commands.sync_concept_graph_command import (
+    SyncConceptGraphCommand,
+)
 from src.modules.knowledge_center.application.commands.sync_graph_command import (
     SyncGraphCommand,
 )
@@ -29,6 +33,9 @@ from src.modules.knowledge_center.application.queries.get_stock_neighbors import
     GetStockNeighborsQuery,
 )
 from src.modules.knowledge_center.application.services.graph_service import GraphService
+from src.modules.knowledge_center.infrastructure.adapters.concept_data_adapter import (
+    ConceptDataAdapter,
+)
 from src.modules.knowledge_center.infrastructure.adapters.data_engineering_adapter import (
     DataEngineeringAdapter,
 )
@@ -92,11 +99,29 @@ class KnowledgeCenterContainer:
             get_finance_use_case=finance_use_case,
         )
 
+    def concept_data_adapter(self) -> ConceptDataAdapter:
+        """组装 ConceptDataAdapter（依赖请求级 DB session）。"""
+        if self._session is None:
+            raise RuntimeError(
+                "KnowledgeCenterContainer 需要 session 才能提供 concept_data_adapter"
+            )
+        # 通过 DataEngineeringContainer 获取 IConceptRepository
+        de_container = DataEngineeringContainer(self._session)
+        concept_repo = de_container.get_concept_repository()
+        return ConceptDataAdapter(concept_repo=concept_repo)
+
     def sync_graph_command(self) -> SyncGraphCommand:
-        """组装图谱同步命令。"""
+        """组装股票图谱同步命令。"""
         return SyncGraphCommand(
             graph_repo=self.graph_repository(),
             data_adapter=self.data_engineering_adapter(),
+        )
+
+    def sync_concept_graph_command(self) -> SyncConceptGraphCommand:
+        """组装概念图谱同步命令。"""
+        return SyncConceptGraphCommand(
+            graph_repo=self.graph_repository(),
+            concept_adapter=self.concept_data_adapter(),
         )
 
     def get_stock_neighbors_query(self) -> GetStockNeighborsQuery:
@@ -112,6 +137,7 @@ class KnowledgeCenterContainer:
         return GraphService(
             graph_repo=self.graph_repository(),
             sync_command=self.sync_graph_command(),
+            sync_concept_command=self.sync_concept_graph_command(),
             neighbors_query=self.get_stock_neighbors_query(),
             graph_query=self.get_stock_graph_query(),
         )

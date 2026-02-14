@@ -17,6 +17,10 @@ class SyncGraphRequest(BaseModel):
     """
 
     mode: Literal["full", "incremental"] = Field(..., description="同步模式：full（全量）或 incremental（增量）")  # noqa: E501
+    target: Literal["stock", "concept", "all"] = Field(
+        "stock",
+        description="同步目标：stock（股票）、concept（概念）或 all（全部），默认 stock",
+    )
     third_codes: Optional[list[str]] = Field(
         None,
         description="增量同步时可选的股票代码列表；为空时按 window_days 自动确定范围",

@@ -31,26 +31,30 @@ class GetStockNeighborsQuery:
         third_code: str,
         dimension: str,
         limit: int = 20,
+        dimension_name: str | None = None,
     ) -> list[StockNeighborDTO]:
         """
         执行同维度股票查询。
         
         Args:
             third_code: 股票第三方代码
-            dimension: 维度类型（industry/area/market/exchange）
+            dimension: 维度类型（industry/area/market/exchange/concept）
             limit: 返回数量上限，默认 20
+            dimension_name: 维度名称，当 dimension="concept" 时必填
         
         Returns:
             StockNeighborDTO 列表（不包含查询股票自身）
         """
         logger.info(
-            f"查询同维度股票: third_code={third_code}, dimension={dimension}, limit={limit}"
+            f"查询同维度股票: third_code={third_code}, dimension={dimension}, "
+            f"dimension_name={dimension_name}, limit={limit}"
         )
         
         neighbors = await self._graph_repo.find_neighbors(
             third_code=third_code,
             dimension=dimension,
             limit=limit,
+            dimension_name=dimension_name,
         )
         
         logger.info(f"查询完成，返回 {len(neighbors)} 条同{dimension}股票记录")

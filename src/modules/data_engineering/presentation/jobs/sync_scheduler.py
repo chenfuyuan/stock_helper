@@ -5,6 +5,10 @@ from loguru import logger
 from src.modules.data_engineering.application.factories.sync_factory import (
     SyncUseCaseFactory,
 )
+from src.modules.data_engineering.application.commands.sync_concept_data_cmd import (
+    SyncConceptDataCmd,
+)
+from src.modules.data_engineering.container import DataEngineeringContainer
 from src.modules.data_engineering.domain.model.enums import SyncJobType
 from src.modules.data_engineering.infrastructure.config import de_config
 
@@ -124,3 +128,36 @@ async def sync_incremental_finance_job(target_date: str | None = None):
 
     except Exception as e:
         logger.error(f"财务增量同步任务失败：{str(e)}", exc_info=True)
+
+
+async def sync_concept_data_job():
+    """
+    定时任务：同步概念数据（akshare → PostgreSQL）
+    
+    描述:
+        从 akshare 获取概念板块及成份股数据，持久化到 PostgreSQL。
+        使用全量替换策略，确保数据一致性。
+    """
+    logger.info("开始执行概念数据同步任务...")
+
+    try:
+        # 获取依赖注入容器
+        container = DataEngineeringContainer()
+        
+        # 创建概念同步命令
+        sync_cmd = SyncConceptDataCmd(
+            concept_provider=container.concept_provider(),
+            concept_repo=container.concept_repository(),
+        )
+        
+        # 执行同步
+        result = await sync_cmd.execute()
+        
+        logger.info(
+            f"概念数据同步完成：总概念数={result.total_concepts}, "
+            f"成功={result.success_concepts}, 失败={result.failed_concepts}, "
+            f"总成份股={result.total_stocks}, 耗时={result.elapsed_time:.2f}s"
+        )
+
+    except Exception as e:
+        logger.error(f"概念数据同步任务失败：{str(e)}", exc_info=True)

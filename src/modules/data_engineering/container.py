@@ -7,6 +7,9 @@
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.modules.data_engineering.application.commands.sync_concept_data_cmd import (
+    SyncConceptDataCmd,
+)
 from src.modules.data_engineering.application.queries.get_daily_bars_for_ticker import (
     GetDailyBarsForTickerUseCase,
 )
@@ -18,6 +21,18 @@ from src.modules.data_engineering.application.queries.get_stock_basic_info impor
 )
 from src.modules.data_engineering.application.queries.get_valuation_dailies_for_ticker import (
     GetValuationDailiesForTickerUseCase,
+)
+from src.modules.data_engineering.domain.ports.providers.concept_data_provider import (
+    IConceptDataProvider,
+)
+from src.modules.data_engineering.domain.ports.repositories.concept_repo import (
+    IConceptRepository,
+)
+from src.modules.data_engineering.infrastructure.external_apis.akshare.client import (
+    AkShareConceptClient,
+)
+from src.modules.data_engineering.infrastructure.persistence.repositories.pg_concept_repo import (
+    PgConceptRepository,
 )
 from src.modules.data_engineering.infrastructure.persistence.repositories.pg_finance_repo import (
     StockFinanceRepositoryImpl,
@@ -38,6 +53,10 @@ class DataEngineeringContainer:
         self._market_quote_repo = StockDailyRepositoryImpl(session)
         self._financial_repo = StockFinanceRepositoryImpl(session)
         self._stock_repo = StockRepositoryImpl(session)
+        
+        # 概念数据相关组件
+        self._concept_provider: IConceptDataProvider = AkShareConceptClient(request_interval=0.3)
+        self._concept_repo: IConceptRepository = PgConceptRepository(session)
 
     def get_daily_bars_use_case(self) -> GetDailyBarsForTickerUseCase:
         """组装按标的查询日线的 UseCase。"""
@@ -59,3 +78,14 @@ class DataEngineeringContainer:
     ) -> GetValuationDailiesForTickerUseCase:
         """组装按标的查询估值日线的 UseCase。"""
         return GetValuationDailiesForTickerUseCase(market_quote_repo=self._market_quote_repo)
+
+    def get_concept_repository(self) -> IConceptRepository:
+        """获取概念数据仓储实例，供 KC 模块使用。"""
+        return self._concept_repo
+
+    def get_sync_concept_data_cmd(self) -> SyncConceptDataCmd:
+        """组装概念数据同步命令。"""
+        return SyncConceptDataCmd(
+            concept_provider=self._concept_provider,
+            concept_repo=self._concept_repo,
+        )

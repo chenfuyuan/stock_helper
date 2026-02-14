@@ -10,6 +10,9 @@ from typing import Any
 from loguru import logger
 from neo4j import Driver
 
+from src.modules.knowledge_center.domain.dtos.concept_sync_dtos import (
+    ConceptGraphSyncDTO,
+)
 from src.modules.knowledge_center.domain.dtos.graph_query_dtos import (
     GraphNodeDTO,
     GraphRelationshipDTO,
@@ -72,6 +75,7 @@ class Neo4jGraphRepository(IGraphRepository):
             "CREATE CONSTRAINT area_name_unique IF NOT EXISTS FOR (a:AREA) REQUIRE a.name IS UNIQUE",
             "CREATE CONSTRAINT market_name_unique IF NOT EXISTS FOR (m:MARKET) REQUIRE m.name IS UNIQUE",
             "CREATE CONSTRAINT exchange_name_unique IF NOT EXISTS FOR (e:EXCHANGE) REQUIRE e.name IS UNIQUE",
+            "CREATE CONSTRAINT concept_code_unique IF NOT EXISTS FOR (c:CONCEPT) REQUIRE c.code IS UNIQUE",
         ]
 
         try:
@@ -257,14 +261,16 @@ class Neo4jGraphRepository(IGraphRepository):
         third_code: str,
         dimension: str,
         limit: int = 20,
+        dimension_name: str | None = None,
     ) -> list[StockNeighborDTO]:
         """
         查询与指定股票共享同一维度节点的其他股票。
         
         Args:
             third_code: 股票第三方代码
-            dimension: 维度类型（industry/area/market/exchange）
+            dimension: 维度类型（industry/area/market/exchange/concept）
             limit: 返回数量上限
+            dimension_name: 维度名称，当 dimension="concept" 时必填
         
         Returns:
             StockNeighborDTO 列表（不包含查询股票自身）
@@ -275,12 +281,20 @@ class Neo4jGraphRepository(IGraphRepository):
             "area": ("AREA", "LOCATED_IN"),
             "market": ("MARKET", "TRADES_ON"),
             "exchange": ("EXCHANGE", "LISTED_ON"),
+            "concept": ("CONCEPT", "BELONGS_TO_CONCEPT"),
         }
         
         if dimension not in dimension_map:
             raise GraphQueryError(
                 message=f"无效的维度类型: {dimension}",
                 details={"valid_dimensions": list(dimension_map.keys())},
+            )
+        
+        # concept 维度必须提供 dimension_name
+        if dimension == "concept" and not dimension_name:
+            raise GraphQueryError(
+                message="查询概念维度邻居时必须提供 dimension_name 参数",
+                details={"dimension": dimension},
             )
         
         # 根据维度类型构建不同的查询
@@ -332,14 +346,29 @@ class Neo4jGraphRepository(IGraphRepository):
                    e.name AS exchange
             LIMIT $limit
             """
+        elif dimension == "concept":
+            cypher = """
+            MATCH (s:STOCK {third_code: $third_code})-[:BELONGS_TO_CONCEPT]->(c:CONCEPT {name: $dimension_name})<-[:BELONGS_TO_CONCEPT]-(neighbor:STOCK)
+            WHERE neighbor.third_code <> $third_code
+            RETURN neighbor.third_code AS third_code,
+                   neighbor.name AS name,
+                   NULL AS industry,
+                   NULL AS area,
+                   NULL AS market,
+                   NULL AS exchange
+            LIMIT $limit
+            """
         
         try:
             with self._driver.session() as session:
-                result = session.run(
-                    cypher,
-                    third_code=third_code,
-                    limit=limit,
-                )
+                params = {
+                    "third_code": third_code,
+                    "limit": limit,
+                }
+                if dimension == "concept":
+                    params["dimension_name"] = dimension_name
+                
+                result = session.run(cypher, **params)
                 
                 neighbors = []
                 for record in result:
@@ -379,7 +408,7 @@ class Neo4jGraphRepository(IGraphRepository):
         OPTIONAL MATCH (s:STOCK {third_code: $third_code})
         WHERE s IS NOT NULL
         OPTIONAL MATCH (s)-[r]->(d)
-        WHERE d:INDUSTRY OR d:AREA OR d:MARKET OR d:EXCHANGE
+        WHERE d:INDUSTRY OR d:AREA OR d:MARKET OR d:EXCHANGE OR d:CONCEPT
         RETURN s, collect({rel: type(r), target: d}) AS connections
         """
         
@@ -445,4 +474,118 @@ class Neo4jGraphRepository(IGraphRepository):
             raise GraphQueryError(
                 message="查询 Stock 关系网络失败",
                 details={"third_code": third_code, "error": str(e)},
+            )
+
+    async def merge_concepts(
+        self,
+        concepts: list[ConceptGraphSyncDTO],
+        batch_size: int = 500,
+    ) -> SyncResult:
+        """
+        批量写入/更新 Concept 节点及其与 Stock 的关系。
+        
+        使用 UNWIND + MERGE 实现批量写入，仅当 Stock 节点存在时才创建关系。
+        """
+        if not concepts:
+            return SyncResult(
+                total=0,
+                success=0,
+                failed=0,
+                duration_ms=0.0,
+                error_details=[],
+            )
+
+        start_time = time.time()
+        total = len(concepts)
+        success = 0
+        failed = 0
+        error_details: list[str] = []
+
+        # Cypher 批量写入语句
+        cypher = """
+        UNWIND $concepts AS concept
+        MERGE (c:CONCEPT {code: concept.code})
+        SET c.name = concept.name
+        
+        WITH c, concept
+        UNWIND concept.stock_third_codes AS stock_code
+        MATCH (s:STOCK {third_code: stock_code})
+        MERGE (s)-[:BELONGS_TO_CONCEPT]->(c)
+        """
+
+        try:
+            with self._driver.session() as session:
+                # 分批处理
+                for i in range(0, total, batch_size):
+                    batch = concepts[i : i + batch_size]
+                    batch_data: list[dict[str, object]] = [
+                        concept.model_dump(mode="json") for concept in batch
+                    ]
+
+                    try:
+                        session.run(cypher, concepts=batch_data)
+                        success += len(batch)
+                        logger.info(f"成功同步概念批次 {i // batch_size + 1}，共 {len(batch)} 条记录")
+                    except Exception as e:
+                        logger.warning(
+                            f"概念批次 {i // batch_size + 1} 同步失败，将降级为单条重试: {str(e)}"
+                        )
+                        for concept_payload in batch_data:
+                            concept_code = str(concept_payload.get("code", "UNKNOWN"))
+                            try:
+                                session.run(cypher, concepts=[concept_payload])
+                                success += 1
+                            except Exception as single_error:
+                                failed += 1
+                                error_msg = f"concept_code={concept_code} 同步失败: {str(single_error)}"
+                                error_details.append(error_msg)
+                                logger.error(error_msg)
+
+            duration_ms = (time.time() - start_time) * 1000
+            logger.info(
+                f"Concept 节点批量同步完成: 总数={total}, 成功={success}, 失败={failed}, 耗时={duration_ms:.2f}ms"
+            )
+            
+            return SyncResult(
+                total=total,
+                success=success,
+                failed=failed,
+                duration_ms=duration_ms,
+                error_details=error_details,
+            )
+        except Exception as e:
+            logger.error(f"批量同步 Concept 节点失败: {str(e)}")
+            raise GraphSyncError(
+                message="批量同步 Concept 节点失败",
+                details={"error": str(e)},
+            )
+
+    async def delete_all_concept_relationships(self) -> int:
+        """
+        删除所有 BELONGS_TO_CONCEPT 关系。
+        
+        Concept 节点本身保留，仅删除关系。
+        
+        Returns:
+            int：删除的关系数量
+        """
+        cypher = """
+        MATCH ()-[r:BELONGS_TO_CONCEPT]->()
+        DELETE r
+        RETURN count(r) AS deleted_count
+        """
+
+        try:
+            with self._driver.session() as session:
+                result = session.run(cypher)
+                record = result.single()
+                deleted_count = record["deleted_count"] if record else 0
+                
+                logger.info(f"删除所有 BELONGS_TO_CONCEPT 关系：{deleted_count} 条")
+                return deleted_count
+        except Exception as e:
+            logger.error(f"删除 BELONGS_TO_CONCEPT 关系失败: {str(e)}")
+            raise GraphSyncError(
+                message="删除概念关系失败",
+                details={"error": str(e)},
             )

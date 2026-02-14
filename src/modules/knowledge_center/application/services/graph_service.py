@@ -8,6 +8,9 @@ from typing import Optional
 
 from loguru import logger
 
+from src.modules.knowledge_center.application.commands.sync_concept_graph_command import (
+    SyncConceptGraphCommand,
+)
 from src.modules.knowledge_center.application.commands.sync_graph_command import (
     SyncGraphCommand,
 )
@@ -36,6 +39,7 @@ class GraphService:
         self,
         graph_repo: IGraphRepository,
         sync_command: SyncGraphCommand,
+        sync_concept_command: SyncConceptGraphCommand,
         neighbors_query: GetStockNeighborsQuery,
         graph_query: GetStockGraphQuery,
     ):
@@ -44,12 +48,14 @@ class GraphService:
         
         Args:
             graph_repo: 图谱仓储接口（Port）
-            sync_command: 同步命令用例
+            sync_command: 股票同步命令用例
+            sync_concept_command: 概念同步命令用例
             neighbors_query: 同维度查询用例
             graph_query: 关系网络查询用例
         """
         self._graph_repo = graph_repo
         self._sync_command = sync_command
+        self._sync_concept_command = sync_concept_command
         self._neighbors_query = neighbors_query
         self._graph_query = graph_query
 
@@ -114,19 +120,36 @@ class GraphService:
         logger.info(f"GraphService: 增量同步完成，成功 {result.success} 条")
         return result
 
+    async def sync_concept_graph(self, batch_size: int = 500) -> SyncResult:
+        """
+        全量同步概念图谱数据。
+        
+        Args:
+            batch_size: 批量大小
+        
+        Returns:
+            SyncResult：同步结果摘要
+        """
+        logger.info("GraphService: 开始全量同步概念图谱")
+        result = await self._sync_concept_command.execute(batch_size=batch_size)
+        logger.info(f"GraphService: 概念图谱同步完成，成功 {result.success} 条")
+        return result
+
     async def get_stock_neighbors(
         self,
         third_code: str,
         dimension: str,
         limit: int = 20,
+        dimension_name: str | None = None,
     ) -> list[StockNeighborDTO]:
         """
         查询同维度股票。
         
         Args:
             third_code: 股票第三方代码
-            dimension: 维度类型（industry/area/market/exchange）
+            dimension: 维度类型（industry/area/market/exchange/concept）
             limit: 返回数量上限
+            dimension_name: 维度名称，当 dimension="concept" 时必填
         
         Returns:
             StockNeighborDTO 列表
@@ -136,6 +159,7 @@ class GraphService:
             third_code=third_code,
             dimension=dimension,
             limit=limit,
+            dimension_name=dimension_name,
         )
         return neighbors
 

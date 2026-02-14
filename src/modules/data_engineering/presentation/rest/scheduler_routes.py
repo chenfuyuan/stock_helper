@@ -12,6 +12,7 @@ from src.modules.data_engineering.presentation.jobs.sync_scheduler import (
     sync_finance_history_job,
     sync_history_daily_data_job,
     sync_incremental_finance_job,
+    sync_concept_data_job,
 )
 from src.shared.dtos import BaseResponse
 from src.shared.infrastructure.scheduler import SchedulerService
@@ -24,6 +25,7 @@ JOB_REGISTRY: Dict[str, Callable] = {
     "sync_daily_by_date": sync_daily_data_job,  # 按日期同步（每日增量）- Renamed in new module
     "sync_history_finance": sync_finance_history_job,  # 历史财务数据同步
     "sync_incremental_finance": sync_incremental_finance_job,  # 增量财务数据同步
+    "sync_concept_data": sync_concept_data_job,  # 概念数据同步（akshare → PostgreSQL）
 }
 
 
