@@ -6,9 +6,10 @@ Spec Scenario：通过 Port 获取指标快照；实现可依赖第三方库。
 from datetime import date
 
 from src.modules.research.domain.dtos.daily_bar_input import DailyBarInput
-from src.modules.research.infrastructure.indicators.indicator_calculator_adapter import (
-    IndicatorCalculatorAdapter,
-)
+from src.modules.research.infrastructure.indicators.\
+        indicator_calculator_adapter import (
+            IndicatorCalculatorAdapter,
+        )
 
 
 def test_indicator_calculator_adapter_empty_bars_returns_empty_snapshot():

@@ -8,9 +8,10 @@ from datetime import date
 from src.modules.research.domain.dtos.financial_record_input import (
     FinanceRecordInput,
 )
-from src.modules.research.infrastructure.financial_snapshot.snapshot_builder import (
-    FinancialSnapshotBuilderImpl,
-)
+from src.modules.research.infrastructure.\
+        financial_snapshot.snapshot_builder import (
+            FinancialSnapshotBuilderImpl,
+        )
 
 
 def _make_record(

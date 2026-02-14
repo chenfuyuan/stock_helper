@@ -14,9 +14,10 @@ from src.modules.research.domain.dtos.valuation_inputs import (
     StockOverviewInput,
     ValuationDailyInput,
 )
-from src.modules.research.infrastructure.valuation_snapshot.snapshot_builder import (
-    ValuationSnapshotBuilderImpl,
-)
+from src.modules.research.infrastructure.valuation_snapshot.\
+        snapshot_builder import (
+            ValuationSnapshotBuilderImpl,
+        )
 
 
 def _make_overview(
