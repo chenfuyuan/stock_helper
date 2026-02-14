@@ -5,9 +5,10 @@ from src.modules.research.domain.dtos.catalyst_inputs import (
     CatalystSearchResultItem,
     CatalystStockOverview,
 )
-from src.modules.research.infrastructure.catalyst_context.context_builder import (
-    CatalystContextBuilderImpl,
-)
+from src.modules.research.infrastructure.catalyst_context.\
+        context_builder import (
+            CatalystContextBuilderImpl,
+        )
 
 
 def test_catalyst_context_builder_normal_case():
@@ -41,9 +42,11 @@ def test_catalyst_context_builder_normal_case():
             ],
         ),
         CatalystSearchResult(
-            dimension_topic="市场情绪与机构动向", items=[]  # Empty items
+            dimension_topic="市场情绪与机构动向",
+            items=[]  # Empty items
         ),
-        # Missing earnings dimension entirely (simulating degradation or logic skip)
+        # Missing earnings dimension entirely
+        # (simulating degradation or logic skip)
     ]
 
     context = builder.build(overview, search_results)

@@ -1,9 +1,10 @@
 import pytest
 
 from src.modules.research.domain.exceptions import LLMOutputParseError
-from src.modules.research.infrastructure.agents.catalyst_detective.output_parser import (
-    parse_catalyst_detective_result,
-)
+from src.modules.research.infrastructure.agents.\
+        catalyst_detective.output_parser import (
+            parse_catalyst_detective_result,
+        )
 
 
 def test_parse_valid_json():
