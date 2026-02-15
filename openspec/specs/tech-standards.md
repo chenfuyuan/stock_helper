@@ -133,8 +133,13 @@ src/modules/<context>/
 OpenSpec 变更的实现须保证**可验证**：Spec 与可执行测试一致，交付前测试通过。
 
 - **Scenario 必测**：Spec 中每个 `#### Scenario:`（WHEN/THEN）在变更完成时须对应至少一个自动化测试用例；无场景的需求须补充场景或明确验收方式。
-- **实现顺序灵活**：可采用「先实现再补测」或「关键逻辑处先写测试再实现」；不强制每个小任务都 Red→Green→Refactor，以交付时**完整测试通过**为完成标准。
-- **设计考虑可测性**：设计决策须考虑可测性（Port 抽象、依赖注入、DTO 便于 mock/断言），便于实现后补测或按需 TDD。
+- **分层 TDD 策略**（默认实践，详见下方「测试策略」节）：
+  - **Domain 层**（领域服务、实体行为）：**Test-First（强制）**。先编写失败测试（基于 Spec Scenarios），再编写最小实现使测试通过，最后重构。纯函数式领域服务天然适合 Red→Green→Refactor。
+  - **Application 层**（Use Case / Command / Query）：**Test-First（推荐）**。Mock Port 依赖编写用例测试（验证编排逻辑、异常隔离等），再实现用例。
+  - **Infrastructure 层**（Adapter、Repository、外部 API Client）：**Test-After（允许）**。先实现，再编写集成测试。因依赖外部系统（DB/API），test-first 不实际。
+  - **Presentation 层**（REST Router）：**Test-After（允许）**。实现后编写端到端或集成测试。
+- **Tasks 编排体现 TDD 节奏**：OpenSpec 的 `tasks.md` 中，Domain/Application 层的任务须按「编写测试 → 实现代码」配对编排，而非将所有测试集中到最后阶段。每个 test-first 任务以 `🔴` 标记。
+- **设计考虑可测性**：设计决策须考虑可测性（Port 抽象、依赖注入、纯函数领域服务、DTO 便于 mock/断言），确保 Domain/Application 层可无依赖地进行单元测试。
 - **提案声明可验证性**：Proposal 的「变更内容 / 影响范围」中须明确本变更通过自动化测试（及哪些场景）验证，能力交付以「相关测试通过」为完成标准。
 
 ---
@@ -186,14 +191,56 @@ OpenSpec 变更的实现须保证**可验证**：Spec 与可执行测试一致�
 
 ## 测试策略
 
-- **测试金字塔**：
-  - **单元测试 (Unit)**：覆盖领域逻辑、工具函数。Mock 所有外部依赖（DB, Network）。目标：快、稳定。
-  - **集成测试 (Integration)**：覆盖 Repository、Adapter、Service。连接真实的测试数据库（Docker）。目标：验证组件协作。
-  - **端到端测试 (E2E)**：覆盖关键用户旅程。
-- **测试原则**：
-  - **AAA 模式**：Arrange (准备), Act (执行), Assert (断言)。
-  - **独立性**：测试用例之间不可互相依赖，每个测试均可独立运行。
-  - **可见性**：测试失败信息必须清晰指明期望值与实际值的差异。
+### TDD 工作流（Red → Green → Refactor）
+
+Domain 层和 Application 层的实现须遵循 TDD 三步循环：
+
+1. **Red（编写失败测试）**：基于 Spec 的 Scenario（WHEN/THEN）编写测试用例。测试须在实现代码不存在或为空时失败。测试命名采用 `test_<scenario_描述>` 格式（如 `test_连板梯队_涨停池为空_返回零高度`）。
+2. **Green（最小实现）**：编写刚好通过测试的最小代码。不做过度设计。
+3. **Refactor（重构）**：在测试保护下优化代码结构（消除重复、改善命名、提取方法）。重构后所有测试仍须通过。
+
+**何时适用**：
+- ✅ 领域服务（纯函数计算，如 `ConceptHeatCalculator`、`SentimentAnalyzer`）
+- ✅ 实体行为方法（如 `SyncTask.start()`）
+- ✅ Application 层 Use Case / Command 的编排逻辑（Mock Port 依赖）
+- ⚠️ Infrastructure 层（Adapter、Repository、外部 API Client）：Test-After，先实现后编写集成测试
+
+### 测试金字塔
+
+- **单元测试 (Unit)**：覆盖领域逻辑、工具函数。Mock 所有外部依赖（DB, Network）。目标：快、稳定。Domain/Application 层 **Test-First**。
+- **集成测试 (Integration)**：覆盖 Repository、Adapter、Service。连接真实的测试数据库（Docker）。目标：验证组件协作。Infrastructure 层 **Test-After**。
+- **端到端测试 (E2E)**：覆盖关键用户旅程。
+
+### 测试原则
+
+- **AAA 模式**：Arrange (准备), Act (执行), Assert (断言)。
+- **独立性**：测试用例之间不可互相依赖，每个测试均可独立运行。
+- **可见性**：测试失败信息必须清晰指明期望值与实际值的差异。
+- **Spec-Scenario 对齐**：每个测试函数对应 Spec 中的一个 Scenario；测试文件头部以注释引用对应 Spec 路径。
+- **边界条件必测**：空输入、零值、单条数据、类型边界（如 ST 股票判定）须有独立测试。
+
+### 测试文件组织
+
+```
+tests/
+└── <module>/                        # 镜像 src/modules/<module>/ 结构
+    ├── domain/
+    │   └── services/
+    │       └── test_<service>.py    # 领域服务单元测试（Test-First）
+    ├── application/
+    │   ├── commands/
+    │   │   └── test_<command>.py    # 命令用例单元测试（Test-First）
+    │   └── queries/
+    │       └── test_<query>.py      # 查询用例单元测试
+    ├── infrastructure/
+    │   ├── adapters/
+    │   │   └── test_<adapter>.py    # 适配器集成测试（Test-After）
+    │   └── persistence/
+    │       └── test_<repo>.py       # Repository 集成测试（Test-After）
+    └── presentation/
+        └── rest/
+            └── test_<router>.py     # API 端点集成测试（Test-After）
+```
 
 ---
 

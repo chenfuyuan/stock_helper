@@ -4,7 +4,7 @@ Market Insight Application 层 DTO 定义
 """
 
 from datetime import date
-from typing import List
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -45,3 +45,5 @@ class DailyReportResult(BaseModel):
     limit_up_count: int = Field(..., description="涨停股数量")
     report_path: str = Field(..., description="生成的 Markdown 文件路径")
     elapsed_seconds: float = Field(..., description="总执行耗时（秒）")
+    sentiment_metrics: Optional[Dict[str, Any]] = Field(None, description="市场情绪指标")
+    capital_flow_analysis: Optional[Dict[str, Any]] = Field(None, description="资金流向分析")

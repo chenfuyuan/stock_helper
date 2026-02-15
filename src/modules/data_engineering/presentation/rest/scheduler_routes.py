@@ -16,6 +16,9 @@ from src.modules.data_engineering.presentation.jobs.sync_scheduler import (
     sync_concept_data_job,
     sync_stock_basic_job,
 )
+from src.modules.data_engineering.presentation.jobs.akshare_market_data_jobs import (
+    sync_akshare_market_data_job,
+)
 from src.shared.dtos import BaseResponse
 from src.shared.infrastructure.scheduler.scheduler_service import SchedulerService
 from src.shared.infrastructure.scheduler.repositories import (
@@ -34,6 +37,7 @@ JOB_REGISTRY: Dict[str, Callable] = {
     "sync_incremental_finance": sync_incremental_finance_job,  # 增量财务数据同步
     "sync_concept_data": sync_concept_data_job,  # 概念数据同步（akshare → PostgreSQL）
     "sync_stock_basic": sync_stock_basic_job,  # 股票基础信息同步（TuShare → PostgreSQL）
+    "sync_akshare_market_data": sync_akshare_market_data_job,  # AkShare市场数据同步（涨停池、炸板池等）
 }
 
 

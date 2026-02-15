@@ -10,7 +10,12 @@ data_engineering 模块的统一数据同步能力：涵盖历史全量同步引
 
 ### Requirement: 同步任务状态建模与持久化
 
-系统 SHALL 在 data_engineering 的 Domain 层定义 `SyncTask` 实体和 `SyncFailureRecord` 实体，用于追踪同步任务的生命周期和失败记录。系统 SHALL 定义 `ISyncTaskRepository` Port（含创建、更新、按类型查询最近任务、查询未解决失败等方法），由 Infrastructure 层实现 PostgreSQL 持久化。`SyncTask` SHALL 包含：`id`、`job_type`（枚举：DAILY_HISTORY / FINANCE_HISTORY / DAILY_INCREMENTAL / FINANCE_INCREMENTAL）、`status`（枚举：PENDING / RUNNING / COMPLETED / FAILED / PAUSED）、`current_offset`、`batch_size`、`total_processed`、`started_at`、`updated_at`、`completed_at`、`config`（dict）。`SyncFailureRecord` SHALL 包含：`id`、`job_type`、`third_code`、`error_message`、`retry_count`、`max_retries`、`last_attempt_at`、`resolved_at`。系统 SHALL 通过 Alembic migration 创建对应的数据库表。
+系统 SHALL 在 data_engineering 的 Domain 层定义 `SyncTask` 实体和 `SyncFailureRecord` 实体，用于追踪同步任务的生命周期和失败记录。系统 SHALL 定义 `ISyncTaskRepository` Port（含创建、更新、按类型查询最近任务、查询未解决失败等方法），由 Infrastructure 层实现 PostgreSQL 持久化。`SyncTask` SHALL 包含：`id`、`job_type`（枚举：DAILY_HISTORY / FINANCE_HISTORY / DAILY_INCREMENTAL / FINANCE_INCREMENTAL / AKSHARE_MARKET_DATA）、`status`（枚举：PENDING / RUNNING / COMPLETED / FAILED / PAUSED）、`current_offset`、`batch_size`、`total_processed`、`started_at`、`updated_at`、`completed_at`、`config`（dict）。`SyncFailureRecord` SHALL 包含：`id`、`job_type`、`third_code`、`error_message`、`retry_count`、`max_retries`、`last_attempt_at`、`resolved_at`。系统 SHALL 通过 Alembic migration 创建对应的数据库表。
+
+#### Scenario: 创建 AkShare 同步任务
+
+- **WHEN** 系统启动 AkShare 市场数据同步
+- **THEN** 系统 SHALL 通过 `ISyncTaskRepository` 创建一条 `SyncTask` 记录，`job_type` 为 `AKSHARE_MARKET_DATA`，状态为 RUNNING
 
 #### Scenario: 创建同步任务
 

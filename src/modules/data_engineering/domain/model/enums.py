@@ -35,6 +35,7 @@ class SyncJobType(str, Enum):
     FINANCE_HISTORY = "FINANCE_HISTORY"  # 历史财务全量同步
     DAILY_INCREMENTAL = "DAILY_INCREMENTAL"  # 日线增量同步
     FINANCE_INCREMENTAL = "FINANCE_INCREMENTAL"  # 财务增量同步
+    AKSHARE_MARKET_DATA = "AKSHARE_MARKET_DATA"  # AkShare 市场情绪与资金数据同步
 
 
 class SyncTaskStatus(str, Enum):

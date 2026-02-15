@@ -7,8 +7,14 @@
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.modules.data_engineering.application.commands.sync_akshare_market_data_cmd import (
+    SyncAkShareMarketDataCmd,
+)
 from src.modules.data_engineering.application.commands.sync_concept_data_cmd import (
     SyncConceptDataCmd,
+)
+from src.modules.data_engineering.application.queries.get_broken_board_by_date import (
+    GetBrokenBoardByDateUseCase,
 )
 from src.modules.data_engineering.application.queries.get_daily_bars_by_date import (
     GetDailyBarsByDateUseCase,
@@ -16,8 +22,20 @@ from src.modules.data_engineering.application.queries.get_daily_bars_by_date imp
 from src.modules.data_engineering.application.queries.get_daily_bars_for_ticker import (
     GetDailyBarsForTickerUseCase,
 )
+from src.modules.data_engineering.application.queries.get_dragon_tiger_by_date import (
+    GetDragonTigerByDateUseCase,
+)
 from src.modules.data_engineering.application.queries.get_finance_for_ticker import (
     GetFinanceForTickerUseCase,
+)
+from src.modules.data_engineering.application.queries.get_limit_up_pool_by_date import (
+    GetLimitUpPoolByDateUseCase,
+)
+from src.modules.data_engineering.application.queries.get_previous_limit_up_by_date import (
+    GetPreviousLimitUpByDateUseCase,
+)
+from src.modules.data_engineering.application.queries.get_sector_capital_flow_by_date import (
+    GetSectorCapitalFlowByDateUseCase,
 )
 from src.modules.data_engineering.application.queries.get_stock_basic_info import (
     GetStockBasicInfoUseCase,
@@ -28,14 +46,56 @@ from src.modules.data_engineering.application.queries.get_valuation_dailies_for_
 from src.modules.data_engineering.domain.ports.providers.concept_data_provider import (
     IConceptDataProvider,
 )
+from src.modules.data_engineering.domain.ports.providers.dragon_tiger_provider import (
+    IDragonTigerProvider,
+)
+from src.modules.data_engineering.domain.ports.providers.market_sentiment_provider import (
+    IMarketSentimentProvider,
+)
+from src.modules.data_engineering.domain.ports.providers.sector_capital_flow_provider import (
+    ISectorCapitalFlowProvider,
+)
+from src.modules.data_engineering.domain.ports.repositories.broken_board_repo import (
+    IBrokenBoardRepository,
+)
 from src.modules.data_engineering.domain.ports.repositories.concept_repo import (
     IConceptRepository,
+)
+from src.modules.data_engineering.domain.ports.repositories.dragon_tiger_repo import (
+    IDragonTigerRepository,
+)
+from src.modules.data_engineering.domain.ports.repositories.limit_up_pool_repo import (
+    ILimitUpPoolRepository,
+)
+from src.modules.data_engineering.domain.ports.repositories.previous_limit_up_repo import (
+    IPreviousLimitUpRepository,
+)
+from src.modules.data_engineering.domain.ports.repositories.sector_capital_flow_repo import (
+    ISectorCapitalFlowRepository,
 )
 from src.modules.data_engineering.infrastructure.external_apis.akshare.client import (
     AkShareConceptClient,
 )
+from src.modules.data_engineering.infrastructure.external_apis.akshare.market_data_client import (
+    AkShareMarketDataClient,
+)
+from src.modules.data_engineering.infrastructure.persistence.repositories.pg_broken_board_repo import (
+    PgBrokenBoardRepository,
+)
 from src.modules.data_engineering.infrastructure.persistence.repositories.pg_concept_repo import (
     PgConceptRepository,
+)
+from src.modules.data_engineering.infrastructure.persistence.repositories.pg_dragon_tiger_repo import (
+    PgDragonTigerRepository,
+)
+from src.modules.data_engineering.infrastructure.persistence.repositories.pg_limit_up_pool_repo import (
+    PgLimitUpPoolRepository,
+)
+from src.modules.data_engineering.infrastructure.persistence.repositories.pg_previous_limit_up_repo import (
+    PgPreviousLimitUpRepository,
+)
+from src.modules.data_engineering.infrastructure.persistence.repositories.pg_sector_capital_flow_repo import (
+    PgSectorCapitalFlowRepository,
 )
 from src.modules.data_engineering.infrastructure.persistence.repositories.pg_finance_repo import (
     StockFinanceRepositoryImpl,
@@ -60,6 +120,23 @@ class DataEngineeringContainer:
         # 概念数据相关组件
         self._concept_provider: IConceptDataProvider = AkShareConceptClient(request_interval=0.3)
         self._concept_repo: IConceptRepository = PgConceptRepository(session)
+        
+        # AkShare 市场数据相关组件
+        self._akshare_market_data_client = AkShareMarketDataClient(request_interval=0.3)
+        self._sentiment_provider: IMarketSentimentProvider = self._akshare_market_data_client
+        self._dragon_tiger_provider: IDragonTigerProvider = self._akshare_market_data_client
+        self._capital_flow_provider: ISectorCapitalFlowProvider = self._akshare_market_data_client
+        
+        # AkShare 市场数据 Repositories
+        self._limit_up_pool_repo: ILimitUpPoolRepository = PgLimitUpPoolRepository(session)
+        self._broken_board_repo: IBrokenBoardRepository = PgBrokenBoardRepository(session)
+        self._previous_limit_up_repo: IPreviousLimitUpRepository = PgPreviousLimitUpRepository(
+            session
+        )
+        self._dragon_tiger_repo: IDragonTigerRepository = PgDragonTigerRepository(session)
+        self._sector_capital_flow_repo: ISectorCapitalFlowRepository = (
+            PgSectorCapitalFlowRepository(session)
+        )
 
     def get_daily_bars_use_case(self) -> GetDailyBarsForTickerUseCase:
         """组装按标的查询日线的 UseCase。"""
@@ -96,3 +173,40 @@ class DataEngineeringContainer:
     def get_daily_bars_by_date_use_case(self) -> GetDailyBarsByDateUseCase:
         """组装按日期查询全市场日线的 UseCase。"""
         return GetDailyBarsByDateUseCase(market_quote_repo=self._market_quote_repo)
+    
+    def get_sync_akshare_market_data_cmd(self) -> SyncAkShareMarketDataCmd:
+        """组装 AkShare 市场数据同步命令。"""
+        return SyncAkShareMarketDataCmd(
+            sentiment_provider=self._sentiment_provider,
+            dragon_tiger_provider=self._dragon_tiger_provider,
+            capital_flow_provider=self._capital_flow_provider,
+            limit_up_pool_repo=self._limit_up_pool_repo,
+            broken_board_repo=self._broken_board_repo,
+            previous_limit_up_repo=self._previous_limit_up_repo,
+            dragon_tiger_repo=self._dragon_tiger_repo,
+            sector_capital_flow_repo=self._sector_capital_flow_repo,
+        )
+    
+    def get_limit_up_pool_by_date_use_case(self) -> GetLimitUpPoolByDateUseCase:
+        """组装按日期查询涨停池的 UseCase。"""
+        return GetLimitUpPoolByDateUseCase(limit_up_pool_repo=self._limit_up_pool_repo)
+    
+    def get_broken_board_by_date_use_case(self) -> GetBrokenBoardByDateUseCase:
+        """组装按日期查询炸板池的 UseCase。"""
+        return GetBrokenBoardByDateUseCase(broken_board_repo=self._broken_board_repo)
+    
+    def get_previous_limit_up_by_date_use_case(self) -> GetPreviousLimitUpByDateUseCase:
+        """组装按日期查询昨日涨停表现的 UseCase。"""
+        return GetPreviousLimitUpByDateUseCase(
+            previous_limit_up_repo=self._previous_limit_up_repo
+        )
+    
+    def get_dragon_tiger_by_date_use_case(self) -> GetDragonTigerByDateUseCase:
+        """组装按日期查询龙虎榜的 UseCase。"""
+        return GetDragonTigerByDateUseCase(dragon_tiger_repo=self._dragon_tiger_repo)
+    
+    def get_sector_capital_flow_by_date_use_case(self) -> GetSectorCapitalFlowByDateUseCase:
+        """组装按日期查询板块资金流向的 UseCase。"""
+        return GetSectorCapitalFlowByDateUseCase(
+            sector_capital_flow_repo=self._sector_capital_flow_repo
+        )

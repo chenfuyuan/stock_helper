@@ -10,10 +10,16 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.modules.market_insight.application.dtos.capital_flow_analysis_dtos import (
+    CapitalFlowAnalysisDTO,
+)
 from src.modules.market_insight.application.dtos.market_insight_dtos import (
     ConceptHeatDTO,
     DailyReportResult,
     LimitUpStockDTO,
+)
+from src.modules.market_insight.application.dtos.sentiment_metrics_dtos import (
+    SentimentMetricsDTO,
 )
 from src.modules.market_insight.container import MarketInsightContainer
 from src.shared.infrastructure.db.session import get_async_session
@@ -90,3 +96,44 @@ async def post_daily_report(
     except Exception as e:
         logger.exception(f"生成每日复盘报告失败: {e}")
         raise HTTPException(status_code=500, detail="生成每日复盘报告失败")
+
+
+@router.get(
+    "/market-insight/sentiment-metrics",
+    response_model=SentimentMetricsDTO,
+    summary="查询市场情绪指标",
+    description="获取指定交易日的市场情绪分析，包括连板梯队、赚钱效应、炸板率",
+)
+async def get_sentiment_metrics(
+    trade_date: date = Query(..., description="交易日期"),
+    container: MarketInsightContainer = Depends(get_container),
+) -> SentimentMetricsDTO:
+    """GET /api/market-insight/sentiment-metrics：查询市场情绪指标"""
+    try:
+        query = container.get_sentiment_metrics_query()
+        result = await query.execute(trade_date)
+        return result
+    except Exception as e:
+        logger.exception(f"查询市场情绪指标失败: {e}")
+        raise HTTPException(status_code=500, detail="查询市场情绪指标失败")
+
+
+@router.get(
+    "/market-insight/capital-flow",
+    response_model=CapitalFlowAnalysisDTO,
+    summary="查询资金流向分析",
+    description="获取指定交易日的资金流向分析，包括龙虎榜汇总和板块资金流向",
+)
+async def get_capital_flow_analysis(
+    trade_date: date = Query(..., description="交易日期"),
+    sector_type: Optional[str] = Query(None, description="板块类型（可选，如'概念资金流'）"),
+    container: MarketInsightContainer = Depends(get_container),
+) -> CapitalFlowAnalysisDTO:
+    """GET /api/market-insight/capital-flow：查询资金流向分析"""
+    try:
+        query = container.get_capital_flow_analysis_query()
+        result = await query.execute(trade_date, sector_type)
+        return result
+    except Exception as e:
+        logger.exception(f"查询资金流向分析失败: {e}")
+        raise HTTPException(status_code=500, detail="查询资金流向分析失败")
