@@ -59,3 +59,5 @@ Thumbs.db
 .agent/
 .windsurf/
 .kilocode/
+.claude/
+.gemini/
