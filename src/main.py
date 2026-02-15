@@ -11,7 +11,7 @@ from src.modules.knowledge_center.container import (
 )
 from src.shared.config import settings
 from src.shared.infrastructure.logging import setup_logging
-from src.shared.infrastructure.scheduler.scheduler_service import SchedulerService
+from src.modules.foundation.infrastructure.di.container import get_scheduler_service
 
 # 初始化日志配置
 setup_logging()
@@ -29,16 +29,14 @@ async def lifespan(app: FastAPI):
 
     # 启动调度器
     logger.info("Initializing Scheduler Service...")
-    SchedulerService.start()
+    scheduler_service = get_scheduler_service()
+    await scheduler_service.start_scheduler()
 
     # 从数据库加载持久化的调度配置并自动注册
-    from src.modules.data_engineering.presentation.rest.scheduler_routes import JOB_REGISTRY
-    from src.shared.infrastructure.db.session import AsyncSessionLocal
+    from src.modules.data_engineering.application.job_registry import get_job_registry
     
-    await SchedulerService.load_persisted_jobs(
-        registry=JOB_REGISTRY,
-        session_factory=AsyncSessionLocal,
-    )
+    job_registry = get_job_registry()
+    await scheduler_service.load_persisted_jobs(job_registry)
 
     # 初始化 LLM 注册表（委托 Application 层服务，不直接依赖 Infrastructure）
     from src.modules.llm_platform.application.services.startup import (
@@ -60,7 +58,7 @@ async def lifespan(app: FastAPI):
     logger.info("Application shutting down...")
 
     # 关闭调度器
-    SchedulerService.shutdown()
+    await scheduler_service.shutdown_scheduler()
 
     # 关闭 Knowledge Center Neo4j Driver
     close_knowledge_center_driver()

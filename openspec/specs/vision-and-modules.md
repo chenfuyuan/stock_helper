@@ -103,6 +103,7 @@
 
 | 模块 | 路径 | 核心职责 | 对外暴露接口 (Ports) |
 | :--- | :--- | :--- | :--- |
+| **Foundation** | `src/modules/foundation/` | **公共支撑能力层**。提供跨业务模块的基础设施能力（调度服务、消息推送等横切关注点）。 | `SchedulerPort`, `SchedulerApplicationService` |
 | **Data Engineering** | `src/modules/data_engineering/` | **数据底座**。行情、财报数据的 ETL、存储与查询。 | `StockRepo`, `FinancialRepo` |
 | **LLM Platform** | `src/modules/llm_platform/` | **AI 基础设施**。模型路由、Prompt 管理、计费统计。 | `LLMService`, `PromptManager` |
 | **Market Insight** | `src/modules/market_insight/` | **板块洞察分析**。概念热度计算、涨停扫描归因、每日复盘报告生成。 | `GetConceptHeatQuery`, `GetLimitUpQuery`, `GenerateDailyReportCmd` |

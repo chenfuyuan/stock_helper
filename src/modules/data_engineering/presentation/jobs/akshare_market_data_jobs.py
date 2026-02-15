@@ -9,8 +9,8 @@ from src.modules.data_engineering.application.commands.sync_akshare_market_data_
     SyncAkShareMarketDataCmd,
 )
 from src.modules.data_engineering.container import DataEngineeringContainer
-from src.shared.infrastructure.scheduler.execution_tracker import ExecutionTracker
-from src.shared.infrastructure.scheduler.repositories import SchedulerExecutionLogRepository
+from src.modules.foundation.infrastructure.execution_tracker import ExecutionTracker
+from src.modules.foundation.infrastructure.persistence.repositories.scheduler_execution_log_repo import SchedulerExecutionLogRepository
 from src.shared.infrastructure.db.session import AsyncSessionLocal
 
 

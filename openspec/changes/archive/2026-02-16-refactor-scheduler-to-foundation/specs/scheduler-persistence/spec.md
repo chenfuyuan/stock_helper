@@ -1,12 +1,10 @@
-# Spec: scheduler-persistence
+# Spec: scheduler-persistence (Delta)
 
-调度器配置的数据库持久化、应用启动自动注册、调度执行历史记录与查询能力。
-
-**测试约定**：每个 `#### Scenario:` 在变更**交付时**须对应至少一个自动化测试用例（单元或集成）；实现顺序可先实现再补测，以完整测试通过为需求完成标准。
+持久化代码从 `src/shared/` 迁移到 `src/modules/foundation/` 的路径变更与 Repository 访问方式变更。功能需求不变，但实现归属模块变更。
 
 ---
 
-## ADDED Requirements
+## MODIFIED Requirements
 
 ### Requirement: 调度配置数据建模与持久化
 
@@ -84,28 +82,3 @@
 
 - **WHEN** 数据库中有一条 `enabled=False` 的调度配置
 - **THEN** 该 job SHALL NOT 被注册到 APScheduler
-
----
-
-### Requirement: 预置默认调度计划
-
-系统 SHALL 通过 Alembic migration 在 `scheduler_job_config` 表中 seed 以下默认调度配置（所有配置 `enabled=True`，`timezone=Asia/Shanghai`）：
-
-| job_id | job_name | cron_expression | 说明 |
-|--------|----------|-----------------|------|
-| `sync_daily_by_date` | 日线增量同步 | `0 18 * * *` | 每天 18:00（北京时间） |
-| `sync_incremental_finance` | 财务增量同步 | `0 0 * * *` | 每天 00:00（北京时间） |
-| `sync_concept_data` | 概念数据同步 | `0 18 30 * * *` | 每天 18:30（北京时间） |
-| `sync_stock_basic` | 股票基础信息同步 | `0 19 * * *` | 每天 19:00（北京时间） |
-
-注意：此处仅 seed 增量/定期同步任务。历史全量同步（`sync_daily_history`、`sync_history_finance`）为一次性操作，不预置调度，保留手动触发方式。
-
-#### Scenario: 首次部署后默认配置存在
-
-- **WHEN** 执行 Alembic migration 后查询 `scheduler_job_config` 表
-- **THEN** SHALL 存在上述 4 条默认记录，且 `enabled=True`
-
-#### Scenario: 重复执行 migration 幂等
-
-- **WHEN** 再次执行相同的 Alembic migration
-- **THEN** SHALL 使用 `INSERT ... ON CONFLICT DO NOTHING` 保证不重复插入默认配置

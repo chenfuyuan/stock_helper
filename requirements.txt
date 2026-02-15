@@ -16,6 +16,7 @@ APScheduler==3.10.4
 neo4j
 openai
 langgraph>=0.2
+dependency-injector
 pytest
 pytest-asyncio
 

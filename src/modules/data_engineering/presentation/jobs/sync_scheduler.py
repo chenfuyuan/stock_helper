@@ -11,8 +11,8 @@ from src.modules.data_engineering.application.commands.sync_concept_data_cmd imp
 from src.modules.data_engineering.container import DataEngineeringContainer
 from src.modules.data_engineering.domain.model.enums import SyncJobType
 from src.modules.data_engineering.infrastructure.config import de_config
-from src.shared.infrastructure.scheduler.execution_tracker import ExecutionTracker
-from src.shared.infrastructure.scheduler.repositories import SchedulerExecutionLogRepository
+from src.modules.foundation.infrastructure.execution_tracker import ExecutionTracker
+from src.modules.foundation.infrastructure.persistence.repositories.scheduler_execution_log_repo import SchedulerExecutionLogRepository
 from src.shared.infrastructure.db.session import AsyncSessionLocal
 
 

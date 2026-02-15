@@ -19,11 +19,15 @@ from src.modules.market_insight.presentation.rest.market_insight_router import (
     router as market_insight_router,
 )
 from src.modules.research.presentation.rest import router as research_router
+from src.modules.foundation.presentation.rest.scheduler_routes import (
+    router as scheduler_router,
+)
 
 api_router = APIRouter()
 api_router.include_router(health.router, tags=["health"])
 api_router.include_router(coordinator_router)
 api_router.include_router(de_router)
+api_router.include_router(scheduler_router, prefix="/scheduler", tags=["scheduler"])
 api_router.include_router(debate_router)
 api_router.include_router(judge_router)
 api_router.include_router(knowledge_graph_router)
