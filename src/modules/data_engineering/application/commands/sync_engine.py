@@ -99,20 +99,20 @@ class SyncEngine:
             timeout_delta = timedelta(minutes=timeout_minutes)
             
             if now - latest_task.updated_at > timeout_delta:
-                # 任务僵死，标记为 FAILED 并允许创建新任务
+                # 任务僵死，标记为 PAUSED 并允许创建新任务（保持断点续跑能力）
                 logger.warning(
                     f"检测到僵死任务 (task_id={latest_task.id}, job_type={job_type.value}), "
                     f"updated_at={latest_task.updated_at}, 超时阈值={timeout_minutes}分钟, "
-                    f"自动标记为 FAILED"
+                    f"自动标记为 PAUSED 以保持断点续跑能力"
                 )
-                latest_task.fail()
+                latest_task.pause()
                 latest_task.config = latest_task.config or {}
-                latest_task.config["error_message"] = (
-                    f"超时自动标记：updated_at 超过 {timeout_minutes} 分钟阈值，"
-                    f"判定为僵死任务"
+                latest_task.config["timeout_message"] = (
+                    f"超时自动暂停：updated_at 超过 {timeout_minutes} 分钟阈值，"
+                    f"判定为僵死任务，保持断点续跑能力"
                 )
                 await self.sync_task_repo.update(latest_task)
-                logger.info("僵死任务已标记为 FAILED，允许创建新任务")
+                logger.info("僵死任务已标记为 PAUSED，允许创建新任务并保持断点续跑能力")
             else:
                 # 任务正常运行中，拒绝启动新任务
                 logger.warning(f"已存在正在运行的 {job_type.value} 任务，拒绝启动新任务")
