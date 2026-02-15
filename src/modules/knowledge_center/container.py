@@ -20,8 +20,14 @@ from src.modules.data_engineering.infrastructure.persistence.repositories.pg_sto
 )
 from src.modules.data_engineering.container import DataEngineeringContainer
 
+from src.modules.knowledge_center.application.commands.suggest_concept_relations_command import (
+    SuggestConceptRelationsCmd,
+)
 from src.modules.knowledge_center.application.commands.sync_concept_graph_command import (
     SyncConceptGraphCommand,
+)
+from src.modules.knowledge_center.application.commands.sync_concept_relations_command import (
+    SyncConceptRelationsCmd,
 )
 from src.modules.knowledge_center.application.commands.sync_graph_command import (
     SyncGraphCommand,
@@ -32,12 +38,21 @@ from src.modules.knowledge_center.application.queries.get_stock_graph import (
 from src.modules.knowledge_center.application.queries.get_stock_neighbors import (
     GetStockNeighborsQuery,
 )
+from src.modules.knowledge_center.application.services.concept_relation_service import (
+    ConceptRelationService,
+)
 from src.modules.knowledge_center.application.services.graph_service import GraphService
 from src.modules.knowledge_center.infrastructure.adapters.concept_data_adapter import (
     ConceptDataAdapter,
 )
 from src.modules.knowledge_center.infrastructure.adapters.data_engineering_adapter import (
     DataEngineeringAdapter,
+)
+from src.modules.knowledge_center.infrastructure.adapters.llm_concept_relation_analyzer import (
+    LLMConceptRelationAnalyzer,
+)
+from src.modules.knowledge_center.infrastructure.persistence.pg_concept_relation_repository import (
+    PgConceptRelationRepository,
 )
 from src.modules.knowledge_center.infrastructure.config import neo4j_config
 
@@ -140,4 +155,45 @@ class KnowledgeCenterContainer:
             sync_concept_command=self.sync_concept_graph_command(),
             neighbors_query=self.get_stock_neighbors_query(),
             graph_query=self.get_stock_graph_query(),
+        )
+
+    def concept_relation_repository(self) -> PgConceptRelationRepository:
+        """组装概念关系 PostgreSQL 仓储。"""
+        if self._session is None:
+            raise RuntimeError(
+                "KnowledgeCenterContainer 需要 session 才能提供 concept_relation_repository"
+            )
+        return PgConceptRelationRepository(session=self._session)
+
+    def llm_concept_relation_analyzer(self) -> LLMConceptRelationAnalyzer:
+        """
+        组装 LLM 概念关系分析器。
+        
+        依赖 llm_platform 的 LLMService。
+        """
+        from src.modules.llm_platform.container import LLMPlatformContainer
+        
+        # 通过 LLMPlatformContainer 获取 LLMService
+        llm_container = LLMPlatformContainer()
+        llm_service = llm_container.llm_service()
+        
+        return LLMConceptRelationAnalyzer(llm_service=llm_service)
+
+    def concept_relation_service(self) -> ConceptRelationService:
+        """组装概念关系应用服务。"""
+        return ConceptRelationService(repository=self.concept_relation_repository())
+
+    def suggest_concept_relations_cmd(self) -> SuggestConceptRelationsCmd:
+        """组装 LLM 概念关系推荐命令。"""
+        return SuggestConceptRelationsCmd(
+            analyzer=self.llm_concept_relation_analyzer(),
+            repository=self.concept_relation_repository(),
+            service=self.concept_relation_service(),
+        )
+
+    def sync_concept_relations_cmd(self) -> SyncConceptRelationsCmd:
+        """组装概念关系同步命令。"""
+        return SyncConceptRelationsCmd(
+            pg_repository=self.concept_relation_repository(),
+            graph_repository=self.graph_repository(),
         )

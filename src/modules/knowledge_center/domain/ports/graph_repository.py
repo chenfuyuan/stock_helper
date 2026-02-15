@@ -6,6 +6,13 @@ GraphRepository Port 接口。
 
 from abc import ABC, abstractmethod
 
+from src.modules.knowledge_center.domain.dtos.concept_relation_query_dtos import (
+    ConceptChainNodeDTO,
+    ConceptRelationQueryDTO,
+)
+from src.modules.knowledge_center.domain.dtos.concept_relation_sync_dtos import (
+    ConceptRelationSyncDTO,
+)
 from src.modules.knowledge_center.domain.dtos.concept_sync_dtos import (
     ConceptGraphSyncDTO,
 )
@@ -140,4 +147,79 @@ class IGraphRepository(ABC):
         
         Returns:
             int：删除的关系数量
+        """
+
+    @abstractmethod
+    async def merge_concept_relations(
+        self,
+        relations: list[ConceptRelationSyncDTO],
+        batch_size: int = 500,
+    ) -> SyncResult:
+        """
+        批量写入/更新 Concept 节点间的关系。
+        
+        使用 Cypher UNWIND + MATCH Concept + MERGE 关系实现批量写入，确保幂等性。
+        每条关系使用独立的关系类型（IS_UPSTREAM_OF、IS_DOWNSTREAM_OF 等），
+        并携带 source_type、confidence、pg_id 属性用于追溯和反向校验。
+        
+        Args:
+            relations: 概念关系同步 DTO 列表
+            batch_size: 每批提交的记录数，默认 500
+        
+        Returns:
+            SyncResult：包含成功/失败数、耗时与错误详情
+        """
+
+    @abstractmethod
+    async def delete_all_concept_inter_relationships(self) -> int:
+        """
+        删除所有 Concept 节点之间的关系。
+        
+        用于概念关系全量重建的"先清"策略。
+        仅删除 Concept 间关系（IS_UPSTREAM_OF 等），保留 BELONGS_TO_CONCEPT 关系。
+        
+        Returns:
+            int：删除的关系数量
+        """
+
+    @abstractmethod
+    async def find_concept_relations(
+        self,
+        concept_code: str,
+        direction: str = "both",
+        relation_types: list[str] | None = None,
+    ) -> list[ConceptRelationQueryDTO]:
+        """
+        查询指定概念的直接关系。
+        
+        Args:
+            concept_code: 概念代码
+            direction: 查询方向，枚举值：outgoing（出边）/ incoming（入边）/ both（双向）
+            relation_types: 关系类型筛选列表（如 ["IS_UPSTREAM_OF"]），None 表示所有类型
+        
+        Returns:
+            概念关系查询结果列表
+        """
+
+    @abstractmethod
+    async def find_concept_chain(
+        self,
+        concept_code: str,
+        direction: str = "outgoing",
+        max_depth: int = 3,
+        relation_types: list[str] | None = None,
+    ) -> list[ConceptChainNodeDTO]:
+        """
+        查询产业链路径（变长路径遍历）。
+        
+        从指定概念出发，沿指定方向遍历 Concept 间关系，返回路径上的所有节点。
+        
+        Args:
+            concept_code: 起点概念代码
+            direction: 遍历方向，枚举值：outgoing（下游）/ incoming（上游）/ both（双向）
+            max_depth: 最大遍历深度，默认 3
+            relation_types: 关系类型筛选列表，None 表示所有类型
+        
+        Returns:
+            产业链路径节点列表（按深度排序）
         """

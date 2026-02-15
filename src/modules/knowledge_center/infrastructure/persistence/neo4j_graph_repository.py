@@ -10,6 +10,13 @@ from typing import Any
 from loguru import logger
 from neo4j import Driver
 
+from src.modules.knowledge_center.domain.dtos.concept_relation_query_dtos import (
+    ConceptChainNodeDTO,
+    ConceptRelationQueryDTO,
+)
+from src.modules.knowledge_center.domain.dtos.concept_relation_sync_dtos import (
+    ConceptRelationSyncDTO,
+)
 from src.modules.knowledge_center.domain.dtos.concept_sync_dtos import (
     ConceptGraphSyncDTO,
 )
@@ -589,3 +596,342 @@ class Neo4jGraphRepository(IGraphRepository):
                 message="删除概念关系失败",
                 details={"error": str(e)},
             )
+
+    async def merge_concept_relations(
+        self,
+        relations: list[ConceptRelationSyncDTO],
+        batch_size: int = 500,
+    ) -> SyncResult:
+        """
+        批量写入/更新 Concept 节点间的关系。
+        
+        使用 Cypher UNWIND + MATCH Concept + MERGE 关系实现批量写入。
+        每条关系使用独立的关系类型（IS_UPSTREAM_OF 等），
+        并携带 source_type、confidence、pg_id 属性。
+        """
+        if not relations:
+            return SyncResult(
+                total=0,
+                success=0,
+                failed=0,
+                duration_ms=0.0,
+                error_details=[],
+            )
+
+        start_time = time.time()
+        total = len(relations)
+        success = 0
+        failed = 0
+        error_details: list[str] = []
+
+        # 按关系类型分组，每种类型使用独立的 MERGE 语句
+        grouped_by_type: dict[str, list[ConceptRelationSyncDTO]] = {}
+        for relation in relations:
+            rel_type = relation.relation_type
+            if rel_type not in grouped_by_type:
+                grouped_by_type[rel_type] = []
+            grouped_by_type[rel_type].append(relation)
+
+        try:
+            with self._driver.session() as session:
+                for rel_type, rel_batch in grouped_by_type.items():
+                    # 为每种关系类型构建 Cypher
+                    cypher = f"""
+                    UNWIND $relations AS rel
+                    MATCH (source:CONCEPT {{code: rel.source_concept_code}})
+                    MATCH (target:CONCEPT {{code: rel.target_concept_code}})
+                    MERGE (source)-[r:{rel_type}]->(target)
+                    SET r.source_type = rel.source_type,
+                        r.confidence = rel.confidence,
+                        r.pg_id = rel.pg_id
+                    """
+
+                    # 分批处理
+                    for i in range(0, len(rel_batch), batch_size):
+                        batch = rel_batch[i : i + batch_size]
+                        batch_data: list[dict[str, object]] = [
+                            r.model_dump(mode="json") for r in batch
+                        ]
+
+                        try:
+                            session.run(cypher, relations=batch_data)
+                            success += len(batch)
+                            logger.info(
+                                f"成功同步概念关系批次（{rel_type}），共 {len(batch)} 条记录"
+                            )
+                        except Exception as e:
+                            logger.warning(
+                                f"概念关系批次（{rel_type}）同步失败，将降级为单条重试: {str(e)}"
+                            )
+                            for rel_payload in batch_data:
+                                rel_id = rel_payload.get("pg_id", "UNKNOWN")
+                                try:
+                                    session.run(cypher, relations=[rel_payload])
+                                    success += 1
+                                except Exception as single_error:
+                                    failed += 1
+                                    error_msg = (
+                                        f"pg_id={rel_id} 同步失败: {str(single_error)}"
+                                    )
+                                    error_details.append(error_msg)
+                                    logger.error(error_msg)
+
+            duration_ms = (time.time() - start_time) * 1000
+            logger.info(
+                f"概念关系批量同步完成: 总数={total}, 成功={success}, 失败={failed}, 耗时={duration_ms:.2f}ms"
+            )
+
+            return SyncResult(
+                total=total,
+                success=success,
+                failed=failed,
+                duration_ms=duration_ms,
+                error_details=error_details,
+            )
+        except Exception as e:
+            logger.error(f"批量同步概念关系失败: {str(e)}")
+            raise GraphSyncError(
+                message="批量同步概念关系失败",
+                details={"error": str(e)},
+            )
+
+    async def delete_all_concept_inter_relationships(self) -> int:
+        """
+        删除所有 Concept 节点之间的关系。
+        
+        仅删除 Concept 间关系（IS_UPSTREAM_OF 等），保留 BELONGS_TO_CONCEPT 关系。
+        """
+        # 使用正则匹配删除所有非 BELONGS_TO_CONCEPT 的 Concept 间关系
+        cypher = """
+        MATCH (c1:CONCEPT)-[r]->(c2:CONCEPT)
+        WHERE type(r) <> 'BELONGS_TO_CONCEPT'
+        DELETE r
+        RETURN count(r) AS deleted_count
+        """
+
+        try:
+            with self._driver.session() as session:
+                result = session.run(cypher)
+                record = result.single()
+                deleted_count = record["deleted_count"] if record else 0
+
+                logger.info(f"删除所有 Concept 间关系：{deleted_count} 条")
+                return deleted_count
+        except Exception as e:
+            logger.error(f"删除 Concept 间关系失败: {str(e)}")
+            raise GraphSyncError(
+                message="删除 Concept 间关系失败",
+                details={"error": str(e)},
+            )
+
+    async def find_concept_relations(
+        self,
+        concept_code: str,
+        direction: str = "both",
+        relation_types: list[str] | None = None,
+    ) -> list[ConceptRelationQueryDTO]:
+        """
+        查询指定概念的直接关系。
+        
+        Args:
+            concept_code: 概念代码
+            direction: 查询方向（outgoing / incoming / both）
+            relation_types: 关系类型筛选列表
+        
+        Returns:
+            概念关系查询结果列表
+        """
+        # 构建 Cypher 查询
+        if direction == "outgoing":
+            cypher_pattern = "(c:CONCEPT {code: $code})-[r]->(target:CONCEPT)"
+            return_source = "c.code"
+            return_target = "target.code"
+        elif direction == "incoming":
+            cypher_pattern = "(source:CONCEPT)-[r]->(c:CONCEPT {code: $code})"
+            return_source = "source.code"
+            return_target = "c.code"
+        else:  # both
+            cypher_pattern = """
+            (c:CONCEPT {code: $code})-[r]->(target:CONCEPT)
+            UNION ALL
+            MATCH (source:CONCEPT)-[r]->(c:CONCEPT {code: $code})
+            """
+            # 对于 both 模式，使用 UNION ALL 查询
+            cypher = f"""
+            MATCH (c:CONCEPT {{code: $code}})-[r]->(target:CONCEPT)
+            WHERE type(r) <> 'BELONGS_TO_CONCEPT'
+            {self._build_relation_type_filter(relation_types, 'r')}
+            RETURN c.code AS source_concept_code, target.code AS target_concept_code,
+                   type(r) AS relation_type, r.source_type AS source_type,
+                   r.confidence AS confidence, r.pg_id AS pg_id
+            UNION ALL
+            MATCH (source:CONCEPT)-[r]->(c:CONCEPT {{code: $code}})
+            WHERE type(r) <> 'BELONGS_TO_CONCEPT'
+            {self._build_relation_type_filter(relation_types, 'r')}
+            RETURN source.code AS source_concept_code, c.code AS target_concept_code,
+                   type(r) AS relation_type, r.source_type AS source_type,
+                   r.confidence AS confidence, r.pg_id AS pg_id
+            """
+
+            try:
+                with self._driver.session() as session:
+                    result = session.run(cypher, code=concept_code)
+                    records = result.data()
+
+                    relations = [
+                        ConceptRelationQueryDTO(
+                            source_concept_code=record["source_concept_code"],
+                            target_concept_code=record["target_concept_code"],
+                            relation_type=record["relation_type"],
+                            source_type=record.get("source_type", "UNKNOWN"),
+                            confidence=record.get("confidence", 1.0),
+                            pg_id=record.get("pg_id"),
+                        )
+                        for record in records
+                    ]
+
+                    logger.debug(
+                        f"查询概念关系: code={concept_code}, direction={direction}, "
+                        f"返回 {len(relations)} 条"
+                    )
+                    return relations
+            except Exception as e:
+                logger.error(f"查询概念关系失败: {str(e)}")
+                raise GraphQueryError(
+                    message="查询概念关系失败",
+                    details={"error": str(e), "concept_code": concept_code},
+                )
+
+        # 单向查询（outgoing 或 incoming）
+        cypher = f"""
+        MATCH {cypher_pattern}
+        WHERE type(r) <> 'BELONGS_TO_CONCEPT'
+        {self._build_relation_type_filter(relation_types, 'r')}
+        RETURN {return_source} AS source_concept_code,
+               {return_target} AS target_concept_code,
+               type(r) AS relation_type,
+               r.source_type AS source_type,
+               r.confidence AS confidence,
+               r.pg_id AS pg_id
+        """
+
+        try:
+            with self._driver.session() as session:
+                result = session.run(cypher, code=concept_code)
+                records = result.data()
+
+                relations = [
+                    ConceptRelationQueryDTO(
+                        source_concept_code=record["source_concept_code"],
+                        target_concept_code=record["target_concept_code"],
+                        relation_type=record["relation_type"],
+                        source_type=record.get("source_type", "UNKNOWN"),
+                        confidence=record.get("confidence", 1.0),
+                        pg_id=record.get("pg_id"),
+                    )
+                    for record in records
+                ]
+
+                logger.debug(
+                    f"查询概念关系: code={concept_code}, direction={direction}, "
+                    f"返回 {len(relations)} 条"
+                )
+                return relations
+        except Exception as e:
+            logger.error(f"查询概念关系失败: {str(e)}")
+            raise GraphQueryError(
+                message="查询概念关系失败",
+                details={"error": str(e), "concept_code": concept_code},
+            )
+
+    async def find_concept_chain(
+        self,
+        concept_code: str,
+        direction: str = "outgoing",
+        max_depth: int = 3,
+        relation_types: list[str] | None = None,
+    ) -> list[ConceptChainNodeDTO]:
+        """
+        查询产业链路径（变长路径遍历）。
+        
+        从指定概念出发，沿指定方向遍历 Concept 间关系，返回路径上的所有节点。
+        """
+        # 构建路径方向
+        if direction == "outgoing":
+            path_pattern = f"(start:CONCEPT {{code: $code}})-[rels*1..{max_depth}]->(end:CONCEPT)"
+        elif direction == "incoming":
+            path_pattern = f"(start:CONCEPT)<-[rels*1..{max_depth}]-(end:CONCEPT {{code: $code}})"
+        else:  # both
+            path_pattern = f"(start:CONCEPT {{code: $code}})-[rels*1..{max_depth}]-(end:CONCEPT)"
+
+        # 构建关系类型过滤
+        rel_filter = ""
+        if relation_types:
+            rel_types_str = "|".join(f":{rt}" for rt in relation_types)
+            if direction == "outgoing":
+                path_pattern = f"(start:CONCEPT {{code: $code}})-[rels{rel_types_str}*1..{max_depth}]->(end:CONCEPT)"
+            elif direction == "incoming":
+                path_pattern = f"(start:CONCEPT)<-[rels{rel_types_str}*1..{max_depth}]-(end:CONCEPT {{code: $code}})"
+            else:
+                path_pattern = f"(start:CONCEPT {{code: $code}})-[rels{rel_types_str}*1..{max_depth}]-(end:CONCEPT)"
+
+        cypher = f"""
+        MATCH path = {path_pattern}
+        WHERE ALL(r IN rels WHERE type(r) <> 'BELONGS_TO_CONCEPT')
+        WITH nodes(path) AS node_list, relationships(path) AS rel_list
+        UNWIND range(0, size(node_list)-1) AS idx
+        RETURN node_list[idx].code AS concept_code,
+               node_list[idx].name AS concept_name,
+               idx AS depth,
+               CASE WHEN idx > 0 THEN type(rel_list[idx-1]) ELSE null END AS relation_from_previous
+        ORDER BY depth
+        """
+
+        try:
+            with self._driver.session() as session:
+                result = session.run(cypher, code=concept_code)
+                records = result.data()
+
+                # 去重（同一深度的同一概念可能通过多条路径到达）
+                seen = set()
+                nodes = []
+                for record in records:
+                    key = (record["concept_code"], record["depth"])
+                    if key not in seen:
+                        seen.add(key)
+                        nodes.append(
+                            ConceptChainNodeDTO(
+                                concept_code=record["concept_code"],
+                                concept_name=record.get("concept_name"),
+                                depth=record["depth"],
+                                relation_from_previous=record.get("relation_from_previous"),
+                            )
+                        )
+
+                logger.debug(
+                    f"查询产业链路径: code={concept_code}, direction={direction}, "
+                    f"max_depth={max_depth}, 返回 {len(nodes)} 个节点"
+                )
+                return nodes
+        except Exception as e:
+            logger.error(f"查询产业链路径失败: {str(e)}")
+            raise GraphQueryError(
+                message="查询产业链路径失败",
+                details={"error": str(e), "concept_code": concept_code},
+            )
+
+    def _build_relation_type_filter(self, relation_types: list[str] | None, var: str) -> str:
+        """
+        构建关系类型过滤条件。
+        
+        Args:
+            relation_types: 关系类型列表
+            var: 关系变量名
+        
+        Returns:
+            Cypher WHERE 子句片段
+        """
+        if not relation_types:
+            return ""
+        types_str = ", ".join(f"'{rt}'" for rt in relation_types)
+        return f"AND type({var}) IN [{types_str}]"
