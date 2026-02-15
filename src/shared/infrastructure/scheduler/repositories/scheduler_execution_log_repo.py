@@ -43,11 +43,8 @@ class SchedulerExecutionLogRepository:
         log = SchedulerExecutionLogModel(
             id=uuid.uuid4(),
             job_id=job_id,
-            execution_id=str(uuid.uuid4()),  # 生成执行ID
             started_at=started_at,
             status=status,
-            created_at=started_at,
-            updated_at=started_at,
         )
         self._session.add(log)
         await self._session.commit()
