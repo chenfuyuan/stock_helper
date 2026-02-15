@@ -24,6 +24,9 @@ from src.modules.data_engineering.domain.ports.providers.stock_basic_provider im
     IStockBasicProvider,
 )
 from src.modules.data_engineering.infrastructure.config import de_config
+from src.modules.data_engineering.infrastructure.external_apis.tushare.rate_limiter import (
+    SlidingWindowRateLimiter,
+)
 from src.modules.data_engineering.infrastructure.external_apis.tushare.converters.finance_converter import (  # noqa: E501
     StockFinanceAssembler,
 )
@@ -38,17 +41,19 @@ from src.modules.data_engineering.infrastructure.external_apis.tushare.converter
 )
 from src.shared.domain.exceptions import AppException
 
-# Tushare 限速锁：全进程共享，确保 API 调用频率不超过限制
-_tushare_rate_lock: asyncio.Lock | None = None
-_tushare_last_call: float = 0.0
+# Tushare 滑动窗口限速器：全进程共享
+_tushare_rate_limiter: SlidingWindowRateLimiter | None = None
 
 
-def _get_tushare_rate_lock() -> asyncio.Lock:
-    """获取进程内共享的 Tushare 限速锁。"""
-    global _tushare_rate_lock
-    if _tushare_rate_lock is None:
-        _tushare_rate_lock = asyncio.Lock()
-    return _tushare_rate_lock
+def _get_tushare_rate_limiter() -> SlidingWindowRateLimiter:
+    """获取进程内共享的 Tushare 滑动窗口限速器。"""
+    global _tushare_rate_limiter
+    if _tushare_rate_limiter is None:
+        _tushare_rate_limiter = SlidingWindowRateLimiter(
+            max_calls=de_config.TUSHARE_RATE_LIMIT_MAX_CALLS,
+            window_seconds=de_config.TUSHARE_RATE_LIMIT_WINDOW_SECONDS,
+        )
+    return _tushare_rate_limiter
 
 
 class TushareClient(IStockBasicProvider, IMarketQuoteProvider, IFinancialDataProvider):
@@ -83,22 +88,45 @@ class TushareClient(IStockBasicProvider, IMarketQuoteProvider, IFinancialDataPro
 
     async def _rate_limited_call(self, func, *args, **kwargs):
         """
-        带限速的 Tushare API 调用。全进程共享限速，确保不超过 200 次/分钟。
-        限速间隔从配置中读取（de_config.TUSHARE_MIN_INTERVAL），默认 0.35s。
+        带限速的 Tushare API 调用，使用滑动窗口限速器。
+        支持频率超限异常的指数退避重试（最多 3 次）。
         """
-        global _tushare_last_call
-        lock = _get_tushare_rate_lock()
-        async with lock:
-            now = time.monotonic()
-            elapsed = now - _tushare_last_call
-            min_interval = de_config.TUSHARE_MIN_INTERVAL
-            if elapsed < min_interval and _tushare_last_call > 0:
-                wait_time = min_interval - elapsed
-                logger.debug(f"Tushare 限速：等待 {wait_time:.2f}s")
-                await asyncio.sleep(wait_time)
-            result = await self._run_in_executor(func, *args, **kwargs)
-            _tushare_last_call = time.monotonic()
-            return result
+        limiter = _get_tushare_rate_limiter()
+        max_retries = 3
+        base_wait = 3.0  # 基础等待时间（秒）
+        
+        for retry in range(max_retries + 1):
+            try:
+                # 获取调用许可（滑动窗口限速）
+                await limiter.acquire()
+                
+                # 执行实际调用
+                result = await self._run_in_executor(func, *args, **kwargs)
+                return result
+                
+            except Exception as e:
+                error_msg = str(e).lower()
+                
+                # 检查是否为频率超限异常（关键词匹配）
+                is_rate_limit_error = (
+                    "频率" in error_msg or
+                    "每分钟" in error_msg or
+                    "rate limit" in error_msg or
+                    "too many requests" in error_msg
+                )
+                
+                if is_rate_limit_error and retry < max_retries:
+                    # 指数退避重试
+                    wait_time = base_wait * (2 ** retry)
+                    logger.warning(
+                        f"TuShare 频率超限，第 {retry + 1} 次重试，等待 {wait_time:.1f}s: {e}"
+                    )
+                    await asyncio.sleep(wait_time)
+                else:
+                    # 非频率超限异常或已达最大重试次数，直接抛出
+                    if is_rate_limit_error:
+                        logger.error(f"TuShare 频率超限，已达最大重试次数 ({max_retries})")
+                    raise
 
     async def fetch_disclosure_date(
         self, actual_date: Optional[str] = None

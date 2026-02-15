@@ -2,9 +2,10 @@ from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional
 
 import pandas as pd
-from fastapi import APIRouter, Body, HTTPException, status
+from fastapi import APIRouter, Body, Depends, HTTPException, status
 from loguru import logger
 from pydantic import BaseModel, Field
+from sqlalchemy.ext.asyncio import AsyncSession
 
 # Updated imports to point to the new location
 from src.modules.data_engineering.presentation.jobs.sync_scheduler import (
@@ -13,9 +14,15 @@ from src.modules.data_engineering.presentation.jobs.sync_scheduler import (
     sync_history_daily_data_job,
     sync_incremental_finance_job,
     sync_concept_data_job,
+    sync_stock_basic_job,
 )
 from src.shared.dtos import BaseResponse
-from src.shared.infrastructure.scheduler import SchedulerService
+from src.shared.infrastructure.scheduler.scheduler_service import SchedulerService
+from src.shared.infrastructure.scheduler.repositories import (
+    SchedulerJobConfigRepository,
+    SchedulerExecutionLogRepository,
+)
+from src.shared.infrastructure.db.session import get_async_session
 
 router = APIRouter()
 
@@ -26,6 +33,7 @@ JOB_REGISTRY: Dict[str, Callable] = {
     "sync_history_finance": sync_finance_history_job,  # 历史财务数据同步
     "sync_incremental_finance": sync_incremental_finance_job,  # 增量财务数据同步
     "sync_concept_data": sync_concept_data_job,  # 概念数据同步（akshare → PostgreSQL）
+    "sync_stock_basic": sync_stock_basic_job,  # 股票基础信息同步（TuShare → PostgreSQL）
 }
 
 
@@ -100,6 +108,7 @@ async def get_status():
 async def start_job(
     job_id: str,
     interval_minutes: int = Body(..., embed=True, description="执行间隔(分钟)"),
+    session: AsyncSession = Depends(get_async_session),
 ):
     """
     启动一个 Interval 模式的定时任务 (每隔 X 分钟执行一次)
@@ -132,6 +141,17 @@ async def start_job(
     )
     logger.info(f"API: Job started successfully: {job_id}")
 
+    # 持久化到数据库（interval 模式转换为等效的 cron 表达式）
+    repo = SchedulerJobConfigRepository(session)
+    cron_expression = f"*/{interval_minutes} * * * *"  # 每 N 分钟执行
+    await repo.upsert(
+        job_id=job_id,
+        job_name=job_id,  # 使用 job_id 作为默认名称
+        cron_expression=cron_expression,
+        enabled=True,
+    )
+    logger.info(f"API: Job config persisted to DB: {job_id}")
+
     return BaseResponse(
         success=True,
         code="JOB_STARTED",
@@ -149,6 +169,7 @@ async def schedule_job(
     job_id: str,
     hour: int = Body(..., embed=True, description="执行小时 (0-23)"),
     minute: int = Body(..., embed=True, description="执行分钟 (0-59)"),
+    session: AsyncSession = Depends(get_async_session),
 ):
     """
     启动一个 Cron 模式的定时任务 (每天固定时间执行)
@@ -177,6 +198,17 @@ async def schedule_job(
         id=job_id,
         replace_existing=True,
     )
+
+    # 持久化到数据库
+    repo = SchedulerJobConfigRepository(session)
+    cron_expression = f"{minute} {hour} * * *"  # 每天 HH:MM 执行
+    await repo.upsert(
+        job_id=job_id,
+        job_name=job_id,  # 使用 job_id 作为默认名称
+        cron_expression=cron_expression,
+        enabled=True,
+    )
+    logger.info(f"API: Job config persisted to DB: {job_id}")
 
     return BaseResponse(
         success=True,
@@ -232,7 +264,10 @@ async def trigger_job(
     response_model=BaseResponse[str],
     summary="停止指定定时任务",
 )
-async def stop_job(job_id: str):
+async def stop_job(
+    job_id: str,
+    session: AsyncSession = Depends(get_async_session),
+):
     scheduler = SchedulerService.get_scheduler()
 
     if scheduler.get_job(job_id):
@@ -241,4 +276,69 @@ async def stop_job(job_id: str):
     else:
         msg = f"任务 '{job_id}' 未运行"
 
+    # 更新数据库中的 enabled 状态为 False
+    repo = SchedulerJobConfigRepository(session)
+    try:
+        await repo.update_enabled(job_id=job_id, enabled=False)
+        logger.info(f"API: Job config disabled in DB: {job_id}")
+    except Exception as e:
+        # 如果 DB 中不存在该配置，仅记录警告
+        logger.warning(f"API: Failed to disable job config in DB: {job_id}, error: {e}")
+
     return BaseResponse(success=True, code="JOB_STOPPED", message=msg, data="stopped")
+
+
+class ExecutionLogDetail(BaseModel):
+    """执行日志详情 DTO"""
+
+    job_id: str = Field(..., description="任务标识")
+    started_at: datetime = Field(..., description="开始时间")
+    finished_at: Optional[datetime] = Field(None, description="结束时间")
+    status: str = Field(..., description="执行状态")
+    error_message: Optional[str] = Field(None, description="错误信息")
+    duration_ms: Optional[int] = Field(None, description="执行耗时（毫秒）")
+
+
+@router.get(
+    "/executions",
+    response_model=BaseResponse[List[ExecutionLogDetail]],
+    summary="查询调度执行历史",
+)
+async def get_executions(
+    job_id: Optional[str] = None,
+    limit: int = 20,
+    session: AsyncSession = Depends(get_async_session),
+):
+    """
+    查询调度执行历史记录
+    :param job_id: 可选，按任务 ID 筛选
+    :param limit: 返回记录数量上限，默认 20，最大 100
+    """
+    if limit > 100:
+        limit = 100
+
+    repo = SchedulerExecutionLogRepository(session)
+
+    if job_id:
+        logs = await repo.get_recent_by_job_id(job_id=job_id, limit=limit)
+    else:
+        logs = await repo.get_recent_all(limit=limit)
+
+    execution_details = [
+        ExecutionLogDetail(
+            job_id=log.job_id,
+            started_at=log.started_at,
+            finished_at=log.finished_at,
+            status=log.status,
+            error_message=log.error_message,
+            duration_ms=log.duration_ms,
+        )
+        for log in logs
+    ]
+
+    return BaseResponse(
+        success=True,
+        code="EXECUTIONS_RETRIEVED",
+        message=f"查询到 {len(execution_details)} 条执行记录",
+        data=execution_details,
+    )

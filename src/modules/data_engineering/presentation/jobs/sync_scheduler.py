@@ -11,6 +11,9 @@ from src.modules.data_engineering.application.commands.sync_concept_data_cmd imp
 from src.modules.data_engineering.container import DataEngineeringContainer
 from src.modules.data_engineering.domain.model.enums import SyncJobType
 from src.modules.data_engineering.infrastructure.config import de_config
+from src.shared.infrastructure.scheduler.execution_tracker import ExecutionTracker
+from src.shared.infrastructure.scheduler.repositories import SchedulerExecutionLogRepository
+from src.shared.infrastructure.db.session import AsyncSessionLocal
 
 
 async def sync_history_daily_data_job():
@@ -28,21 +31,20 @@ async def sync_history_daily_data_job():
     """
     logger.info("开始执行历史日线全量同步任务...")
 
-    try:
-        async with SyncUseCaseFactory.create_sync_engine() as engine:
-            config = {
-                "batch_size": de_config.SYNC_DAILY_HISTORY_BATCH_SIZE,
-            }
+    async with AsyncSessionLocal() as session:
+        repo = SchedulerExecutionLogRepository(session)
+        async with ExecutionTracker(job_id="sync_daily_history", repo=repo):
+            async with SyncUseCaseFactory.create_sync_engine() as engine:
+                config = {
+                    "batch_size": de_config.SYNC_DAILY_HISTORY_BATCH_SIZE,
+                }
 
-            task = await engine.run_history_sync(job_type=SyncJobType.DAILY_HISTORY, config=config)
+                task = await engine.run_history_sync(job_type=SyncJobType.DAILY_HISTORY, config=config)
 
-            logger.info(
-                f"历史日线同步完成：task_id={task.id}, "
-                f"status={task.status.value}, total_processed={task.total_processed}"
-            )
-
-    except Exception as e:
-        logger.error(f"历史日线同步任务失败：{str(e)}", exc_info=True)
+                logger.info(
+                    f"历史日线同步完成：task_id={task.id}, "
+                    f"status={task.status.value}, total_processed={task.total_processed}"
+                )
 
 
 async def sync_daily_data_job(target_date: str | None = None):
@@ -54,19 +56,18 @@ async def sync_daily_data_job(target_date: str | None = None):
     """
     logger.info(f"开始执行日线增量同步任务... 目标日期: {target_date or '今天'}")
 
-    try:
-        async with SyncUseCaseFactory.create_sync_engine() as engine:
-            date_str = target_date or datetime.now().strftime("%Y%m%d")
+    async with AsyncSessionLocal() as session:
+        repo = SchedulerExecutionLogRepository(session)
+        async with ExecutionTracker(job_id="sync_daily_by_date", repo=repo):
+            async with SyncUseCaseFactory.create_sync_engine() as engine:
+                date_str = target_date or datetime.now().strftime("%Y%m%d")
 
-            result = await engine.run_incremental_daily_sync(target_date=date_str)
+                result = await engine.run_incremental_daily_sync(target_date=date_str)
 
-            logger.info(
-                f"日线增量同步完成：synced_dates={result.get('synced_dates')}, "
-                f"total_count={result.get('total_count')}, message={result.get('message')}"
-            )
-
-    except Exception as e:
-        logger.error(f"日线增量同步任务失败：{str(e)}", exc_info=True)
+                logger.info(
+                    f"日线增量同步完成：synced_dates={result.get('synced_dates')}, "
+                    f"total_count={result.get('total_count')}, message={result.get('message')}"
+                )
 
 
 async def sync_finance_history_job():
@@ -84,25 +85,24 @@ async def sync_finance_history_job():
     """
     logger.info("开始执行历史财务全量同步任务...")
 
-    try:
-        async with SyncUseCaseFactory.create_sync_engine() as engine:
-            config = {
-                "batch_size": de_config.SYNC_FINANCE_HISTORY_BATCH_SIZE,
-                "start_date": de_config.SYNC_FINANCE_HISTORY_START_DATE,
-                "end_date": datetime.now().strftime("%Y%m%d"),
-            }
+    async with AsyncSessionLocal() as session:
+        repo = SchedulerExecutionLogRepository(session)
+        async with ExecutionTracker(job_id="sync_history_finance", repo=repo):
+            async with SyncUseCaseFactory.create_sync_engine() as engine:
+                config = {
+                    "batch_size": de_config.SYNC_FINANCE_HISTORY_BATCH_SIZE,
+                    "start_date": de_config.SYNC_FINANCE_HISTORY_START_DATE,
+                    "end_date": datetime.now().strftime("%Y%m%d"),
+                }
 
-            task = await engine.run_history_sync(
-                job_type=SyncJobType.FINANCE_HISTORY, config=config
-            )
+                task = await engine.run_history_sync(
+                    job_type=SyncJobType.FINANCE_HISTORY, config=config
+                )
 
-            logger.info(
-                f"历史财务同步完成：task_id={task.id}, "
-                f"status={task.status.value}, total_processed={task.total_processed}"
-            )
-
-    except Exception as e:
-        logger.error(f"历史财务同步任务失败：{str(e)}", exc_info=True)
+                logger.info(
+                    f"历史财务同步完成：task_id={task.id}, "
+                    f"status={task.status.value}, total_processed={task.total_processed}"
+                )
 
 
 async def sync_incremental_finance_job(target_date: str | None = None):
@@ -114,20 +114,19 @@ async def sync_incremental_finance_job(target_date: str | None = None):
     """
     logger.info(f"开始执行财务增量同步任务... 基准日期: {target_date or '今天'}")
 
-    try:
-        async with SyncUseCaseFactory.create_incremental_finance_use_case() as use_case:
-            result = await use_case.execute(actual_date=target_date)
+    async with AsyncSessionLocal() as session:
+        repo = SchedulerExecutionLogRepository(session)
+        async with ExecutionTracker(job_id="sync_incremental_finance", repo=repo):
+            async with SyncUseCaseFactory.create_incremental_finance_use_case() as use_case:
+                result = await use_case.execute(actual_date=target_date)
 
-            logger.info(
-                f"财务增量同步完成：synced_count={result.get('synced_count')}, "
-                f"failed_count={result.get('failed_count')}, "
-                f"retry_count={result.get('retry_count')}, "
-                f"retry_success_count={result.get('retry_success_count')}, "
-                f"target_period={result.get('target_period')}"
-            )
-
-    except Exception as e:
-        logger.error(f"财务增量同步任务失败：{str(e)}", exc_info=True)
+                logger.info(
+                    f"财务增量同步完成：synced_count={result.get('synced_count')}, "
+                    f"failed_count={result.get('failed_count')}, "
+                    f"retry_count={result.get('retry_count')}, "
+                    f"retry_success_count={result.get('retry_success_count')}, "
+                    f"target_period={result.get('target_period')}"
+                )
 
 
 async def sync_concept_data_job():
@@ -140,24 +139,45 @@ async def sync_concept_data_job():
     """
     logger.info("开始执行概念数据同步任务...")
 
-    try:
-        # 获取依赖注入容器
-        container = DataEngineeringContainer()
-        
-        # 创建概念同步命令
-        sync_cmd = SyncConceptDataCmd(
-            concept_provider=container.concept_provider(),
-            concept_repo=container.concept_repository(),
-        )
-        
-        # 执行同步
-        result = await sync_cmd.execute()
-        
-        logger.info(
-            f"概念数据同步完成：总概念数={result.total_concepts}, "
-            f"成功={result.success_concepts}, 失败={result.failed_concepts}, "
-            f"总成份股={result.total_stocks}, 耗时={result.elapsed_time:.2f}s"
-        )
+    async with AsyncSessionLocal() as session:
+        repo = SchedulerExecutionLogRepository(session)
+        async with ExecutionTracker(job_id="sync_concept_data", repo=repo):
+            # 获取依赖注入容器
+            container = DataEngineeringContainer()
+            
+            # 创建概念同步命令
+            sync_cmd = SyncConceptDataCmd(
+                concept_provider=container.concept_provider(),
+                concept_repo=container.concept_repository(),
+            )
+            
+            # 执行同步
+            result = await sync_cmd.execute()
+            
+            logger.info(
+                f"概念数据同步完成：总概念数={result.total_concepts}, "
+                f"成功={result.success_concepts}, 失败={result.failed_concepts}, "
+                f"总成份股={result.total_stocks}, 耗时={result.elapsed_time:.2f}s"
+            )
 
-    except Exception as e:
-        logger.error(f"概念数据同步任务失败：{str(e)}", exc_info=True)
+
+async def sync_stock_basic_job():
+    """
+    定时任务：同步股票基础信息（TuShare → PostgreSQL）
+    
+    描述:
+        从 TuShare 获取股票基础信息（代码、名称、上市日期等），
+        持久化到 PostgreSQL stocks 表。使用 upsert 策略。
+    """
+    logger.info("开始执行股票基础信息同步任务...")
+
+    async with AsyncSessionLocal() as session:
+        repo = SchedulerExecutionLogRepository(session)
+        async with ExecutionTracker(job_id="sync_stock_basic", repo=repo):
+            async with SyncUseCaseFactory.create_sync_stock_basic_use_case() as use_case:
+                result = await use_case.execute()
+                
+                logger.info(
+                    f"股票基础信息同步完成：总数={result.get('total_count')}, "
+                    f"成功={result.get('success_count')}, 失败={result.get('failed_count')}"
+                )

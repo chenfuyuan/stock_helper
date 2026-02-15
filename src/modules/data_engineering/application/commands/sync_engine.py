@@ -83,11 +83,40 @@ class SyncEngine:
         """
         logger.info(f"开始执行历史同步：job_type={job_type.value}, config={config}")
 
-        # 1. 检查是否存在正在运行的同类型任务（互斥）
+        # 1. 检查是否存在正在运行的同类型任务（互斥 + 僵死检测）
         latest_task = await self.sync_task_repo.get_latest_by_job_type(job_type)
         if latest_task and latest_task.status == SyncTaskStatus.RUNNING:
-            logger.warning(f"已存在正在运行的 {job_type.value} 任务，拒绝启动新任务")
-            return latest_task
+            if latest_task.updated_at is None:
+                logger.warning(
+                    f"检测到 RUNNING 任务但 updated_at 为空，按互斥规则拒绝新任务: "
+                    f"task_id={latest_task.id}, job_type={job_type.value}"
+                )
+                return latest_task
+
+            # 检查任务是否僵死（updated_at 超过阈值）
+            now = datetime.utcnow()
+            timeout_minutes = de_config.SYNC_TASK_STALE_TIMEOUT_MINUTES
+            timeout_delta = timedelta(minutes=timeout_minutes)
+            
+            if now - latest_task.updated_at > timeout_delta:
+                # 任务僵死，标记为 FAILED 并允许创建新任务
+                logger.warning(
+                    f"检测到僵死任务 (task_id={latest_task.id}, job_type={job_type.value}), "
+                    f"updated_at={latest_task.updated_at}, 超时阈值={timeout_minutes}分钟, "
+                    f"自动标记为 FAILED"
+                )
+                latest_task.fail()
+                latest_task.config = latest_task.config or {}
+                latest_task.config["error_message"] = (
+                    f"超时自动标记：updated_at 超过 {timeout_minutes} 分钟阈值，"
+                    f"判定为僵死任务"
+                )
+                await self.sync_task_repo.update(latest_task)
+                logger.info("僵死任务已标记为 FAILED，允许创建新任务")
+            else:
+                # 任务正常运行中，拒绝启动新任务
+                logger.warning(f"已存在正在运行的 {job_type.value} 任务，拒绝启动新任务")
+                return latest_task
 
         # 2. 判断是否需要恢复任务（断点续跑）
         # 如果存在之前的任务且处于可恢复状态，则从上次的 offset 继续同步

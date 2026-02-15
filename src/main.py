@@ -11,7 +11,7 @@ from src.modules.knowledge_center.container import (
 )
 from src.shared.config import settings
 from src.shared.infrastructure.logging import setup_logging
-from src.shared.infrastructure.scheduler import SchedulerService
+from src.shared.infrastructure.scheduler.scheduler_service import SchedulerService
 
 # 初始化日志配置
 setup_logging()
@@ -30,6 +30,15 @@ async def lifespan(app: FastAPI):
     # 启动调度器
     logger.info("Initializing Scheduler Service...")
     SchedulerService.start()
+
+    # 从数据库加载持久化的调度配置并自动注册
+    from src.modules.data_engineering.presentation.rest.scheduler_routes import JOB_REGISTRY
+    from src.shared.infrastructure.db.session import AsyncSessionLocal
+    
+    await SchedulerService.load_persisted_jobs(
+        registry=JOB_REGISTRY,
+        session_factory=AsyncSessionLocal,
+    )
 
     # 初始化 LLM 注册表（委托 Application 层服务，不直接依赖 Infrastructure）
     from src.modules.llm_platform.application.services.startup import (

@@ -2,6 +2,7 @@
 单元测试：SyncEngine 核心功能（任务 9.2-9.4）
 """
 
+from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -14,6 +15,7 @@ from src.modules.data_engineering.domain.model.enums import (
     SyncTaskStatus,
 )
 from src.modules.data_engineering.domain.model.sync_task import SyncTask
+from src.modules.data_engineering.infrastructure.config import de_config
 
 
 @pytest.fixture
@@ -124,3 +126,88 @@ async def test_sync_engine_resumes_paused_task(sync_engine, mock_repositories):
 
     # 验证：更新了任务（启动 + 完成）
     assert mock_repositories["sync_task_repo"].update.call_count >= 2
+
+
+@pytest.mark.asyncio
+async def test_sync_engine_marks_stale_running_task_failed(sync_engine, mock_repositories):
+    """RUNNING 任务超时应自动标记 FAILED 并创建新任务。"""
+    stale_task = SyncTask(
+        job_type=SyncJobType.DAILY_HISTORY,
+        status=SyncTaskStatus.RUNNING,
+        batch_size=50,
+        updated_at=datetime.utcnow() - timedelta(minutes=30),
+    )
+    stale_task.start()
+    stale_task.updated_at = datetime.utcnow() - timedelta(minutes=30)
+    mock_repositories["sync_task_repo"].get_latest_by_job_type.return_value = stale_task
+
+    new_task = SyncTask(
+        job_type=SyncJobType.DAILY_HISTORY,
+        status=SyncTaskStatus.RUNNING,
+        batch_size=50,
+    )
+    mock_repositories["sync_task_repo"].create.return_value = new_task
+
+    with patch.object(sync_engine, "_execute_batch", new_callable=AsyncMock) as mock_execute:
+        mock_execute.return_value = {"synced_stocks": 0}
+        result = await sync_engine.run_history_sync(
+            job_type=SyncJobType.DAILY_HISTORY,
+            config={"batch_size": 50},
+        )
+
+    assert result.status == SyncTaskStatus.COMPLETED
+    # 一次用于标记 stale task，后续还有新任务更新
+    assert mock_repositories["sync_task_repo"].update.call_count >= 2
+    mock_repositories["sync_task_repo"].create.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_sync_engine_rejects_non_stale_running_task(sync_engine, mock_repositories):
+    """RUNNING 任务未超时时应拒绝新任务。"""
+    running_task = SyncTask(
+        job_type=SyncJobType.DAILY_HISTORY,
+        status=SyncTaskStatus.RUNNING,
+        batch_size=50,
+    )
+    running_task.start()
+    running_task.updated_at = datetime.utcnow() - timedelta(minutes=1)
+    mock_repositories["sync_task_repo"].get_latest_by_job_type.return_value = running_task
+
+    result = await sync_engine.run_history_sync(
+        job_type=SyncJobType.DAILY_HISTORY,
+        config={"batch_size": 50},
+    )
+
+    assert result is running_task
+    mock_repositories["sync_task_repo"].create.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_sync_engine_stale_timeout_respects_config(sync_engine, mock_repositories, monkeypatch):
+    """僵死阈值应可通过配置覆盖。"""
+    monkeypatch.setattr(de_config, "SYNC_TASK_STALE_TIMEOUT_MINUTES", 5)
+
+    stale_task = SyncTask(
+        job_type=SyncJobType.DAILY_HISTORY,
+        status=SyncTaskStatus.RUNNING,
+        batch_size=50,
+    )
+    stale_task.start()
+    stale_task.updated_at = datetime.utcnow() - timedelta(minutes=6)
+    mock_repositories["sync_task_repo"].get_latest_by_job_type.return_value = stale_task
+
+    new_task = SyncTask(
+        job_type=SyncJobType.DAILY_HISTORY,
+        status=SyncTaskStatus.RUNNING,
+        batch_size=50,
+    )
+    mock_repositories["sync_task_repo"].create.return_value = new_task
+
+    with patch.object(sync_engine, "_execute_batch", new_callable=AsyncMock) as mock_execute:
+        mock_execute.return_value = {"synced_stocks": 0}
+        await sync_engine.run_history_sync(
+            job_type=SyncJobType.DAILY_HISTORY,
+            config={"batch_size": 50},
+        )
+
+    mock_repositories["sync_task_repo"].create.assert_called_once()
