@@ -192,3 +192,35 @@ class StockDailyRepositoryImpl(BaseRepository[StockDailyModel], IMarketQuoteRepo
             )
             for r in rows
         ]
+
+    async def get_all_by_trade_date(self, trade_date: date) -> List[StockDaily]:
+        """查询指定交易日的全市场日线数据"""
+        from src.modules.data_engineering.infrastructure.persistence.models.stock_model import StockModel
+        
+        stmt = (
+            select(StockDailyModel, StockModel.name)
+            .join(StockModel, StockDailyModel.third_code == StockModel.third_code, isouter=True)
+            .where(StockDailyModel.trade_date == trade_date)
+            .order_by(StockDailyModel.third_code.asc())
+        )
+        result = await self.session.execute(stmt)
+        rows = result.all()
+        return [
+            StockDaily(
+                third_code=r.third_code,
+                stock_name=stock_name or "",
+                trade_date=r.trade_date,
+                open=r.open or 0.0,
+                high=r.high or 0.0,
+                low=r.low or 0.0,
+                close=r.close or 0.0,
+                pre_close=r.pre_close or 0.0,
+                change=r.change or 0.0,
+                pct_chg=r.pct_chg or 0.0,
+                vol=r.vol or 0.0,
+                amount=r.amount or 0.0,
+                adj_factor=r.adj_factor,
+                source=r.source or "tushare",
+            )
+            for r, stock_name in rows
+        ]

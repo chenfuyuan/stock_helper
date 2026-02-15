@@ -11,6 +11,9 @@ from src.modules.knowledge_center.presentation.rest.graph_router import (
     router as knowledge_graph_router,
 )
 from src.modules.llm_platform.presentation.rest import router as llm_router
+from src.modules.market_insight.presentation.rest.market_insight_router import (
+    router as market_insight_router,
+)
 from src.modules.research.presentation.rest import router as research_router
 
 api_router = APIRouter()
@@ -21,4 +24,5 @@ api_router.include_router(debate_router)
 api_router.include_router(judge_router)
 api_router.include_router(knowledge_graph_router)
 api_router.include_router(llm_router)
+api_router.include_router(market_insight_router)
 api_router.include_router(research_router)

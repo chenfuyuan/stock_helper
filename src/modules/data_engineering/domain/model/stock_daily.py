@@ -13,6 +13,7 @@ class StockDaily(BaseEntity):
     """
 
     third_code: str = Field(..., description="第三方系统代码 (如 Tushare 的 ts_code)")
+    stock_name: str = Field(default="", description="股票名称")
     trade_date: date = Field(..., description="交易日期")
     open: float = Field(..., description="开盘价")
     high: float = Field(..., description="最高价")

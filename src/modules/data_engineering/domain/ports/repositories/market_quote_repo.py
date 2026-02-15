@@ -43,3 +43,11 @@ class IMarketQuoteRepository(ABC):
         按第三方代码与日期区间查询日线（含估值字段），供估值分析使用。
         返回的 StockDaily 包含 pe_ttm、pb、ps_ttm、dv_ratio、total_mv 等估值字段。
         """
+
+    @abstractmethod
+    async def get_all_by_trade_date(self, trade_date: date) -> List[StockDaily]:
+        """
+        查询指定交易日的全市场日线数据
+        :param trade_date: 交易日期
+        :return: 该日期的所有股票日线数据列表
+        """

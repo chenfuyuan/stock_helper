@@ -10,6 +10,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.modules.data_engineering.application.commands.sync_concept_data_cmd import (
     SyncConceptDataCmd,
 )
+from src.modules.data_engineering.application.queries.get_daily_bars_by_date import (
+    GetDailyBarsByDateUseCase,
+)
 from src.modules.data_engineering.application.queries.get_daily_bars_for_ticker import (
     GetDailyBarsForTickerUseCase,
 )
@@ -89,3 +92,7 @@ class DataEngineeringContainer:
             concept_provider=self._concept_provider,
             concept_repo=self._concept_repo,
         )
+
+    def get_daily_bars_by_date_use_case(self) -> GetDailyBarsByDateUseCase:
+        """组装按日期查询全市场日线的 UseCase。"""
+        return GetDailyBarsByDateUseCase(market_quote_repo=self._market_quote_repo)

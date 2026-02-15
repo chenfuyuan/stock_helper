@@ -27,8 +27,11 @@ AsyncSessionLocal = sessionmaker(
     autoflush=False,
 )
 
+# 提供工厂函数别名
+async_session_factory = AsyncSessionLocal
 
-async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
+
+async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
     """
     获取数据库会话的依赖注入函数 (Dependency)
     FastAPI Depends 使用此生成器管理会话生命周期。
@@ -82,3 +85,9 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
             raise
         finally:
             await session.close()
+
+
+async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
+    """保持向后兼容的别名"""
+    async for session in get_async_session():
+        yield session

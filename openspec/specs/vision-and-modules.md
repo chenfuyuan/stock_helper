@@ -59,11 +59,22 @@
 │   │  data_engineering  │◄────►│    llm_platform     │   │
 │   │  (硬数据/ETL)       │      │   (AI 网关/路由)     │   │
 │   └─────────┬──────────┘      └─────────────────────┘   │
-│             │ 同步                                      │
-│             ▼                                           │
-│   ┌────────────────────┐                                │
-│   │  knowledge_center  │◄───────────────────────────────┘
-│   │  (知识中心)         │
+│             │ 同步            ▲                        │
+│             ▼                │ 提供数据                │
+│   ┌────────────────────┐    │                         │
+│   │  knowledge_center  │    │                         │
+│   │  (知识中心)         │    │                         │
+│   └────────────────────┘    │                         │
+│                              │                         │
+│   ┌────────────────────┐    │                         │
+│   │  market_insight    │────┘                         │
+│   │  (板块洞察)         │                              │
+│   └─────────┬──────────┘                              │
+│             │ 消费数据                                │
+│             ▼                                        │
+│   ┌────────────────────┐                              │
+│   │  data_engineering  │◄─────────────────────────────┘
+│   │  (硬数据/ETL)       │
 │   └────────────────────┘
 └─────────────────────────────────────────────────────────┘
 ```
@@ -94,6 +105,7 @@
 | :--- | :--- | :--- | :--- |
 | **Data Engineering** | `src/modules/data_engineering/` | **数据底座**。行情、财报数据的 ETL、存储与查询。 | `StockRepo`, `FinancialRepo` |
 | **LLM Platform** | `src/modules/llm_platform/` | **AI 基础设施**。模型路由、Prompt 管理、计费统计。 | `LLMService`, `PromptManager` |
+| **Market Insight** | `src/modules/market_insight/` | **板块洞察分析**。概念热度计算、涨停扫描归因、每日复盘报告生成。 | `GetConceptHeatQuery`, `GetLimitUpQuery`, `GenerateDailyReportCmd` |
 | **Knowledge Center** | `src/modules/knowledge_center/` | **知识中心**。全系统知识资产管理、图谱构建与神经中枢推理。 | `GraphRepository`, `GraphService` |
 | **Shared Kernel** | `src/shared/` | **共享内核**。全系统通用的值对象、异常定义、工具类、基础架构代码（日志、DB Session）。 | `AppException`, `Money`, `logger` |
 
