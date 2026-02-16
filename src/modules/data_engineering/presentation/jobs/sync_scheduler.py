@@ -1,14 +1,20 @@
-"""定时任务 Job 函数定义——所有 Job 精简为调用 DataSyncApplicationService。"""
+"""定时任务 Job 函数定义——所有 Job 精简为调用专门的服务。"""
 
-from src.modules.data_engineering.application.services.data_sync_application_service import (
-    DataSyncApplicationService,
+from src.modules.data_engineering.application.services.daily_sync_service import (
+    DailySyncService,
+)
+from src.modules.data_engineering.application.services.finance_sync_service import (
+    FinanceSyncService,
+)
+from src.modules.data_engineering.application.services.basic_data_sync_service import (
+    BasicDataSyncService,
 )
 
 
 async def sync_history_daily_data_job():
     """定时任务：同步股票历史日线数据（全量历史）。"""
-    service = DataSyncApplicationService()
-    await service.run_daily_history_sync()
+    service = DailySyncService()
+    await service.run_history_sync()
 
 
 async def sync_daily_data_job(target_date: str | None = None):
@@ -18,14 +24,14 @@ async def sync_daily_data_job(target_date: str | None = None):
     Args:
         target_date: 目标日期 (YYYYMMDD)，默认为当天
     """
-    service = DataSyncApplicationService()
-    await service.run_daily_incremental_sync(target_date)
+    service = DailySyncService()
+    await service.run_incremental_sync(target_date)
 
 
 async def sync_finance_history_job():
     """定时任务：同步历史财务数据（全量历史）。"""
-    service = DataSyncApplicationService()
-    await service.run_finance_history_sync()
+    service = FinanceSyncService()
+    await service.run_history_sync()
 
 
 async def sync_incremental_finance_job(target_date: str | None = None):
@@ -35,17 +41,17 @@ async def sync_incremental_finance_job(target_date: str | None = None):
     Args:
         target_date: 目标日期 (YYYYMMDD)，默认为当天
     """
-    service = DataSyncApplicationService()
-    await service.run_incremental_finance_sync(target_date)
+    service = FinanceSyncService()
+    await service.run_incremental_sync(target_date)
 
 
 async def sync_concept_data_job():
     """定时任务：同步概念数据（akshare → PostgreSQL）。"""
-    service = DataSyncApplicationService()
+    service = BasicDataSyncService()
     await service.run_concept_sync()
 
 
 async def sync_stock_basic_job():
     """定时任务：同步股票基础信息（TuShare → PostgreSQL）。"""
-    service = DataSyncApplicationService()
+    service = BasicDataSyncService()
     await service.run_stock_basic_sync()

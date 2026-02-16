@@ -1,7 +1,7 @@
-"""AkShare 市场数据同步任务——所有 Job 精简为调用 DataSyncApplicationService。"""
+"""AkShare 市场数据同步任务——所有 Job 精简为调用 MarketDataSyncService。"""
 
-from src.modules.data_engineering.application.services.data_sync_application_service import (
-    DataSyncApplicationService,
+from src.modules.data_engineering.application.services.market_data_sync_service import (
+    MarketDataSyncService,
 )
 
 
@@ -12,5 +12,5 @@ async def sync_akshare_market_data_job(target_date: str | None = None):
     Args:
         target_date: 目标日期 (YYYYMMDD)，默认为当天
     """
-    service = DataSyncApplicationService()
-    await service.run_akshare_market_data_sync(target_date)
+    service = MarketDataSyncService()
+    await service.run_sync(target_date)

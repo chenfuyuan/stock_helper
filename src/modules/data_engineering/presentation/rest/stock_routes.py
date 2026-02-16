@@ -172,16 +172,16 @@ async def sync_daily_history_full():
     
     异步运行：立即返回任务ID，任务在后台执行
     """
-    from src.modules.data_engineering.application.services.data_sync_application_service import (
-        DataSyncApplicationService,
+    from src.modules.data_engineering.application.services.daily_sync_service import (
+        DailySyncService,
     )
     
     logger.info("收到日线历史全量同步请求")
     try:
-        service = DataSyncApplicationService()
+        service = DailySyncService()
         
         # 创建后台任务，不等待完成
-        task = asyncio.create_task(service.run_daily_history_sync())
+        task = asyncio.create_task(service.run_history_sync())
         
         # 立即返回响应，包含任务引用信息
         return BaseResponse(
@@ -210,16 +210,16 @@ async def sync_finance_history_full():
     
     异步运行：立即返回任务ID，任务在后台执行
     """
-    from src.modules.data_engineering.application.services.data_sync_application_service import (
-        DataSyncApplicationService,
+    from src.modules.data_engineering.application.services.finance_sync_service import (
+        FinanceSyncService,
     )
     
     logger.info("收到财务历史全量同步请求")
     try:
-        service = DataSyncApplicationService()
+        service = FinanceSyncService()
         
         # 创建后台任务，不等待完成
-        task = asyncio.create_task(service.run_finance_history_sync())
+        task = asyncio.create_task(service.run_history_sync())
         
         # 立即返回响应，包含任务引用信息
         return BaseResponse(
