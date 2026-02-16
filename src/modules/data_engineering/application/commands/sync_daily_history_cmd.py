@@ -29,24 +29,40 @@ class SyncDailyHistoryCmd:
         self.daily_repo = daily_repo
         self.data_provider = data_provider
 
-    async def execute(self, limit: int = 10, offset: int = 0) -> DailyHistorySyncResult:
+    async def execute(self, limit: int = 10, offset: int = 0, symbol: str | None = None) -> DailyHistorySyncResult:
         """
-        执行同步逻辑（支持分页）
+        执行同步逻辑（支持分页和指定股票）
 
         改为纯串行调用，限速完全由 TushareClient 的 _rate_limited_call 统一处理。
         移除了 Semaphore 和 sleep 等 Application 层的限速代码。
         """
-        target_stocks = await self.stock_repo.get_all(skip=offset, limit=limit)
+        if symbol:
+            # 指定股票代码同步
+            stock = await self.stock_repo.get_by_symbol(symbol)
+            if not stock:
+                logger.warning(f"未找到股票代码 {symbol}")
+                return DailyHistorySyncResult(
+                    synced_stocks=0,
+                    total_rows=0,
+                    message=f"未找到股票代码 {symbol}"
+                )
+            target_stocks = [stock]
+        else:
+            # 分页同步多只股票
+            target_stocks = await self.stock_repo.get_all(skip=offset, limit=limit)
 
         if not target_stocks:
-            logger.warning(f"未找到需要同步的股票 (offset={offset}, limit={limit})")
+            logger.warning(f"未找到需要同步的股票 (symbol={symbol}, offset={offset}, limit={limit})")
             return DailyHistorySyncResult(
                 synced_stocks=0,
                 total_rows=0,
-                message=f"未找到需要同步的股票 (offset={offset}, limit={limit})"
+                message=f"未找到需要同步的股票 (symbol={symbol}, offset={offset}, limit={limit})"
             )
 
-        logger.info(f"开始同步 {len(target_stocks)} 只股票的历史日线数据 (offset={offset})...")
+        if symbol:
+            logger.info(f"开始同步股票 {symbol} 的历史日线数据...")
+        else:
+            logger.info(f"开始同步 {len(target_stocks)} 只股票的历史日线数据 (offset={offset})...")
 
         synced_stocks_count = 0
         total_rows_saved = 0

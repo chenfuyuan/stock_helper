@@ -107,27 +107,31 @@ async def sync_stocks(
         raise e
 
 
-@router.post("/sync/daily", response_model=BaseResponse[SyncStockDailyResponse])
-async def sync_stock_daily(
+@router.post("/sync/daily/incremental", response_model=BaseResponse[SyncStockDailyResponse])
+async def sync_stock_daily_incremental(
     limit: int = 10,
     offset: int = 0,
+    symbol: str | None = None,
     use_case: SyncDailyHistoryCmd = Depends(get_sync_daily_use_case),
 ):
     """
-    同步股票日线历史数据
+    增量同步股票日线历史数据（日常操作）
+    
+    用于定期同步最新数据，支持分页处理避免超时。
+    可指定股票代码同步单只股票，不指定则按分页同步多只股票。
     """
-    logger.info(f"收到日线历史同步请求：limit={limit}, offset={offset}")
+    logger.info(f"收到日线增量同步请求：limit={limit}, offset={offset}, symbol={symbol}")
     try:
-        result = await use_case.execute(limit=limit, offset=offset)
+        result = await use_case.execute(limit=limit, offset=offset, symbol=symbol)
         logger.info(
-            f"日线历史同步完成：{result.synced_stocks} 只股票，"
+            f"日线增量同步完成：{result.synced_stocks} 只股票，"
             f"{result.total_rows} 条记录"
         )
 
         return BaseResponse(
             success=True,
-            code="SYNC_DAILY_SUCCESS",
-            message="股票日线数据同步成功",
+            code="SYNC_DAILY_INCREMENTAL_SUCCESS",
+            message="股票日线增量同步成功",
             data=SyncStockDailyResponse(
                 synced_stocks=result.synced_stocks,
                 total_rows=result.total_rows,
@@ -135,7 +139,7 @@ async def sync_stock_daily(
             ),
         )
     except Exception as e:
-        logger.exception(f"日线历史同步失败：{str(e)}")
+        logger.exception(f"日线增量同步失败：{str(e)}")
         raise e
 
 
@@ -147,12 +151,13 @@ class HistorySyncResponse(BaseModel):
     message: str
 
 
-@router.post("/sync/daily-history", response_model=BaseResponse[HistorySyncResponse])
-async def sync_daily_history():
+@router.post("/sync/daily/full", response_model=BaseResponse[HistorySyncResponse])
+async def sync_daily_history_full():
     """
-    触发日线历史全量同步（一次性/低频操作，手动触发）。
+    日线历史全量同步（管理操作）
     
-    使用 SyncEngine 一次触发、自动分批、跑完全量。
+    用于初始化或数据修复，一次性同步所有历史数据
+    使用 SyncEngine 自动分批处理，适合低频手动触发
     """
     from src.modules.data_engineering.application.services.data_sync_application_service import (
         DataSyncApplicationService,
@@ -167,7 +172,7 @@ async def sync_daily_history():
         
         return BaseResponse(
             success=True,
-            code="DAILY_HISTORY_SYNC_SUCCESS",
+            code="DAILY_HISTORY_FULL_SYNC_SUCCESS",
             message="日线历史全量同步已启动",
             data=HistorySyncResponse(
                 task_id=str(task.id),
@@ -181,12 +186,13 @@ async def sync_daily_history():
         raise e
 
 
-@router.post("/sync/finance-history", response_model=BaseResponse[HistorySyncResponse])
-async def sync_finance_history():
+@router.post("/sync/finance/full", response_model=BaseResponse[HistorySyncResponse])
+async def sync_finance_history_full():
     """
-    触发财务历史全量同步（一次性/低频操作，手动触发）。
+    财务历史全量同步（管理操作）
     
-    使用 SyncEngine 一次触发、自动分批、跑完全量。
+    用于初始化或数据修复，一次性同步所有财务历史数据
+    使用 SyncEngine 自动分批处理，适合低频手动触发
     """
     from src.modules.data_engineering.application.services.data_sync_application_service import (
         DataSyncApplicationService,
@@ -201,7 +207,7 @@ async def sync_finance_history():
         
         return BaseResponse(
             success=True,
-            code="FINANCE_HISTORY_SYNC_SUCCESS",
+            code="FINANCE_HISTORY_FULL_SYNC_SUCCESS",
             message="财务历史全量同步已启动",
             data=HistorySyncResponse(
                 task_id=str(task.id),
