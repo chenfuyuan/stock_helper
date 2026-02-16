@@ -1,16 +1,22 @@
+# Standard library imports
+import asyncio
+from typing import Optional
+
+# Third-party imports
 from fastapi import APIRouter, Depends
 from loguru import logger
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
+# Application imports
 from src.modules.data_engineering.application.commands.sync_daily_history_cmd import (
     SyncDailyHistoryCmd,
 )
-
-# Commands
 from src.modules.data_engineering.application.commands.sync_stock_list_cmd import (
     SyncStockListCmd,
 )
+
+# Domain ports
 from src.modules.data_engineering.domain.ports.providers.market_quote_provider import (
     IMarketQuoteProvider,
 )
@@ -20,40 +26,52 @@ from src.modules.data_engineering.domain.ports.providers.stock_basic_provider im
 from src.modules.data_engineering.domain.ports.repositories.market_quote_repo import (
     IMarketQuoteRepository,
 )
-
-# Ports
 from src.modules.data_engineering.domain.ports.repositories.stock_basic_repo import (
     IStockBasicRepository,
 )
+
+# Infrastructure
 from src.modules.data_engineering.infrastructure.external_apis.tushare.client import (
     TushareClient,
 )
 from src.modules.data_engineering.infrastructure.persistence.repositories.pg_quote_repo import (
     StockDailyRepositoryImpl,
 )
-
-# Infra
 from src.modules.data_engineering.infrastructure.persistence.repositories.pg_stock_repo import (
     StockRepositoryImpl,
 )
+
+# Shared
 from src.shared.dtos import BaseResponse
 from src.shared.infrastructure.db.session import get_db_session
 
-router = APIRouter()
-
-
+# Response Models
 class SyncStockResponse(BaseModel):
+    """股票同步响应模型。"""
     synced_count: int
     message: str
 
 
 class SyncStockDailyResponse(BaseModel):
+    """股票日线同步响应模型。"""
     synced_stocks: int
     total_rows: int
     message: str
 
 
-# Dependency Injection
+class HistorySyncResponse(BaseModel):
+    """历史全量同步响应模型。"""
+    task_id: str
+    status: str
+    total_processed: int
+    message: str
+
+
+# Router
+router = APIRouter()
+
+
+# Dependency Injection Functions
 async def get_stock_repo(
     db: AsyncSession = Depends(get_db_session),
 ) -> IStockBasicRepository:
@@ -85,6 +103,7 @@ async def get_sync_daily_use_case(
     return SyncDailyHistoryCmd(stock_repo, daily_repo, provider)
 
 
+# API Routes
 @router.post("/sync", response_model=BaseResponse[SyncStockResponse])
 async def sync_stocks(
     use_case: SyncStockListCmd = Depends(get_sync_stocks_use_case),
@@ -143,14 +162,6 @@ async def sync_stock_daily_incremental(
         raise e
 
 
-class HistorySyncResponse(BaseModel):
-    """历史全量同步响应。"""
-    task_id: str
-    status: str
-    total_processed: int
-    message: str
-
-
 @router.post("/sync/daily/full", response_model=BaseResponse[HistorySyncResponse])
 async def sync_daily_history_full():
     """
@@ -158,6 +169,8 @@ async def sync_daily_history_full():
     
     用于初始化或数据修复，一次性同步所有历史数据
     使用 SyncEngine 自动分批处理，适合低频手动触发
+    
+    异步运行：立即返回任务ID，任务在后台执行
     """
     from src.modules.data_engineering.application.services.data_sync_application_service import (
         DataSyncApplicationService,
@@ -166,23 +179,24 @@ async def sync_daily_history_full():
     logger.info("收到日线历史全量同步请求")
     try:
         service = DataSyncApplicationService()
-        task = await service.run_daily_history_sync()
         
-        logger.info(f"日线历史全量同步完成：task_id={task.id}, status={task.status.value}")
+        # 创建后台任务，不等待完成
+        task = asyncio.create_task(service.run_daily_history_sync())
         
+        # 立即返回响应，包含任务引用信息
         return BaseResponse(
             success=True,
-            code="DAILY_HISTORY_FULL_SYNC_SUCCESS",
-            message="日线历史全量同步已启动",
+            code="DAILY_HISTORY_FULL_SYNC_STARTED",
+            message="日线历史全量同步已启动（后台运行）",
             data=HistorySyncResponse(
-                task_id=str(task.id),
-                status=task.status.value,
-                total_processed=task.total_processed,
-                message=f"已处理 {task.total_processed} 条记录",
+                task_id=f"background_task_{id(task)}",
+                status="running",
+                total_processed=0,
+                message="任务正在后台执行，请通过其他接口查询执行状态",
             ),
         )
     except Exception as e:
-        logger.exception(f"日线历史全量同步失败：{str(e)}")
+        logger.exception(f"启动日线历史全量同步失败：{str(e)}")
         raise e
 
 
@@ -193,6 +207,8 @@ async def sync_finance_history_full():
     
     用于初始化或数据修复，一次性同步所有财务历史数据
     使用 SyncEngine 自动分批处理，适合低频手动触发
+    
+    异步运行：立即返回任务ID，任务在后台执行
     """
     from src.modules.data_engineering.application.services.data_sync_application_service import (
         DataSyncApplicationService,
@@ -201,21 +217,22 @@ async def sync_finance_history_full():
     logger.info("收到财务历史全量同步请求")
     try:
         service = DataSyncApplicationService()
-        task = await service.run_finance_history_sync()
         
-        logger.info(f"财务历史全量同步完成：task_id={task.id}, status={task.status.value}")
+        # 创建后台任务，不等待完成
+        task = asyncio.create_task(service.run_finance_history_sync())
         
+        # 立即返回响应，包含任务引用信息
         return BaseResponse(
             success=True,
-            code="FINANCE_HISTORY_FULL_SYNC_SUCCESS",
-            message="财务历史全量同步已启动",
+            code="FINANCE_HISTORY_FULL_SYNC_STARTED",
+            message="财务历史全量同步已启动（后台运行）",
             data=HistorySyncResponse(
-                task_id=str(task.id),
-                status=task.status.value,
-                total_processed=task.total_processed,
-                message=f"已处理 {task.total_processed} 条记录",
+                task_id=f"background_task_{id(task)}",
+                status="running",
+                total_processed=0,
+                message="任务正在后台执行，请通过其他接口查询执行状态",
             ),
         )
     except Exception as e:
-        logger.exception(f"财务历史全量同步失败：{str(e)}")
+        logger.exception(f"启动财务历史全量同步失败：{str(e)}")
         raise e
