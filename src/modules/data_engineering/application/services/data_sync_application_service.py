@@ -19,16 +19,11 @@ from typing import Optional
 
 from loguru import logger
 
-from src.modules.data_engineering.application.commands.sync_concept_data_cmd import (
-    SyncConceptDataCmd,
-)
 from src.modules.data_engineering.application.dtos.sync_result_dtos import (
     ConceptSyncResult,
     IncrementalFinanceSyncResult,
 )
-from src.modules.data_engineering.application.factories.sync_factory import (
-    SyncUseCaseFactory,
-)
+
 from src.modules.data_engineering.application.services.basic_data_sync_service import (
     BasicDataSyncService,
 )
@@ -41,15 +36,7 @@ from src.modules.data_engineering.application.services.finance_sync_service impo
 from src.modules.data_engineering.application.services.market_data_sync_service import (
     MarketDataSyncService,
 )
-from src.modules.data_engineering.container import DataEngineeringContainer
-from src.modules.data_engineering.domain.model.enums import SyncJobType
 from src.modules.data_engineering.domain.model.sync_task import SyncTask
-from src.modules.data_engineering.infrastructure.config import de_config
-from src.modules.foundation.infrastructure.execution_tracker import ExecutionTracker
-from src.modules.foundation.infrastructure.persistence.repositories.scheduler_execution_log_repo import (
-    SchedulerExecutionLogRepository,
-)
-from src.shared.infrastructure.db.session import AsyncSessionLocal
 
 
 class DataSyncApplicationService:
