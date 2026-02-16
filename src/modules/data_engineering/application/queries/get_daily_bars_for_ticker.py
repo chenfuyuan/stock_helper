@@ -6,27 +6,11 @@
 from datetime import date
 from typing import List
 
-from pydantic import BaseModel, Field
-
+from src.modules.data_engineering.application.dtos.daily_bar_dto import DailyBarDTO
 from src.modules.data_engineering.domain.model.stock_daily import StockDaily
 from src.modules.data_engineering.domain.ports.repositories.market_quote_repo import (
     IMarketQuoteRepository,
 )
-
-
-class DailyBarDTO(BaseModel):
-    """日线 DTO，仅暴露开高低收量、涨跌幅等分析所需字段。"""
-
-    trade_date: date = Field(..., description="交易日期")
-    open: float = Field(..., description="开盘价")
-    high: float = Field(..., description="最高价")
-    low: float = Field(..., description="最低价")
-    close: float = Field(..., description="收盘价")
-    vol: float = Field(..., description="成交量")
-    amount: float = Field(default=0.0, description="成交额")
-    pct_chg: float = Field(default=0.0, description="涨跌幅（%）")
-
-    model_config = {"frozen": True}
 
 
 class GetDailyBarsForTickerUseCase:
@@ -55,6 +39,8 @@ class GetDailyBarsForTickerUseCase:
         )
         return [
             DailyBarDTO(
+                third_code=d.third_code,
+                stock_name=getattr(d, "stock_name", "") or "",
                 trade_date=d.trade_date,
                 open=d.open,
                 high=d.high,

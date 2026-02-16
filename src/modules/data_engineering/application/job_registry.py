@@ -8,8 +8,6 @@ from typing import Dict, Callable
 
 from src.modules.data_engineering.presentation.jobs.sync_scheduler import (
     sync_daily_data_job,
-    sync_finance_history_job,
-    sync_history_daily_data_job,
     sync_incremental_finance_job,
     sync_concept_data_job,
     sync_stock_basic_job,
@@ -26,9 +24,7 @@ def get_job_registry() -> Dict[str, Callable]:
         任务 ID 到任务函数的映射字典
     """
     return {
-        "sync_daily_history": sync_history_daily_data_job,
         "sync_daily_by_date": sync_daily_data_job,
-        "sync_history_finance": sync_finance_history_job,
         "sync_incremental_finance": sync_incremental_finance_job,
         "sync_concept_data": sync_concept_data_job,
         "sync_stock_basic": sync_stock_basic_job,

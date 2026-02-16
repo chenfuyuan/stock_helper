@@ -1,16 +1,16 @@
 from datetime import date, datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Dict, Any, List, Optional, Union
 
 from loguru import logger
 
-from src.modules.data_engineering.application.commands.sync_daily_bar_cmd import (
-    SyncDailyByDateUseCase,
+from src.modules.data_engineering.application.commands.sync_daily_by_date_cmd import (
+    SyncDailyByDateCmd,
 )
-from src.modules.data_engineering.application.commands.sync_daily_history import (
-    SyncDailyHistoryUseCase,
+from src.modules.data_engineering.application.commands.sync_daily_history_cmd import (
+    SyncDailyHistoryCmd,
 )
-from src.modules.data_engineering.application.commands.sync_finance_cmd import (
-    SyncFinanceHistoryUseCase,
+from src.modules.data_engineering.application.commands.sync_finance_history_cmd import (
+    SyncFinanceHistoryCmd,
 )
 from src.modules.data_engineering.domain.model.enums import (
     SyncJobType,
@@ -36,6 +36,11 @@ from src.modules.data_engineering.domain.ports.repositories.sync_task_repo impor
     ISyncTaskRepository,
 )
 from src.modules.data_engineering.infrastructure.config import de_config
+from src.modules.data_engineering.application.dtos.sync_result_dtos import (
+    DailyByDateSyncResult,
+    DailyHistorySyncResult,
+    FinanceHistorySyncResult,
+)
 
 
 class SyncEngine:
@@ -153,7 +158,11 @@ class SyncEngine:
                 result = await self._execute_batch(job_type, task)
 
                 # 判断是否完成
-                processed_count = result.get("synced_stocks") or result.get("batch_size") or 0
+                processed_count = (
+                    result.synced_stocks if hasattr(result, 'synced_stocks') 
+                    else result.batch_size if hasattr(result, 'batch_size') 
+                    else 0
+                )
                 if processed_count == 0:
                     logger.info("本批未处理任何股票，标记任务为 COMPLETED")
                     task.complete()
@@ -180,14 +189,16 @@ class SyncEngine:
         logger.info(f"历史同步完成：task_id={task.id}, total_processed={task.total_processed}")
         return task
 
-    async def _execute_batch(self, job_type: SyncJobType, task: SyncTask) -> Dict[str, Any]:
+    async def _execute_batch(
+        self, job_type: SyncJobType, task: SyncTask
+    ) -> Union[DailyHistorySyncResult, FinanceHistorySyncResult]:
         """
         执行单批同步（内部方法）
 
         根据 job_type 选择对应的 Use Case 执行。
         """
         if job_type == SyncJobType.DAILY_HISTORY:
-            use_case = SyncDailyHistoryUseCase(
+            use_case = SyncDailyHistoryCmd(
                 stock_repo=self.stock_repo,
                 daily_repo=self.daily_repo,
                 data_provider=self.quote_provider,
@@ -198,7 +209,7 @@ class SyncEngine:
             )
 
         elif job_type == SyncJobType.FINANCE_HISTORY:
-            use_case = SyncFinanceHistoryUseCase(
+            use_case = SyncFinanceHistoryCmd(
                 stock_repo=self.stock_repo,
                 finance_repo=self.finance_repo,
                 data_provider=self.finance_provider,
@@ -215,7 +226,7 @@ class SyncEngine:
         else:
             raise ValueError(f"不支持的 job_type: {job_type}")
 
-    async def run_incremental_daily_sync(self, target_date: Optional[str] = None) -> Dict[str, Any]:
+    async def run_incremental_daily_sync(self, target_date: Optional[str] = None) -> dict[str, any]:
         """
         执行日线增量同步（含遗漏检测与自动补偿）
 
@@ -244,7 +255,7 @@ class SyncEngine:
 
         if not latest_trade_date:
             logger.warning("数据库中无日线数据，建议先执行历史全量同步。仅同步目标日期。")
-            use_case = SyncDailyByDateUseCase(
+            use_case = SyncDailyByDateCmd(
                 daily_repo=self.daily_repo,
                 data_provider=self.quote_provider,
             )
@@ -252,7 +263,7 @@ class SyncEngine:
             return {
                 "status": "success",
                 "synced_dates": [target_date],
-                "total_count": result.get("count", 0),
+                "total_count": result.count,
                 "message": "数据库为空，仅同步目标日期",
             }
 
@@ -261,7 +272,7 @@ class SyncEngine:
 
         if not missing_dates:
             logger.info(f"无遗漏日期，仅同步目标日期 {target_date}")
-            use_case = SyncDailyByDateUseCase(
+            use_case = SyncDailyByDateCmd(
                 daily_repo=self.daily_repo,
                 data_provider=self.quote_provider,
             )
@@ -269,7 +280,7 @@ class SyncEngine:
             return {
                 "status": "success",
                 "synced_dates": [target_date],
-                "total_count": result.get("count", 0),
+                "total_count": result.count,
                 "message": "无遗漏，仅同步目标日期",
             }
 
@@ -279,7 +290,7 @@ class SyncEngine:
         synced_dates = []
         total_count = 0
 
-        use_case = SyncDailyByDateUseCase(
+        use_case = SyncDailyByDateCmd(
             daily_repo=self.daily_repo,
             data_provider=self.quote_provider,
         )
@@ -290,8 +301,8 @@ class SyncEngine:
                 logger.info(f"正在同步日期：{date_str}")
                 result = await use_case.execute(trade_date=date_str)
                 synced_dates.append(date_str)
-                total_count += result.get("count", 0)
-                logger.info(f"成功同步 {date_str}，{result.get('count', 0)} 条记录")
+                total_count += result.count
+                logger.info(f"成功同步 {date_str}，{result.count} 条记录")
             except Exception as e:
                 logger.error(f"同步 {date_str} 失败：{str(e)}")
                 # 单日失败不中断，继续后续日期

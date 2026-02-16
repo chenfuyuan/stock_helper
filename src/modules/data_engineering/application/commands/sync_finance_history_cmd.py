@@ -1,5 +1,3 @@
-from typing import Any, Dict
-
 from loguru import logger
 
 from src.modules.data_engineering.domain.ports.providers.financial_data_provider import (
@@ -11,9 +9,12 @@ from src.modules.data_engineering.domain.ports.repositories.financial_data_repo 
 from src.modules.data_engineering.domain.ports.repositories.stock_basic_repo import (
     IStockBasicRepository,
 )
+from src.modules.data_engineering.application.dtos.sync_result_dtos import (
+    FinanceHistorySyncResult,
+)
 
 
-class SyncFinanceHistoryUseCase:
+class SyncFinanceHistoryCmd:
     """
     同步历史财务数据
     """
@@ -34,14 +35,14 @@ class SyncFinanceHistoryUseCase:
         end_date: str,
         offset: int = 0,
         limit: int = 100,
-    ) -> Dict[str, Any]:
+    ) -> FinanceHistorySyncResult:
         """
         分批同步历史财务数据，避免超过 Tushare 200 次/分钟限制。
         :param offset: 跳过前 offset 只股票
         :param limit: 每批最多处理 limit 只股票
         """
         logger.info(
-            f"Syncing finance history from {start_date} to {end_date}, "  # noqa: E501
+            f"开始同步财务历史数据：{start_date} 至 {end_date}，"
             f"offset={offset}, limit={limit}"
         )
         stocks = await self.stock_repo.get_all(skip=offset, limit=limit)
@@ -57,8 +58,8 @@ class SyncFinanceHistoryUseCase:
                 count = await self.finance_repo.save_all(finances)
                 total_synced += count
 
-        return {
-            "status": "success",
-            "count": total_synced,
-            "batch_size": len(stocks),
-        }
+        return FinanceHistorySyncResult(
+            status="success",
+            count=total_synced,
+            batch_size=len(stocks)
+        )

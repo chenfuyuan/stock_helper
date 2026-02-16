@@ -1,5 +1,5 @@
 from datetime import date, datetime, timedelta
-from typing import Any, Dict, Set
+from typing import Set
 
 from loguru import logger
 
@@ -20,9 +20,12 @@ from src.modules.data_engineering.domain.ports.repositories.sync_task_repo impor
     ISyncTaskRepository,
 )
 from src.modules.data_engineering.infrastructure.config import de_config
+from src.modules.data_engineering.application.dtos.sync_result_dtos import (
+    IncrementalFinanceSyncResult,
+)
 
 
-class SyncIncrementalFinanceDataUseCase:
+class SyncIncrementalFinanceCmd:
     """
     增量同步股票财务指标用例
 
@@ -62,7 +65,7 @@ class SyncIncrementalFinanceDataUseCase:
             # 11-12月，目标是今年的三季报 (Q3)
             return f"{year}0930"
 
-    async def execute(self, actual_date: str = None) -> Dict[str, Any]:
+    async def execute(self, actual_date: str = None) -> IncrementalFinanceSyncResult:
         """
         执行增量同步逻辑
 
@@ -210,15 +213,15 @@ class SyncIncrementalFinanceDataUseCase:
                 except Exception as save_err:
                     logger.error(f"保存失败记录失败：{code} - {str(save_err)}")
 
-        return {
-            "status": "success",
-            "synced_count": synced_count,
-            "failed_count": failed_count,
-            "retry_count": retry_count,
-            "retry_success_count": retry_success_count,
-            "target_period": target_period,
-            "message": (  # noqa: E501
+        return IncrementalFinanceSyncResult(
+            status="success",
+            synced_count=synced_count,
+            failed_count=failed_count,
+            retry_count=retry_count,
+            retry_success_count=retry_success_count,
+            target_period=target_period,
+            message=(
                 f"成功同步 {synced_count} 只股票，失败 {failed_count} 只；"
                 f"重试 {retry_count} 条记录，成功 {retry_success_count} 条"
-            ),
-        }
+            )
+        )

@@ -4,8 +4,8 @@ from typing import AsyncGenerator
 from src.modules.data_engineering.application.commands.sync_engine import (
     SyncEngine,
 )
-from src.modules.data_engineering.application.commands.sync_incremental_finance_data import (
-    SyncIncrementalFinanceDataUseCase,
+from src.modules.data_engineering.application.commands.sync_incremental_finance_cmd import (
+    SyncIncrementalFinanceCmd,
 )
 from src.modules.data_engineering.infrastructure.external_apis.tushare.client import (
     TushareClient,
@@ -76,7 +76,7 @@ class SyncUseCaseFactory:
     @staticmethod
     @asynccontextmanager
     async def create_incremental_finance_use_case() -> (
-        AsyncGenerator[SyncIncrementalFinanceDataUseCase, None]
+        AsyncGenerator[SyncIncrementalFinanceCmd, None]
     ):
         """
         创建增量财务同步 Use Case 实例（异步上下文管理器）
@@ -84,7 +84,7 @@ class SyncUseCaseFactory:
         独立创建，因为增量同步不需要 SyncEngine 的全部依赖。
 
         Yields:
-            装配好的 SyncIncrementalFinanceDataUseCase 实例
+            装配好的 SyncIncrementalFinanceCmd 实例
         """
         async with AsyncSessionLocal() as session:
             try:
@@ -93,7 +93,7 @@ class SyncUseCaseFactory:
                 finance_repo = StockFinanceRepositoryImpl(session)
                 finance_provider = TushareClient()
 
-                use_case = SyncIncrementalFinanceDataUseCase(
+                use_case = SyncIncrementalFinanceCmd(
                     finance_repo=finance_repo,
                     stock_repo=stock_repo,
                     sync_task_repo=sync_task_repo,

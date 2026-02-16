@@ -1,13 +1,25 @@
-from dataclasses import dataclass
+"""AkShare 市场数据同步编排 Command。"""
+
 from datetime import date
 
 from loguru import logger
 
-from src.modules.data_engineering.domain.model.broken_board import BrokenBoardStock
-from src.modules.data_engineering.domain.model.dragon_tiger import DragonTigerDetail
-from src.modules.data_engineering.domain.model.limit_up_pool import LimitUpPoolStock
-from src.modules.data_engineering.domain.model.previous_limit_up import PreviousLimitUpStock
-from src.modules.data_engineering.domain.model.sector_capital_flow import SectorCapitalFlow
+from src.modules.data_engineering.application.commands.sync_broken_board_cmd import (
+    SyncBrokenBoardCmd,
+)
+from src.modules.data_engineering.application.commands.sync_dragon_tiger_cmd import (
+    SyncDragonTigerCmd,
+)
+from src.modules.data_engineering.application.commands.sync_limit_up_pool_cmd import (
+    SyncLimitUpPoolCmd,
+)
+from src.modules.data_engineering.application.commands.sync_previous_limit_up_cmd import (
+    SyncPreviousLimitUpCmd,
+)
+from src.modules.data_engineering.application.commands.sync_sector_capital_flow_cmd import (
+    SyncSectorCapitalFlowCmd,
+)
+from src.modules.data_engineering.application.dtos.sync_result_dtos import AkShareSyncResult
 from src.modules.data_engineering.domain.ports.providers.dragon_tiger_provider import (
     IDragonTigerProvider,
 )
@@ -32,34 +44,14 @@ from src.modules.data_engineering.domain.ports.repositories.previous_limit_up_re
 from src.modules.data_engineering.domain.ports.repositories.sector_capital_flow_repo import (
     ISectorCapitalFlowRepository,
 )
-from src.shared.application.use_cases import BaseUseCase
 
 
-@dataclass
-class AkShareSyncResult:
-    """AkShare 市场数据同步结果"""
-
-    trade_date: date
-    limit_up_pool_count: int
-    broken_board_count: int
-    previous_limit_up_count: int
-    dragon_tiger_count: int
-    sector_capital_flow_count: int
-    errors: list[str]
-
-
-class SyncAkShareMarketDataCmd(BaseUseCase):
+class SyncAkShareMarketDataCmd:
     """
-    同步 AkShare 市场数据命令
-    从 AkShare 获取市场情绪与资金数据并写入 PostgreSQL
+    AkShare 市场数据同步编排命令。
     
-    执行流程（错误隔离）：
-    1. 获取涨停池数据
-    2. 获取炸板池数据
-    3. 获取昨日涨停表现数据
-    4. 获取龙虎榜数据
-    5. 获取板块资金流向数据
-    单类数据失败不中断其他类型的同步
+    作为编排入口，依次调用 5 个子 Command 完成数据同步，实现错误隔离：
+    单个子任务失败不中断其他任务的执行。
     """
 
     def __init__(
@@ -73,26 +65,43 @@ class SyncAkShareMarketDataCmd(BaseUseCase):
         dragon_tiger_repo: IDragonTigerRepository,
         sector_capital_flow_repo: ISectorCapitalFlowRepository,
     ):
-        self.sentiment_provider = sentiment_provider
-        self.dragon_tiger_provider = dragon_tiger_provider
-        self.capital_flow_provider = capital_flow_provider
-        self.limit_up_pool_repo = limit_up_pool_repo
-        self.broken_board_repo = broken_board_repo
-        self.previous_limit_up_repo = previous_limit_up_repo
-        self.dragon_tiger_repo = dragon_tiger_repo
-        self.sector_capital_flow_repo = sector_capital_flow_repo
+        """
+        初始化编排命令，构建 5 个子 Command。
+        
+        Args:
+            sentiment_provider: 市场情绪数据提供方
+            dragon_tiger_provider: 龙虎榜数据提供方
+            capital_flow_provider: 板块资金流向数据提供方
+            limit_up_pool_repo: 涨停池仓储
+            broken_board_repo: 炸板池仓储
+            previous_limit_up_repo: 昨日涨停仓储
+            dragon_tiger_repo: 龙虎榜仓储
+            sector_capital_flow_repo: 板块资金流向仓储
+        """
+        # 构建子 Command
+        self.limit_up_cmd = SyncLimitUpPoolCmd(sentiment_provider, limit_up_pool_repo)
+        self.broken_board_cmd = SyncBrokenBoardCmd(sentiment_provider, broken_board_repo)
+        self.previous_limit_up_cmd = SyncPreviousLimitUpCmd(
+            sentiment_provider, previous_limit_up_repo
+        )
+        self.dragon_tiger_cmd = SyncDragonTigerCmd(dragon_tiger_provider, dragon_tiger_repo)
+        self.sector_capital_flow_cmd = SyncSectorCapitalFlowCmd(
+            capital_flow_provider, sector_capital_flow_repo
+        )
 
     async def execute(self, trade_date: date) -> AkShareSyncResult:
         """
-        执行 AkShare 市场数据同步
+        执行 AkShare 市场数据同步。
+        
+        依次调用 5 个子 Command，错误隔离：单个失败不中断其他。
         
         Args:
             trade_date: 交易日期
             
         Returns:
-            AkShareSyncResult: 同步结果摘要
+            AkShareSyncResult: 聚合的同步结果摘要
         """
-        logger.info(f"开始同步 AkShare 市场数据：{trade_date}")
+        logger.info(f"开始编排 AkShare 市场数据同步：{trade_date}")
 
         errors = []
         limit_up_pool_count = 0
@@ -103,26 +112,7 @@ class SyncAkShareMarketDataCmd(BaseUseCase):
 
         # 1. 同步涨停池数据
         try:
-            limit_up_dtos = await self.sentiment_provider.fetch_limit_up_pool(trade_date)
-            if limit_up_dtos:
-                limit_up_entities = [
-                    LimitUpPoolStock(
-                        trade_date=trade_date,
-                        third_code=dto.third_code,
-                        stock_name=dto.stock_name,
-                        pct_chg=dto.pct_chg,
-                        close=dto.close,
-                        amount=dto.amount,
-                        turnover_rate=dto.turnover_rate,
-                        consecutive_boards=dto.consecutive_boards,
-                        first_limit_up_time=dto.first_limit_up_time,
-                        last_limit_up_time=dto.last_limit_up_time,
-                        industry=dto.industry,
-                    )
-                    for dto in limit_up_dtos
-                ]
-                limit_up_pool_count = await self.limit_up_pool_repo.save_all(limit_up_entities)
-                logger.info(f"涨停池数据同步成功：{limit_up_pool_count} 条")
+            limit_up_pool_count = await self.limit_up_cmd.execute(trade_date)
         except Exception as e:
             error_msg = f"涨停池数据同步失败：{str(e)}"
             logger.error(error_msg)
@@ -130,26 +120,7 @@ class SyncAkShareMarketDataCmd(BaseUseCase):
 
         # 2. 同步炸板池数据
         try:
-            broken_board_dtos = await self.sentiment_provider.fetch_broken_board_pool(trade_date)
-            if broken_board_dtos:
-                broken_board_entities = [
-                    BrokenBoardStock(
-                        trade_date=trade_date,
-                        third_code=dto.third_code,
-                        stock_name=dto.stock_name,
-                        pct_chg=dto.pct_chg,
-                        close=dto.close,
-                        amount=dto.amount,
-                        turnover_rate=dto.turnover_rate,
-                        open_count=dto.open_count,
-                        first_limit_up_time=dto.first_limit_up_time,
-                        last_open_time=dto.last_open_time,
-                        industry=dto.industry,
-                    )
-                    for dto in broken_board_dtos
-                ]
-                broken_board_count = await self.broken_board_repo.save_all(broken_board_entities)
-                logger.info(f"炸板池数据同步成功：{broken_board_count} 条")
+            broken_board_count = await self.broken_board_cmd.execute(trade_date)
         except Exception as e:
             error_msg = f"炸板池数据同步失败：{str(e)}"
             logger.error(error_msg)
@@ -157,28 +128,7 @@ class SyncAkShareMarketDataCmd(BaseUseCase):
 
         # 3. 同步昨日涨停表现数据
         try:
-            previous_limit_up_dtos = await self.sentiment_provider.fetch_previous_limit_up(
-                trade_date
-            )
-            if previous_limit_up_dtos:
-                previous_limit_up_entities = [
-                    PreviousLimitUpStock(
-                        trade_date=trade_date,
-                        third_code=dto.third_code,
-                        stock_name=dto.stock_name,
-                        pct_chg=dto.pct_chg,
-                        close=dto.close,
-                        amount=dto.amount,
-                        turnover_rate=dto.turnover_rate,
-                        yesterday_consecutive_boards=dto.yesterday_consecutive_boards,
-                        industry=dto.industry,
-                    )
-                    for dto in previous_limit_up_dtos
-                ]
-                previous_limit_up_count = await self.previous_limit_up_repo.save_all(
-                    previous_limit_up_entities
-                )
-                logger.info(f"昨日涨停表现数据同步成功：{previous_limit_up_count} 条")
+            previous_limit_up_count = await self.previous_limit_up_cmd.execute(trade_date)
         except Exception as e:
             error_msg = f"昨日涨停表现数据同步失败：{str(e)}"
             logger.error(error_msg)
@@ -186,28 +136,7 @@ class SyncAkShareMarketDataCmd(BaseUseCase):
 
         # 4. 同步龙虎榜数据
         try:
-            dragon_tiger_dtos = await self.dragon_tiger_provider.fetch_dragon_tiger_detail(
-                trade_date
-            )
-            if dragon_tiger_dtos:
-                dragon_tiger_entities = [
-                    DragonTigerDetail(
-                        trade_date=trade_date,
-                        third_code=dto.third_code,
-                        stock_name=dto.stock_name,
-                        pct_chg=dto.pct_chg,
-                        close=dto.close,
-                        reason=dto.reason,
-                        net_amount=dto.net_amount,
-                        buy_amount=dto.buy_amount,
-                        sell_amount=dto.sell_amount,
-                        buy_seats=dto.buy_seats,
-                        sell_seats=dto.sell_seats,
-                    )
-                    for dto in dragon_tiger_dtos
-                ]
-                dragon_tiger_count = await self.dragon_tiger_repo.save_all(dragon_tiger_entities)
-                logger.info(f"龙虎榜数据同步成功：{dragon_tiger_count} 条")
+            dragon_tiger_count = await self.dragon_tiger_cmd.execute(trade_date)
         except Exception as e:
             error_msg = f"龙虎榜数据同步失败：{str(e)}"
             logger.error(error_msg)
@@ -215,24 +144,7 @@ class SyncAkShareMarketDataCmd(BaseUseCase):
 
         # 5. 同步板块资金流向数据
         try:
-            capital_flow_dtos = await self.capital_flow_provider.fetch_sector_capital_flow()
-            if capital_flow_dtos:
-                capital_flow_entities = [
-                    SectorCapitalFlow(
-                        trade_date=trade_date,
-                        sector_name=dto.sector_name,
-                        sector_type=dto.sector_type,
-                        net_amount=dto.net_amount,
-                        inflow_amount=dto.inflow_amount,
-                        outflow_amount=dto.outflow_amount,
-                        pct_chg=dto.pct_chg,
-                    )
-                    for dto in capital_flow_dtos
-                ]
-                sector_capital_flow_count = await self.sector_capital_flow_repo.save_all(
-                    capital_flow_entities
-                )
-                logger.info(f"板块资金流向数据同步成功：{sector_capital_flow_count} 条")
+            sector_capital_flow_count = await self.sector_capital_flow_cmd.execute(trade_date)
         except Exception as e:
             error_msg = f"板块资金流向数据同步失败：{str(e)}"
             logger.error(error_msg)

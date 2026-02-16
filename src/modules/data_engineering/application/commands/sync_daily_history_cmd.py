@@ -1,5 +1,3 @@
-from typing import Any, Dict
-
 from loguru import logger
 
 from src.modules.data_engineering.domain.ports.providers.market_quote_provider import (
@@ -11,9 +9,12 @@ from src.modules.data_engineering.domain.ports.repositories.market_quote_repo im
 from src.modules.data_engineering.domain.ports.repositories.stock_basic_repo import (
     IStockBasicRepository,
 )
+from src.modules.data_engineering.application.dtos.sync_result_dtos import (
+    DailyHistorySyncResult,
+)
 
 
-class SyncDailyHistoryUseCase:
+class SyncDailyHistoryCmd:
     """
     同步股票日线历史数据用例
     """
@@ -28,7 +29,7 @@ class SyncDailyHistoryUseCase:
         self.daily_repo = daily_repo
         self.data_provider = data_provider
 
-    async def execute(self, limit: int = 10, offset: int = 0) -> Dict[str, Any]:
+    async def execute(self, limit: int = 10, offset: int = 0) -> DailyHistorySyncResult:
         """
         执行同步逻辑（支持分页）
 
@@ -39,11 +40,11 @@ class SyncDailyHistoryUseCase:
 
         if not target_stocks:
             logger.warning(f"未找到需要同步的股票 (offset={offset}, limit={limit})")
-            return {
-                "synced_stocks": 0,
-                "total_rows": 0,
-                "message": f"未找到需要同步的股票 (offset={offset}, limit={limit})",
-            }
+            return DailyHistorySyncResult(
+                synced_stocks=0,
+                total_rows=0,
+                message=f"未找到需要同步的股票 (offset={offset}, limit={limit})"
+            )
 
         logger.info(f"开始同步 {len(target_stocks)} 只股票的历史日线数据 (offset={offset})...")
 
@@ -74,8 +75,8 @@ class SyncDailyHistoryUseCase:
                 # 单只股票失败不中断整批，继续处理下一只
                 continue
 
-        return {
-            "synced_stocks": synced_stocks_count,
-            "total_rows": total_rows_saved,
-            "message": f"成功同步 {synced_stocks_count} 只股票，共 {total_rows_saved} 条日线记录",
-        }
+        return DailyHistorySyncResult(
+            synced_stocks=synced_stocks_count,
+            total_rows=total_rows_saved,
+            message=f"成功同步 {synced_stocks_count} 只股票，共 {total_rows_saved} 条日线记录"
+        )

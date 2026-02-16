@@ -1,34 +1,40 @@
-from dataclasses import dataclass, field
+"""
+同步任务领域实体。
+
+追踪同步任务的生命周期、进度和状态，支持断点续跑和并发互斥控制。
+从 dataclass 迁移为 Pydantic BaseModel，统一领域建模约定。
+"""
+
 from datetime import datetime
 from typing import Any, Dict, Optional
 from uuid import UUID, uuid4
+
+from pydantic import ConfigDict, Field
 
 from src.modules.data_engineering.domain.model.enums import (
     SyncJobType,
     SyncTaskStatus,
 )
+from src.shared.domain.base_entity import BaseEntity
 
 
-@dataclass
-class SyncTask:
+class SyncTask(BaseEntity):
     """
-    同步任务实体
+    同步任务实体。
 
     用于追踪同步任务的生命周期、进度和状态。支持断点续跑和并发互斥控制。
     """
 
-    id: UUID = field(default_factory=uuid4)
-    job_type: SyncJobType = SyncJobType.DAILY_HISTORY
-    status: SyncTaskStatus = SyncTaskStatus.PENDING
-    current_offset: int = 0  # 当前同步偏移量（用于历史全量同步的分批处理）
-    batch_size: int = 50  # 每批处理的股票数量
-    total_processed: int = 0  # 已处理总条数
-    started_at: Optional[datetime] = None  # 任务启动时间
-    updated_at: Optional[datetime] = None  # 最后更新时间
-    completed_at: Optional[datetime] = None  # 任务完成时间
-    config: Dict[str, Any] = field(
-        default_factory=dict
-    )  # 任务特定配置（如 start_date、end_date 等）
+    job_type: SyncJobType = Field(default=SyncJobType.DAILY_HISTORY, description="任务类型")
+    status: SyncTaskStatus = Field(default=SyncTaskStatus.PENDING, description="任务状态")
+    current_offset: int = Field(default=0, description="当前同步偏移量（用于历史全量同步的分批处理）")
+    batch_size: int = Field(default=50, description="每批处理的股票数量")
+    total_processed: int = Field(default=0, description="已处理总条数")
+    started_at: Optional[datetime] = Field(default=None, description="任务启动时间")
+    completed_at: Optional[datetime] = Field(default=None, description="任务完成时间")
+    config: Dict[str, Any] = Field(default_factory=dict, description="任务特定配置（如 start_date、end_date 等）")
+
+    model_config = ConfigDict(from_attributes=True)
 
     def start(self) -> None:
         """启动任务：更新状态为 RUNNING 并记录启动时间"""
@@ -38,7 +44,7 @@ class SyncTask:
 
     def update_progress(self, processed_count: int, new_offset: int) -> None:
         """
-        更新任务进度
+        更新任务进度。
 
         Args:
             processed_count: 本批处理的条数

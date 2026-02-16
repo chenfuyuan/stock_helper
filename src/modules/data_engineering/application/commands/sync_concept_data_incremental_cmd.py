@@ -1,8 +1,10 @@
 import time
-from dataclasses import dataclass
 
 from loguru import logger
 
+from src.modules.data_engineering.application.dtos.sync_result_dtos import (
+    ConceptSyncResult,
+)
 from src.modules.data_engineering.domain.model.concept import Concept, ConceptStock
 from src.modules.data_engineering.domain.ports.providers.concept_data_provider import (
     IConceptDataProvider,
@@ -11,17 +13,6 @@ from src.modules.data_engineering.domain.ports.repositories.concept_repo import 
     IConceptRepository,
 )
 from src.shared.application.use_cases import BaseUseCase
-
-
-@dataclass
-class ConceptSyncResult:
-    """概念同步结果"""
-
-    total_concepts: int
-    success_concepts: int
-    failed_concepts: int
-    total_stocks: int
-    elapsed_time: float
 
 
 class SyncConceptDataIncrementalCmd(BaseUseCase):
