@@ -90,3 +90,62 @@ class StockGraphResponse(BaseModel):
 
     nodes: list[GraphNodeResponse] = Field(..., description="节点列表")
     relationships: list[GraphRelationshipResponse] = Field(..., description="关系列表")
+
+
+class SyncStocksFullRequest(BaseModel):
+    """
+    股票全量同步请求 DTO。
+    
+    用于 POST /sync/stocks/full 端点。
+    """
+
+    include_finance: bool = Field(False, description="是否包含财务快照数据")
+    batch_size: int = Field(500, description="批量大小")
+    skip: int = Field(0, description="跳过前 N 条记录")
+    limit: int = Field(10000, description="查询数量上限")
+
+
+class SyncStocksIncrementalRequest(BaseModel):
+    """
+    股票增量同步请求 DTO。
+    
+    用于 POST /sync/stocks/incremental 端点。
+    """
+
+    third_codes: Optional[list[str]] = Field(
+        None,
+        description="股票代码列表；为空时按时间窗口自动确定",
+    )
+    include_finance: bool = Field(False, description="是否包含财务快照数据")
+    batch_size: int = Field(500, description="批量大小")
+    window_days: int = Field(3, ge=1, description="自动模式下时间窗口天数")
+    limit: int = Field(10000, description="自动模式下扫描上限")
+
+
+class SyncConceptsRequest(BaseModel):
+    """
+    概念同步请求 DTO。
+    
+    用于 POST /sync/concepts 端点。
+    """
+
+    batch_size: int = Field(500, description="批量大小")
+
+
+class SyncAllRequest(BaseModel):
+    """
+    全部同步请求 DTO。
+    
+    用于 POST /sync/all 端点。
+    """
+
+    mode: Literal["full", "incremental"] = Field(..., description="股票同步模式：full（全量）或 incremental（增量）")
+    include_finance: bool = Field(False, description="是否包含财务快照数据")
+    batch_size: int = Field(500, description="批量大小")
+    third_codes: Optional[list[str]] = Field(
+        None,
+        description="股票代码列表（仅 mode=incremental 时有效）",
+    )
+    window_days: int = Field(3, ge=1, description="自动模式下时间窗口天数（仅 mode=incremental 时有效）")
+    skip: int = Field(0, description="跳过前 N 条记录（仅 mode=full 时有效）")
+    limit: int = Field(10000, description="扫描/查询数量上限")
