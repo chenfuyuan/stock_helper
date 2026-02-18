@@ -111,6 +111,27 @@ Coordinator 模块 SHALL 暴露 `POST /api/v1/coordinator/research` REST 端点�
 
 ---
 
+### Requirement: 统一 API 响应格式
+
+所有 REST API 接口 SHALL 使用统一的 `BaseResponse[T]` 响应格式，确保响应结构的一致性。
+
+#### Scenario: 成功响应格式
+- **WHEN** API 接口成功处理请求
+- **THEN** 系统返回 `BaseResponse` 对象，包含：
+  - `success: true`
+  - `code: str` 成功代码（如 "RESEARCH_ORCHESTRATION_SUCCESS"）
+  - `message: str` 成功描述（如 "研究编排成功完成"）
+  - `data: T` 包含实际的业务数据
+
+#### Scenario: 错误响应格式
+- **WHEN** API 接口处理过程中发生错误
+- **THEN** 系统返回 `ErrorResponse` 对象，包含：
+  - `success: false`
+  - `code: str` 内部错误码
+  - `message: str` 友好的错误提示
+
+---
+
 ### Requirement: 请求体与响应体契约
 
 REST 端点的请求体 SHALL 为 JSON，包含以下字段：
