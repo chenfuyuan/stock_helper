@@ -24,6 +24,7 @@ from src.modules.debate.presentation.rest.debate_schemas import (
     DebateRunResponse,
 )
 from src.shared.domain.exceptions import BadRequestException
+from src.shared.dtos import BaseResponse
 
 logger = logging.getLogger(__name__)
 
@@ -89,14 +90,14 @@ async def get_debate_service() -> DebateService:
 
 @router.post(
     "/run",
-    response_model=DebateRunResponse,
+    response_model=BaseResponse[DebateRunResponse],
     summary="执行辩论",
     description="根据标的与专家结果执行多空辩论，返回 DebateOutcome。",
 )
 async def post_debate_run(
     body: DebateRunRequest,
     service: DebateService = Depends(get_debate_service),
-) -> DebateRunResponse:
+) -> BaseResponse[DebateRunResponse]:
     """POST /api/v1/debate/run：入参校验后调用 DebateService.run，异常映射为 HTTP 状态码。"""
     if not body.symbol or not str(body.symbol).strip():
         raise HTTPException(status_code=400, detail="symbol 为必填")
@@ -108,15 +109,20 @@ async def post_debate_run(
             expert_results=body.expert_results,
         )
         outcome: DebateOutcomeDTO = await service.run(debate_input)
-        return DebateRunResponse(
-            symbol=outcome.symbol,
-            direction=outcome.direction,
-            confidence=outcome.confidence,
-            bull_case=outcome.bull_case.model_dump(),
-            bear_case=outcome.bear_case.model_dump(),
-            risk_matrix=[r.model_dump() for r in outcome.risk_matrix],
-            key_disagreements=outcome.key_disagreements,
-            conflict_resolution=outcome.conflict_resolution,
+        return BaseResponse(
+            success=True,
+            code="DEBATE_RUN_SUCCESS",
+            message="辩论执行成功完成",
+            data=DebateRunResponse(
+                symbol=outcome.symbol,
+                direction=outcome.direction,
+                confidence=outcome.confidence,
+                bull_case=outcome.bull_case.model_dump(),
+                bear_case=outcome.bear_case.model_dump(),
+                risk_matrix=[r.model_dump() for r in outcome.risk_matrix],
+                key_disagreements=outcome.key_disagreements,
+                conflict_resolution=outcome.conflict_resolution,
+            )
         )
     except LLMOutputParseError as e:
         logger.warning("辩论 LLM 解析失败: %s", e.message)

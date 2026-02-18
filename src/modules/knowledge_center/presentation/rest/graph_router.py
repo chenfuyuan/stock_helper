@@ -26,6 +26,7 @@ from src.modules.knowledge_center.domain.exceptions import (
     Neo4jConnectionError,
 )
 from src.shared.infrastructure.db.session import get_db_session
+from src.shared.dtos import BaseResponse
 
 router = APIRouter(prefix="/knowledge-graph", tags=["Knowledge Graph"])
 
@@ -43,7 +44,7 @@ async def get_graph_service(
 
 @router.get(
     "/stocks/{third_code}/neighbors",
-    response_model=list[StockNeighborResponse],
+    response_model=BaseResponse[list[StockNeighborResponse]],
     summary="查询同维度股票",
     description="根据指定维度（行业/地域/市场/交易所/概念）查询与目标股票共享同一维度的其他股票",
 )
@@ -59,7 +60,7 @@ async def get_stock_neighbors(
         description="维度名称，当 dimension='concept' 时必填，指定概念名称",
     ),
     service: GraphService = Depends(get_graph_service),
-) -> list[StockNeighborResponse]:
+) -> BaseResponse[list[StockNeighborResponse]]:
     """
     查询同维度股票。
     
@@ -88,7 +89,7 @@ async def get_stock_neighbors(
             dimension_name=dimension_name,
         )
         
-        return [
+        neighbors_data = [
             StockNeighborResponse(
                 third_code=n.third_code,
                 name=n.name,
@@ -99,6 +100,12 @@ async def get_stock_neighbors(
             )
             for n in neighbors
         ]
+        return BaseResponse(
+            success=True,
+            code="STOCK_NEIGHBORS_SUCCESS",
+            message="同维度股票查询成功",
+            data=neighbors_data
+        )
     except GraphQueryError as e:
         logger.error(f"查询同维度股票失败: {str(e)}")
         raise HTTPException(status_code=e.status_code, detail=e.message)
@@ -109,7 +116,7 @@ async def get_stock_neighbors(
 
 @router.get(
     "/stocks/{third_code}/graph",
-    response_model=StockGraphResponse | None,
+    response_model=BaseResponse[StockGraphResponse | None],
     summary="查询个股关系网络",
     description="查询指定股票及其关联的维度节点和关系",
 )
@@ -117,7 +124,7 @@ async def get_stock_graph(
     third_code: str,
     depth: int = Query(1, ge=1, le=1, description="遍历深度（MVP 阶段仅支持 1）"),
     service: GraphService = Depends(get_graph_service),
-) -> StockGraphResponse | None:
+) -> BaseResponse[StockGraphResponse | None]:
     """
     查询个股关系网络。
     
@@ -136,9 +143,14 @@ async def get_stock_graph(
         )
         
         if not graph:
-            return None
+            return BaseResponse(
+                success=True,
+                code="STOCK_GRAPH_SUCCESS",
+                message="个股关系网络查询成功，无数据",
+                data=None
+            )
         
-        return StockGraphResponse(
+        graph_data = StockGraphResponse(
             nodes=[
                 GraphNodeResponse(
                     label=n.label,
@@ -156,6 +168,12 @@ async def get_stock_graph(
                 for r in graph.relationships
             ],
         )
+        return BaseResponse(
+            success=True,
+            code="STOCK_GRAPH_SUCCESS",
+            message="个股关系网络查询成功",
+            data=graph_data
+        )
     except GraphQueryError as e:
         logger.error(f"查询个股关系网络失败: {str(e)}")
         raise HTTPException(status_code=e.status_code, detail=e.message)
@@ -168,14 +186,14 @@ async def get_stock_graph(
 
 @router.post(
     "/sync",
-    response_model=SyncGraphResponse,
+    response_model=BaseResponse[SyncGraphResponse],
     summary="同步图谱数据",
     description="全量或增量同步股票数据到 Neo4j 图谱",
 )
 async def sync_graph(
     request: SyncGraphRequest,
     service: GraphService = Depends(get_graph_service),
-) -> SyncGraphResponse:
+) -> BaseResponse[SyncGraphResponse]:
     """
     同步图谱数据。
     
@@ -221,7 +239,12 @@ async def sync_graph(
                 duration_ms=stock_result.duration_ms + concept_result.duration_ms,
                 error_details=stock_result.error_details + concept_result.error_details,
             )
-            return result
+            return BaseResponse(
+                success=True,
+                code="GRAPH_SYNC_SUCCESS",
+                message="图谱数据同步成功",
+                data=result
+            )
         else:
             # target="stock" 的默认行为
             if request.mode == "full":
@@ -242,12 +265,17 @@ async def sync_graph(
             else:
                 raise HTTPException(status_code=400, detail=f"无效的同步模式: {request.mode}")
         
-        return SyncGraphResponse(
-            total=result.total,
-            success=result.success,
-            failed=result.failed,
-            duration_ms=result.duration_ms,
-            error_details=result.error_details,
+        return BaseResponse(
+            success=True,
+            code="GRAPH_SYNC_SUCCESS",
+            message="图谱数据同步成功",
+            data=SyncGraphResponse(
+                total=result.total,
+                success=result.success,
+                failed=result.failed,
+                duration_ms=result.duration_ms,
+                error_details=result.error_details,
+            )
         )
     except GraphSyncError as e:
         logger.error(f"同步图谱数据失败: {str(e)}")
@@ -264,12 +292,13 @@ async def sync_graph(
 
 @router.delete(
     "/clear",
+    response_model=BaseResponse[dict],
     summary="清空知识图谱",
     description="删除所有图谱节点和关系，用于完全重建图谱。此操作不可逆，请谨慎使用！",
 )
 async def clear_graph(
     service: GraphService = Depends(get_graph_service),
-) -> dict:
+) -> BaseResponse[dict]:
     """
     清空知识图谱。
     
@@ -280,7 +309,12 @@ async def clear_graph(
     """
     try:
         result = await service.clear_all_graph_data()
-        return result
+        return BaseResponse(
+            success=True,
+            code="GRAPH_CLEAR_SUCCESS",
+            message="知识图谱清空成功",
+            data=result
+        )
     except GraphSyncError as e:
         logger.error(f"清空图谱失败: {str(e)}")
         raise HTTPException(status_code=e.status_code, detail=e.message)

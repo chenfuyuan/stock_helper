@@ -78,6 +78,7 @@ async def get_status(
         
         return BaseResponse(
             success=True,
+            code="SCHEDULER_STATUS_SUCCESS",
             data=response_data,
             message="获取调度器状态成功"
         )
@@ -125,6 +126,7 @@ async def schedule_job(
         
         return BaseResponse(
             success=True,
+            code="SCHEDULER_JOB_SCHEDULE_SUCCESS",
             data={"job_id": request.job_id},
             message=f"任务 {request.job_id} 调度成功"
         )
@@ -179,6 +181,7 @@ async def start_job(
         
         return BaseResponse(
             success=True,
+            code="SCHEDULER_JOB_START_SUCCESS",
             data={"job_id": job_id},
             message=f"任务 {job_id} 启动成功"
         )
@@ -209,6 +212,7 @@ async def stop_job(
         
         return BaseResponse(
             success=True,
+            code="SCHEDULER_JOB_STOP_SUCCESS",
             data={"job_id": job_id},
             message=f"任务 {job_id} 已停止"
         )
@@ -244,6 +248,7 @@ async def trigger_job(
         
         return BaseResponse(
             success=True,
+            code="SCHEDULER_JOB_TRIGGER_SUCCESS",
             data={"job_id": job_id},
             message=f"任务 {job_id} 已触发执行"
         )
@@ -293,6 +298,7 @@ async def get_executions(
         
         return BaseResponse(
             success=True,
+            code="SCHEDULER_EXECUTIONS_SUCCESS",
             data=execution_details,
             message="查询执行历史成功"
         )

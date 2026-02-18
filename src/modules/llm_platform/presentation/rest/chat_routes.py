@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 from src.modules.llm_platform.application.services.llm_service import (
     LLMService,
 )
+from src.shared.dtos import BaseResponse
 
 router = APIRouter(prefix="/llm-platform/chat", tags=["LLM Platform"])
 
@@ -39,7 +40,7 @@ def get_llm_service() -> LLMService:
     return LLMService()
 
 
-@router.post("/generate", response_model=ChatResponse)
+@router.post("/generate", response_model=BaseResponse[ChatResponse])
 async def generate_text(request: ChatRequest, service: LLMService = Depends(get_llm_service)):
     """
     调用大模型生成文本接口。
@@ -66,7 +67,12 @@ async def generate_text(request: ChatRequest, service: LLMService = Depends(get_
             tags=request.tags,
         )
         logger.info("API: generate_text completed successfully")
-        return ChatResponse(response=result)
+        return BaseResponse(
+            success=True,
+            code="LLM_CHAT_SUCCESS",
+            message="LLM 对话成功完成",
+            data=ChatResponse(response=result)
+        )
     except Exception as e:
         logger.error(f"API: generate_text failed: {str(e)}")
         # 捕获可能的路由错误或调用错误

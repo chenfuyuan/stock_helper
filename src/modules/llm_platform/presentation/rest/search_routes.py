@@ -19,6 +19,7 @@ from src.modules.llm_platform.infrastructure.adapters.bocha_web_search import (
     BochaWebSearchAdapter,
 )
 from src.modules.llm_platform.infrastructure.config import llm_config
+from src.shared.dtos import BaseResponse
 
 logger = logging.getLogger(__name__)
 
@@ -78,7 +79,7 @@ def get_web_search_service() -> WebSearchService:
     return WebSearchService(provider=adapter)
 
 
-@router.post("/", response_model=WebSearchApiResponse)
+@router.post("/", response_model=BaseResponse[WebSearchApiResponse])
 async def search_web(
     request: WebSearchApiRequest,
     service: WebSearchService = Depends(get_web_search_service),
@@ -133,10 +134,15 @@ async def search_web(
 
         logger.info(f"API: search_web completed successfully, returned {len(api_results)} results")
 
-        return WebSearchApiResponse(
-            query=response.query,
-            total_matches=response.total_matches,
-            results=api_results,
+        return BaseResponse(
+            success=True,
+            code="WEB_SEARCH_SUCCESS",
+            message="Web 搜索成功完成",
+            data=WebSearchApiResponse(
+                query=response.query,
+                total_matches=response.total_matches,
+                results=api_results,
+            )
         )
 
     except WebSearchConfigError as e:

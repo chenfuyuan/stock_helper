@@ -18,6 +18,7 @@ from src.modules.llm_platform.infrastructure.persistence.repositories.pg_config_
 )
 from src.modules.llm_platform.infrastructure.registry import LLMRegistry
 from src.shared.infrastructure.db.session import get_db_session
+from src.shared.dtos import BaseResponse
 
 router = APIRouter(prefix="/llm-platform/configs", tags=["LLM Platform"])
 
@@ -75,29 +76,41 @@ def get_config_service(
     return ConfigService(repo, registry)
 
 
-@router.get("", response_model=List[LLMConfigResponse])
+@router.get("", response_model=BaseResponse[List[LLMConfigResponse]])
 async def get_configs(service: ConfigService = Depends(get_config_service)):
     """
     获取所有大模型配置。
     """
     logger.info("API: get_configs called")
-    return await service.get_all_configs()
+    configs = await service.get_all_configs()
+    return BaseResponse(
+        success=True,
+        code="CONFIG_LIST_SUCCESS",
+        message="大模型配置列表获取成功",
+        data=configs
+    )
 
 
-@router.get("/{alias}", response_model=LLMConfigResponse)
+@router.get("/{alias}", response_model=BaseResponse[LLMConfigResponse])
 async def get_config(alias: str, service: ConfigService = Depends(get_config_service)):
     """
     根据别名获取大模型配置详情。
     """
     logger.info(f"API: get_config called with alias={alias}")
     try:
-        return await service.get_config(alias)
+        config = await service.get_config(alias)
+        return BaseResponse(
+            success=True,
+            code="CONFIG_DETAIL_SUCCESS",
+            message="大模型配置详情获取成功",
+            data=config
+        )
     except ConfigNotFoundException as e:
         logger.warning(f"API: Config not found: {alias}")
         raise HTTPException(status_code=404, detail=str(e))
 
 
-@router.post("", response_model=LLMConfigResponse, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=BaseResponse[LLMConfigResponse], status_code=status.HTTP_201_CREATED)
 async def create_config(dto: LLMConfigCreate, service: ConfigService = Depends(get_config_service)):
     """
     创建新的大模型配置。
@@ -107,13 +120,18 @@ async def create_config(dto: LLMConfigCreate, service: ConfigService = Depends(g
     try:
         result = await service.create_config(entity)
         logger.info(f"API: Config created successfully: {dto.alias}")
-        return result
+        return BaseResponse(
+            success=True,
+            code="CONFIG_CREATE_SUCCESS",
+            message="大模型配置创建成功",
+            data=result
+        )
     except DuplicateConfigException as e:
         logger.warning(f"API: Duplicate config: {dto.alias}")
         raise HTTPException(status_code=409, detail=str(e))
 
 
-@router.patch("/{alias}", response_model=LLMConfigResponse)
+@router.patch("/{alias}", response_model=BaseResponse[LLMConfigResponse])
 async def update_config(
     alias: str,
     dto: LLMConfigUpdate,
@@ -126,7 +144,12 @@ async def update_config(
     try:
         result = await service.update_config(alias, dto.dict(exclude_unset=True))
         logger.info(f"API: Config updated successfully: {alias}")
-        return result
+        return BaseResponse(
+            success=True,
+            code="CONFIG_UPDATE_SUCCESS",
+            message="大模型配置更新成功",
+            data=result
+        )
     except ConfigNotFoundException as e:
         logger.warning(f"API: Config not found for update: {alias}")
         raise HTTPException(status_code=404, detail=str(e))
@@ -146,7 +169,7 @@ async def delete_config(alias: str, service: ConfigService = Depends(get_config_
         raise HTTPException(status_code=404, detail=str(e))
 
 
-@router.post("/refresh")
+@router.post("/refresh", response_model=BaseResponse[dict])
 async def refresh_registry(
     service: ConfigService = Depends(get_config_service),
 ):
@@ -155,4 +178,9 @@ async def refresh_registry(
     """
     logger.info("API: refresh_registry called")
     await service.refresh_registry()
-    return {"status": "refreshed"}
+    return BaseResponse(
+        success=True,
+        code="REGISTRY_REFRESH_SUCCESS",
+        message="大模型注册表刷新成功",
+        data={"status": "refreshed"}
+    )

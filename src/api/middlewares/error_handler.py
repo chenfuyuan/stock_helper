@@ -4,6 +4,7 @@ from loguru import logger
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from src.shared.domain.exceptions import AppException
+from src.shared.dtos import ErrorResponse
 
 
 class ErrorHandlingMiddleware(BaseHTTPMiddleware):
@@ -21,12 +22,11 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
             logger.error(f"AppException: {e.message} | Path: {request.method} {request.url}")
             return JSONResponse(
                 status_code=e.status_code,
-                content={
-                    "success": False,
-                    "code": e.code,
-                    "message": e.message,
-                    "details": e.details,
-                },
+                content=ErrorResponse(
+                    success=False,
+                    code=e.code,
+                    message=e.message,
+                ).model_dump(),
             )
         except Exception as e:
             # 处理所有未捕获的系统异常
@@ -39,9 +39,9 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
             )
             return JSONResponse(
                 status_code=500,
-                content={
-                    "success": False,
-                    "code": "INTERNAL_SERVER_ERROR",
-                    "message": "服务器内部错误，请稍后重试",
-                },
+                content=ErrorResponse(
+                    success=False,
+                    code="INTERNAL_SERVER_ERROR",
+                    message="服务器内部错误，请稍后重试",
+                ).model_dump(),
             )
