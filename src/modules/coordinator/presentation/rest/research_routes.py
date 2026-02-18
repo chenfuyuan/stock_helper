@@ -22,6 +22,7 @@ from src.modules.coordinator.domain.exceptions import (
     SessionNotRetryableError,
 )
 from src.shared.domain.exceptions import BadRequestException
+from src.shared.dtos import BaseResponse
 from src.shared.infrastructure.db.session import get_db_session
 
 logger = logging.getLogger(__name__)
@@ -88,14 +89,14 @@ async def get_research_orchestration_service(
 # ---------- 路由 ----------
 @router.post(
     "/research",
-    response_model=ResearchOrchestrationResponse,
+    response_model=BaseResponse[ResearchOrchestrationResponse],
     summary="研究编排",
     description="根据指定标的与专家列表，并行执行研究分析并汇总结果。",
 )
 async def post_research(
     body: ResearchOrchestrationRequest,
     service: ResearchOrchestrationService = Depends(get_research_orchestration_service),
-) -> ResearchOrchestrationResponse:
+) -> BaseResponse[ResearchOrchestrationResponse]:
     """
     执行研究编排：symbol + experts + options → 并行调用 Research 专家 → 汇总返回。
     """
@@ -122,14 +123,19 @@ async def post_research(
                     data=None,
                     error=item.error,
                 )
-        return ResearchOrchestrationResponse(
-            symbol=result.symbol,
-            overall_status=result.overall_status,
-            expert_results=expert_results_dict,
-            debate_outcome=result.debate_outcome,
-            verdict=result.verdict,
-            session_id=result.session_id,
-            retry_count=result.retry_count,
+        return BaseResponse(
+            success=True,
+            code="RESEARCH_ORCHESTRATION_SUCCESS",
+            message="研究编排成功完成",
+            data=ResearchOrchestrationResponse(
+                symbol=result.symbol,
+                overall_status=result.overall_status,
+                expert_results=expert_results_dict,
+                debate_outcome=result.debate_outcome,
+                verdict=result.verdict,
+                session_id=result.session_id,
+                retry_count=result.retry_count,
+            )
         )
     except BadRequestException as e:
         raise HTTPException(status_code=400, detail=e.message)
@@ -177,7 +183,7 @@ def _build_response(result: "ResearchResult") -> ResearchOrchestrationResponse:
 
 @router.post(
     "/research/{session_id}/retry",
-    response_model=ResearchOrchestrationResponse,
+    response_model=BaseResponse[ResearchOrchestrationResponse],
     summary="研究重试",
     description="对已有 session 中失败的专家发起重试，复用成功专家的结果，重新执行聚合/辩论/裁决。",
 )
@@ -185,7 +191,7 @@ async def post_research_retry(
     session_id: str,
     body: RetryResearchRequest | None = None,
     service: ResearchOrchestrationService = Depends(get_research_orchestration_service),
-) -> ResearchOrchestrationResponse:
+) -> BaseResponse[ResearchOrchestrationResponse]:
     """
     重试研究编排：仅重新执行失败的专家，复用已成功的结果。
     """
@@ -203,7 +209,12 @@ async def post_research_retry(
             session_id=sid,
             skip_debate=skip_debate,
         )
-        return _build_response(result)
+        return BaseResponse(
+            success=True,
+            code="RESEARCH_RETRY_SUCCESS",
+            message="研究重试成功完成",
+            data=_build_response(result)
+        )
     except SessionNotFoundError as e:
         raise HTTPException(status_code=404, detail=e.message)
     except SessionNotRetryableError as e:

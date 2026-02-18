@@ -17,6 +17,7 @@ from src.modules.research.application.technical_analyst_service import (
 from src.modules.research.container import ResearchContainer
 from src.modules.research.domain.exceptions import LLMOutputParseError
 from src.shared.domain.exceptions import BadRequestException
+from src.shared.dtos import BaseResponse
 from src.shared.infrastructure.db.session import get_db_session
 
 router = APIRouter()
@@ -49,7 +50,7 @@ class TechnicalAnalysisApiResponse(BaseModel):
 # ---------- 接口 ----------
 @router.get(
     "/technical-analysis",
-    response_model=TechnicalAnalysisApiResponse,
+    response_model=BaseResponse[TechnicalAnalysisApiResponse],
     summary="对指定股票进行技术分析",
     description="根据日线数据计算技术指标，并调用大模型生成证据驱动的技术面观点。响应体含 input、technical_indicators、output（代码塞入）。",
 )
@@ -60,14 +61,19 @@ async def run_technical_analysis(
         description="分析基准日，YYYY-MM-DD；不传则使用当前日期",
     ),
     service: TechnicalAnalystService = Depends(get_technical_analyst_service),
-) -> TechnicalAnalysisApiResponse:
+) -> BaseResponse[TechnicalAnalysisApiResponse]:
     """
     对单个标的运行技术分析；响应体包含解析结果及 input、technical_indicators、output（由代码填入）。
     """
     try:
         date_obj = date.fromisoformat(analysis_date) if analysis_date else date.today()
         result = await service.run(ticker=ticker.strip(), analysis_date=date_obj)
-        return TechnicalAnalysisApiResponse(**result)
+        return BaseResponse(
+            success=True,
+            code="TECHNICAL_ANALYSIS_SUCCESS",
+            message="技术分析成功完成",
+            data=TechnicalAnalysisApiResponse(**result)
+        )
     except BadRequestException as e:
         raise HTTPException(status_code=400, detail=e.message)
     except LLMOutputParseError as e:

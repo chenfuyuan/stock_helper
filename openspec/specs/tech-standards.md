@@ -44,6 +44,7 @@
 - **DTO 不暴露领域实体**：Application 层返回的 DTO 字段须为基本类型或其他 DTO，不可直接引用 Domain 层实体或值对象。保持 DTO 的「贫血数据容器」特征。
 - **跨模块 DTO 转换在 Adapter 完成**：下游模块的 DTO 通过 Infrastructure Adapter 转为本模块 `domain/dtos/` 中定义的输入结构；Domain 层不 import 其他模块的任何类型。
 - **Application 层 DTO**：当 Application 层用例需要对外暴露独立的 DTO（如 `DailyBarDTO`），放在 `application/dtos/` 子包中。
+- **Presentation 层响应 DTO**：每个模块的 `presentation/rest/schemas.py` 定义该模块专用的响应 DTO，这些 DTO 仅用于 API 响应，必须继承 `pydantic.BaseModel` 并作为 `BaseResponse[T]` 的类型参数。**所有 REST API 接口必须使用统一的 `BaseResponse[T]` 响应格式**，确保响应结构一致性。
 
 ---
 ## 模块内部结构
@@ -67,6 +68,10 @@ src/modules/<context>/
 │   └── ...              # 其他基础设施（如 agents/、indicators/）
 └── presentation/
     └── rest/            # FastAPI Router + 响应模型
+        ├── __init__.py
+        ├── <module>_router.py    # 路由定义
+        ├── schemas.py           # 响应 DTO（继承 BaseModel）
+        └── exceptions.py        # 模块特定异常（可选）
 ```
 
 - 所有非四层标准目录的内容（如 `agents/`、`indicators/`）须归入 `infrastructure/` 下。
@@ -92,6 +97,12 @@ src/modules/<context>/
 
 ---
 
+## HTTP API 响应格式规范
+- **强制使用 BaseResponse**：所有新开发的 REST API 端点**必须**使用 `src/shared/dtos.py` 中的 `BaseResponse[T]` 作为响应包装器，确保统一的响应格式。
+
+
+---
+
 ## 日志规范
 
 - 合理使用日志级别：
@@ -108,7 +119,7 @@ src/modules/<context>/
 ## 响应协议（默认）
 当用户请求解决方案或代码时，除非符合**例外规则**，否则请遵循以下 **三步走流程**：
 1. **架构分析**：识别核心领域和限界上下文；指出架构风险（如循环依赖、逻辑泄露）；若是新模块，提出符合 `vision-and-modules` 的目录结构。
-2. **代码设计**：提供完整的类型提示；为非显而易见的逻辑编写文档字符串（Docstrings）；使用仓储模式（Repository pattern）处理持久化。
+2. **代码设计**：提供完整的类型提示；为非显而易见的逻辑编写文档字符串（Docstrings）；使用仓储模式（Repository pattern）处理持久化；**确保所有 API 端点使用 BaseResponse 包装响应**。
 3. **重构建议**：指出用户代码片段中的"脏代码"；按照整洁架构原则进行重构，并说明重构的原因（可测试性/可维护性）。
 
 ---

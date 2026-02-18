@@ -16,6 +16,7 @@ from src.modules.research.application.financial_auditor_service import (
 from src.modules.research.container import ResearchContainer
 from src.modules.research.domain.exceptions import LLMOutputParseError
 from src.shared.domain.exceptions import BadRequestException
+from src.shared.dtos import BaseResponse
 from src.shared.infrastructure.db.session import get_db_session
 
 router = APIRouter()
@@ -50,7 +51,7 @@ class FinancialAuditApiResponse(BaseModel):
 # ---------- 接口 ----------
 @router.get(
     "/financial-audit",
-    response_model=FinancialAuditApiResponse,
+    response_model=BaseResponse[FinancialAuditApiResponse],
     summary="对指定股票进行财务审计",
     description=(  # noqa: E501
         "根据财务指标数据构建快照，并调用大模型生成证据驱动的 5D 财务审计观点。"
@@ -61,13 +62,18 @@ async def run_financial_audit(
     symbol: str = Query(..., description="股票代码，如 000001.SZ"),
     limit: int = Query(5, ge=1, le=20, description="取最近几期财务数据，默认 5 期"),
     service: FinancialAuditorService = Depends(get_financial_auditor_service),
-) -> FinancialAuditApiResponse:
+) -> BaseResponse[FinancialAuditApiResponse]:
     """
     对单个标的运行财务审计；响应体包含解析结果及 input、financial_indicators、output（由代码填入）。
     """
     try:
         result = await service.run(symbol=symbol.strip(), limit=limit)
-        return FinancialAuditApiResponse(**result)
+        return BaseResponse(
+            success=True,
+            code="FINANCIAL_AUDIT_SUCCESS",
+            message="财务审计成功完成",
+            data=FinancialAuditApiResponse(**result)
+        )
     except BadRequestException as e:
         raise HTTPException(status_code=400, detail=e.message)
     except LLMOutputParseError as e:

@@ -17,6 +17,7 @@ from src.modules.research.application.macro_intelligence_service import (
 from src.modules.research.container import ResearchContainer
 from src.modules.research.domain.exceptions import LLMOutputParseError
 from src.shared.domain.exceptions import BadRequestException
+from src.shared.dtos import BaseResponse
 from src.shared.infrastructure.db.session import get_db_session
 
 router = APIRouter()
@@ -72,7 +73,7 @@ class MacroIntelligenceApiResponse(BaseModel):
 # ---------- 接口 ----------
 @router.get(
     "/macro-intelligence",
-    response_model=MacroIntelligenceApiResponse,
+    response_model=BaseResponse[MacroIntelligenceApiResponse],
     summary="对指定股票进行宏观情报分析",
     description=(
         "基于股票所属行业，通过 Web 搜索获取四维度宏观情报（货币政策、产业政策、宏观经济、行业景气），"
@@ -82,7 +83,7 @@ class MacroIntelligenceApiResponse(BaseModel):
 async def run_macro_intelligence(
     symbol: str = Query(..., description="股票代码，如 000001.SZ"),
     service: MacroIntelligenceService = Depends(get_macro_intelligence_service),
-) -> MacroIntelligenceApiResponse:
+) -> BaseResponse[MacroIntelligenceApiResponse]:
     """
     对单个标的运行宏观情报分析。
 
@@ -102,7 +103,12 @@ async def run_macro_intelligence(
     """
     try:
         result = await service.run(symbol=symbol.strip())
-        return MacroIntelligenceApiResponse(**result)
+        return BaseResponse(
+            success=True,
+            code="MACRO_INTELLIGENCE_SUCCESS",
+            message="宏观情报分析成功完成",
+            data=MacroIntelligenceApiResponse(**result)
+        )
     except BadRequestException as e:
         logger.warning("宏观情报分析请求错误: {}", e.message)
         raise HTTPException(status_code=400, detail=e.message)

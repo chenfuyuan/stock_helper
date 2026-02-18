@@ -32,6 +32,7 @@ from src.modules.llm_platform.infrastructure.persistence.repositories.llm_call_l
 from src.shared.application.queries.external_api_call_log_query_service import (
     ExternalAPICallLogQueryService,
 )
+from src.shared.dtos import BaseResponse
 from src.shared.infrastructure.db.session import get_db_session
 from src.shared.infrastructure.persistence.external_api_call_log_repository import (
     PgExternalAPICallLogRepository,
@@ -58,7 +59,7 @@ async def get_session_detail_query(
 
 @router.get(
     "/research/sessions",
-    response_model=list[SessionSummaryDTO],
+    response_model=BaseResponse[list[SessionSummaryDTO]],
     summary="会话列表",
     description="分页查询研究会话列表，支持按 symbol、时间范围筛选。",
 )
@@ -69,49 +70,60 @@ async def list_sessions(
     created_before: datetime | None = Query(None, description="创建时间截止（含）"),
     skip: int = Query(0, ge=0, description="跳过条数"),
     limit: int = Query(20, ge=1, le=100, description="每页条数"),
-) -> list[SessionSummaryDTO]:
+) -> BaseResponse[list[SessionSummaryDTO]]:
     """GET /research/sessions：会话列表，按 created_at 降序。"""
-    return await query.execute(
+    sessions = await query.execute(
         symbol=symbol,
         created_after=created_after,
         created_before=created_before,
         skip=skip,
         limit=limit,
     )
+    return BaseResponse(
+        success=True,
+        code="SESSION_LIST_SUCCESS",
+        message="会话列表查询成功",
+        data=sessions
+    )
 
 
 @router.get(
     "/research/sessions/{session_id}",
-    response_model=SessionDetailDTO,
+    response_model=BaseResponse[SessionDetailDTO],
     summary="会话详情",
     description="查询单次研究会话详情及全部节点执行记录。",
 )
 async def get_session_detail(
     session_id: UUID,
     query: SessionDetailQuery = Depends(get_session_detail_query),
-) -> SessionDetailDTO:
+) -> BaseResponse[SessionDetailDTO]:
     """GET /research/sessions/{session_id}：会话详情 + NodeExecution 列表。"""
     detail = await query.execute(session_id)
     if detail is None:
         raise HTTPException(status_code=404, detail="会话不存在")
-    return detail
+    return BaseResponse(
+        success=True,
+        code="SESSION_DETAIL_SUCCESS",
+        message="会话详情查询成功",
+        data=detail
+    )
 
 
 @router.get(
     "/research/sessions/{session_id}/llm-calls",
-    response_model=list[LLMCallItemDTO],
+    response_model=BaseResponse[list[LLMCallItemDTO]],
     summary="会话关联的 LLM 调用日志",
     description="返回该会话下所有 LLM 调用的审计日志（列表项，不含完整 prompt/completion）。",
 )
 async def list_session_llm_calls(
     session_id: UUID,
     db: AsyncSession = Depends(get_db_session),
-) -> list[LLMCallItemDTO]:
+) -> BaseResponse[list[LLMCallItemDTO]]:
     """GET /research/sessions/{session_id}/llm-calls：调用 llm_platform 查询服务。"""
     llm_repo = PgLLMCallLogRepository(db)
     llm_query = LLMCallLogQueryService(llm_repo)
     logs = await llm_query.get_by_session_id(session_id)
-    return [
+    llm_calls = [
         LLMCallItemDTO(
             id=str(log.id),
             caller_module=log.caller_module,
@@ -127,23 +139,29 @@ async def list_session_llm_calls(
         )
         for log in logs
     ]
+    return BaseResponse(
+        success=True,
+        code="SESSION_LLM_CALLS_SUCCESS",
+        message="会话 LLM 调用日志查询成功",
+        data=llm_calls
+    )
 
 
 @router.get(
     "/research/sessions/{session_id}/api-calls",
-    response_model=list[ExternalAPICallItemDTO],
+    response_model=BaseResponse[list[ExternalAPICallItemDTO]],
     summary="会话关联的外部 API 调用日志",
     description="返回该会话下所有外部 API 调用的审计日志（列表项）。",
 )
 async def list_session_api_calls(
     session_id: UUID,
     db: AsyncSession = Depends(get_db_session),
-) -> list[ExternalAPICallItemDTO]:
+) -> BaseResponse[list[ExternalAPICallItemDTO]]:
     """GET /research/sessions/{session_id}/api-calls：调用 shared 查询服务。"""
     api_repo = PgExternalAPICallLogRepository(db)
     api_query = ExternalAPICallLogQueryService(api_repo)
     logs = await api_query.get_by_session_id(session_id)
-    return [
+    api_calls = [
         ExternalAPICallItemDTO(
             id=str(log.id),
             service_name=log.service_name,
@@ -155,3 +173,9 @@ async def list_session_api_calls(
         )
         for log in logs
     ]
+    return BaseResponse(
+        success=True,
+        code="SESSION_API_CALLS_SUCCESS",
+        message="会话 API 调用日志查询成功",
+        data=api_calls
+    )

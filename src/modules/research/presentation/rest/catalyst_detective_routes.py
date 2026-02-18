@@ -16,6 +16,7 @@ from src.modules.research.domain.dtos.catalyst_dtos import (
 )
 from src.modules.research.domain.exceptions import LLMOutputParseError
 from src.shared.domain.exceptions import BadRequestException
+from src.shared.dtos import BaseResponse
 from src.shared.infrastructure.db.session import get_db_session
 
 logger = logging.getLogger(__name__)
@@ -55,7 +56,7 @@ class CatalystDetectiveApiResponse(BaseModel):
     catalyst_indicators: str  # The context used
 
 
-@router.get("/catalyst-detective", response_model=CatalystDetectiveApiResponse)
+@router.get("/catalyst-detective", response_model=BaseResponse[CatalystDetectiveApiResponse])
 async def get_catalyst_detective_analysis(
     symbol: str,
     service: CatalystDetectiveService = Depends(get_catalyst_detective_service),
@@ -66,19 +67,24 @@ async def get_catalyst_detective_analysis(
         context = result_dict["catalyst_context"]
         indicators_json = json.dumps(context, ensure_ascii=False)
 
-        return CatalystDetectiveApiResponse(
-            stock_name=context["stock_name"],
-            symbol=symbol,
-            catalyst_assessment=dto["catalyst_assessment"],
-            confidence_score=dto["confidence_score"],
-            catalyst_summary=dto["catalyst_summary"],
-            dimension_analyses=[CatalystDimensionAnalysis(**x) for x in dto["dimension_analyses"]],
-            positive_catalysts=[CatalystEvent(**x) for x in dto["positive_catalysts"]],
-            negative_catalysts=[CatalystEvent(**x) for x in dto["negative_catalysts"]],
-            information_sources=dto["information_sources"],
-            input=result_dict["user_prompt"],
-            output=result_dict["raw_llm_output"],
-            catalyst_indicators=indicators_json,
+        return BaseResponse(
+            success=True,
+            code="CATALYST_DETECTIVE_SUCCESS",
+            message="催化剂侦探分析成功完成",
+            data=CatalystDetectiveApiResponse(
+                stock_name=context["stock_name"],
+                symbol=symbol,
+                catalyst_assessment=dto["catalyst_assessment"],
+                confidence_score=dto["confidence_score"],
+                catalyst_summary=dto["catalyst_summary"],
+                dimension_analyses=[CatalystDimensionAnalysis(**x) for x in dto["dimension_analyses"]],
+                positive_catalysts=[CatalystEvent(**x) for x in dto["positive_catalysts"]],
+                negative_catalysts=[CatalystEvent(**x) for x in dto["negative_catalysts"]],
+                information_sources=dto["information_sources"],
+                input=result_dict["user_prompt"],
+                output=result_dict["raw_llm_output"],
+                catalyst_indicators=indicators_json,
+            )
         )
 
     except BadRequestException as e:

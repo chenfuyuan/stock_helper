@@ -16,6 +16,7 @@ from src.modules.research.application.valuation_modeler_service import (
 from src.modules.research.container import ResearchContainer
 from src.modules.research.domain.exceptions import LLMOutputParseError
 from src.shared.domain.exceptions import BadRequestException
+from src.shared.dtos import BaseResponse
 from src.shared.infrastructure.db.session import get_db_session
 
 router = APIRouter()
@@ -53,7 +54,7 @@ class ValuationModelApiResponse(BaseModel):
 # ---------- 接口 ----------
 @router.get(
     "/valuation-model",
-    response_model=ValuationModelApiResponse,
+    response_model=BaseResponse[ValuationModelApiResponse],
     summary="对指定股票进行估值建模",
     description=(  # noqa: E501
         '基于基本面数据计算标的的"内在价值"与"安全边际"，剥离市场情绪，仅基于估值模型和财务指标进行判断。'
@@ -63,13 +64,18 @@ class ValuationModelApiResponse(BaseModel):
 async def run_valuation_model(
     symbol: str = Query(..., description="股票代码，如 000001.SZ"),
     service: ValuationModelerService = Depends(get_valuation_modeler_service),
-) -> ValuationModelApiResponse:
+) -> BaseResponse[ValuationModelApiResponse]:
     """
     对单个标的运行估值建模；响应体包含解析结果及 input、valuation_indicators、output（由代码填入）。
     """
     try:
         result = await service.run(symbol=symbol.strip())
-        return ValuationModelApiResponse(**result)
+        return BaseResponse(
+            success=True,
+            code="VALUATION_MODEL_SUCCESS",
+            message="估值建模成功完成",
+            data=ValuationModelApiResponse(**result)
+        )
     except BadRequestException as e:
         raise HTTPException(status_code=400, detail=e.message)
     except LLMOutputParseError as e:

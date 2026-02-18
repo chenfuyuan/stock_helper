@@ -17,6 +17,7 @@ from src.modules.judge.presentation.rest.judge_schemas import (
     JudgeVerdictResponse,
 )
 from src.shared.domain.exceptions import AppException
+from src.shared.dtos import BaseResponse
 
 logger = logging.getLogger(__name__)
 
@@ -50,14 +51,14 @@ async def get_judge_service() -> JudgeService:
 
 @router.post(
     "/verdict",
-    response_model=JudgeVerdictResponse,
+    response_model=BaseResponse[JudgeVerdictResponse],
     summary="执行裁决",
     description="根据标的与辩论结果执行综合裁决，返回可执行操作指令。",
 )
 async def post_judge_verdict(
     body: JudgeVerdictRequest,
     service: JudgeService = Depends(get_judge_service),
-) -> JudgeVerdictResponse:
+) -> BaseResponse[JudgeVerdictResponse]:
     """POST /api/v1/judge/verdict：入参校验后调用 JudgeService.run，异常映射为 400/500。"""
     if not body.symbol or not str(body.symbol).strip():
         raise HTTPException(status_code=400, detail="symbol 为必填")
@@ -69,17 +70,22 @@ async def post_judge_verdict(
             debate_outcome=body.debate_outcome,
         )
         verdict: VerdictDTO = await service.run(judge_input)
-        return JudgeVerdictResponse(
-            symbol=verdict.symbol,
-            action=verdict.action,
-            position_percent=verdict.position_percent,
-            confidence=verdict.confidence,
-            entry_strategy=verdict.entry_strategy,
-            stop_loss=verdict.stop_loss,
-            take_profit=verdict.take_profit,
-            time_horizon=verdict.time_horizon,
-            risk_warnings=verdict.risk_warnings,
-            reasoning=verdict.reasoning,
+        return BaseResponse(
+            success=True,
+            code="JUDGE_VERDICT_SUCCESS",
+            message="投资裁决成功完成",
+            data=JudgeVerdictResponse(
+                symbol=verdict.symbol,
+                action=verdict.action,
+                position_percent=verdict.position_percent,
+                confidence=verdict.confidence,
+                entry_strategy=verdict.entry_strategy,
+                stop_loss=verdict.stop_loss,
+                take_profit=verdict.take_profit,
+                time_horizon=verdict.time_horizon,
+                risk_warnings=verdict.risk_warnings,
+                reasoning=verdict.reasoning,
+            )
         )
     except LLMOutputParseError as e:
         logger.warning("裁决 LLM 解析失败: %s", e.message)
