@@ -10,8 +10,23 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.modules.data_engineering.application.commands.sync_akshare_market_data_cmd import (
     SyncAkShareMarketDataCmd,
 )
+from src.modules.data_engineering.application.commands.sync_broken_board_cmd import (
+    SyncBrokenBoardCmd,
+)
 from src.modules.data_engineering.application.commands.sync_concept_data_cmd import (
     SyncConceptDataCmd,
+)
+from src.modules.data_engineering.application.commands.sync_dragon_tiger_cmd import (
+    SyncDragonTigerCmd,
+)
+from src.modules.data_engineering.application.commands.sync_limit_up_pool_cmd import (
+    SyncLimitUpPoolCmd,
+)
+from src.modules.data_engineering.application.commands.sync_previous_limit_up_cmd import (
+    SyncPreviousLimitUpCmd,
+)
+from src.modules.data_engineering.application.commands.sync_sector_capital_flow_cmd import (
+    SyncSectorCapitalFlowCmd,
 )
 from src.modules.data_engineering.application.queries.get_broken_board_by_date import (
     GetBrokenBoardByDateUseCase,
@@ -209,4 +224,39 @@ class DataEngineeringContainer:
         """组装按日期查询板块资金流向的 UseCase。"""
         return GetSectorCapitalFlowByDateUseCase(
             sector_capital_flow_repo=self._sector_capital_flow_repo
+        )
+    
+    def get_sync_limit_up_pool_cmd(self) -> SyncLimitUpPoolCmd:
+        """组装涨停池数据同步命令。"""
+        return SyncLimitUpPoolCmd(
+            sentiment_provider=self._sentiment_provider,
+            limit_up_pool_repo=self._limit_up_pool_repo,
+        )
+    
+    def get_sync_broken_board_cmd(self) -> SyncBrokenBoardCmd:
+        """组装炸板池数据同步命令。"""
+        return SyncBrokenBoardCmd(
+            sentiment_provider=self._sentiment_provider,
+            broken_board_repo=self._broken_board_repo,
+        )
+    
+    def get_sync_previous_limit_up_cmd(self) -> SyncPreviousLimitUpCmd:
+        """组装昨日涨停表现数据同步命令。"""
+        return SyncPreviousLimitUpCmd(
+            sentiment_provider=self._sentiment_provider,
+            previous_limit_up_repo=self._previous_limit_up_repo,
+        )
+    
+    def get_sync_dragon_tiger_cmd(self) -> SyncDragonTigerCmd:
+        """组装龙虎榜数据同步命令。"""
+        return SyncDragonTigerCmd(
+            dragon_tiger_provider=self._dragon_tiger_provider,
+            dragon_tiger_repo=self._dragon_tiger_repo,
+        )
+    
+    def get_sync_sector_capital_flow_cmd(self) -> SyncSectorCapitalFlowCmd:
+        """组装板块资金流向数据同步命令。"""
+        return SyncSectorCapitalFlowCmd(
+            capital_flow_provider=self._capital_flow_provider,
+            sector_capital_flow_repo=self._sector_capital_flow_repo,
         )

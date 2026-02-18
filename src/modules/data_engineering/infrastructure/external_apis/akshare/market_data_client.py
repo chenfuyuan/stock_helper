@@ -259,6 +259,17 @@ class AkShareMarketDataClient(
 
             date_str = trade_date.strftime("%Y%m%d")
             logger.info(f"开始获取龙虎榜数据：{date_str}")
+            
+            # 检查是否为交易日，避免 akshare API 在非交易日时的 bug
+            try:
+                trade_cal = ak.tool_trade_date_hist_sina()
+                is_trade_day = date_str in trade_cal['trade_date'].tolist()
+                if not is_trade_day:
+                    logger.info(f"日期 {date_str} 非交易日，跳过龙虎榜数据获取")
+                    return []
+            except Exception as e:
+                logger.warning(f"无法检查交易日状态，继续尝试获取数据：{str(e)}")
+            
             df: pd.DataFrame = await self._rate_limited_call(
                 ak.stock_lhb_detail_em, start_date=date_str, end_date=date_str
             )
