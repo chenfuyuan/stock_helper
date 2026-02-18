@@ -49,12 +49,3 @@
 - **语言**：解释用 **中文（简体）**；代码使用英文命名，但**新增的注释与 Docstring 必须使用中文，并且说明清楚做什么、为什么这样做以及关键边界条件**；日志内容也应使用中文，便于排查问题。
 
 ---
-
-## OpenSpec 工作流提示
-
-本项目使用 **OpenSpec**。当用户提出新需求或变更时：
-
-- 若用户使用 `/opsx:new` 或明确要求「按 OpenSpec 做 change」：按 OpenSpec 流程创建 `openspec/changes/<change-id>/`（proposal、specs、design、tasks），并遵循 `openspec/config.yaml` 中的 project context。
-- 实现时以 `openspec/specs/vision-and-modules.md` 为模块边界与目录依据，以 `openspec/specs/tech-standards.md` 为代码与响应规范；**测试约定**：Spec 中每个 Scenario 在交付时须有对应测试，实现顺序可先实现再补测，见 tech-standards § OpenSpec 与测试约定。
-
-**用户提出对 OpenSpec 的修改时**（包括对 proposal/design/specs/tasks 或对 `vision-and-modules.md`、`tech-standards.md` 的修改）：**必须先做合理性分析，再决定是否落稿**。分析维度：是否与现有愿景、模块边界、技术规范一致；是否与当前 change 内已有决策或能力冲突；是否引入新风险或歧义。若合理则简要说明后执行修改；若部分合理则说明顾虑并建议措辞或请用户确认；若不合理则说明理由（引用规范/决策）并拒绝落地，或只采纳合理部分并注明保留意见。详见 [openspec/specs/tech-standards.md § OpenSpec: Review User-Proposed Modifications](openspec/specs/tech-standards.md)。
