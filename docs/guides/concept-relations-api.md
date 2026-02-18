@@ -1,108 +1,25 @@
-# 概念关系 API 文档
+# 概念关系 API 文档 (已废弃)
 
-## 基础查询
+**⚠️ 重要提醒**: 概念关系功能已被移除，原因是该功能基于错误假设，将不同维度的"概念"混为一谈建立伪产业链关系。
 
-### 查看所有概念关系
-```bash
-curl "http://localhost:8000/api/v1/knowledge-graph/concept-relations?limit=10"
-```
+## 移除的功能
 
-### 查看特定概念的关系
-```bash
-curl "http://localhost:8000/api/v1/knowledge-graph/concepts/BK0729/relations"
-```
+以下API端点已不再可用：
+- `POST /api/v1/knowledge-graph/concept-relations` - 创建概念关系
+- `GET /api/v1/knowledge-graph/concept-relations` - 查询概念关系列表  
+- `GET /api/v1/knowledge-graph/concept-relations/{id}` - 查询单条概念关系
+- `PUT /api/v1/knowledge-graph/concept-relations/{id}` - 更新概念关系
+- `DELETE /api/v1/knowledge-graph/concept-relations/{id}` - 删除概念关系
+- `POST /api/v1/knowledge-graph/concept-relations/llm-suggest` - LLM推荐概念关系
+- `POST /api/v1/knowledge-graph/concept-relations/sync` - 同步概念关系
+- `GET /api/v1/knowledge-graph/concepts/{code}/relations` - 查询概念关系网络
+- `GET /api/v1/knowledge-graph/concepts/{code}/chain` - 查询产业链路径
 
-### 查询产业链路径
-```bash
-curl "http://localhost:8000/api/v1/knowledge-graph/concepts/BK0729/chain?direction=outgoing&max_depth=2"
-```
+## 保留的功能
 
-## LLM 智能分析
+以下功能仍然可用：
+- 基础概念板块信息查询
+- 股票-概念映射关系查询  
+- 股票图谱查询和同步
 
-### LLM 推荐概念关系
-```bash
-curl -X POST http://localhost:8000/api/v1/knowledge-graph/concept-relations/llm-suggest \
-  -H "Content-Type: application/json" \
-  -d '{
-    "concept_codes_with_names": [
-      ["BK0729", "银行"],
-      ["BK0480", "证券"],
-      ["BK0625", "保险"]
-    ],
-    "min_confidence": 0.6
-  }'
-```
-
-## 手动管理
-
-### 创建手动关系
-```bash
-curl -X POST http://localhost:8000/api/v1/knowledge-graph/concept-relations \
-  -H "Content-Type: application/json" \
-  -d '{
-    "source_concept_code": "BK0729",
-    "target_concept_code": "BK0480",
-    "relation_type": "IS_UPSTREAM_OF",
-    "note": "银行是证券的上游资金来源",
-    "reason": "银行提供资金支持证券业务发展"
-  }'
-```
-
-### 更新关系状态
-```bash
-curl -X PUT http://localhost:8000/api/v1/knowledge-graph/concept-relations/{id} \
-  -H "Content-Type: application/json" \
-  -d '{"status": "CONFIRMED"}'
-```
-
-### 删除关系
-```bash
-curl -X DELETE http://localhost:8000/api/v1/knowledge-graph/concept-relations/{id}
-```
-
-## 数据同步
-
-### 同步到 Neo4j
-```bash
-curl -X POST http://localhost:8000/api/v1/knowledge-graph/concept-relations/sync \
-  -H "Content-Type: application/json" \
-  -d '{
-    "mode": "incremental",
-    "batch_size": 100
-  }'
-```
-
-### 重建同步
-```bash
-curl -X POST http://localhost:8000/api/v1/knowledge-graph/concept-relations/sync \
-  -H "Content-Type: application/json" \
-  -d '{
-    "mode": "rebuild",
-    "batch_size": 100
-  }'
-```
-
-## 高级查询
-
-### 按状态筛选
-```bash
-curl "http://localhost:8000/api/v1/knowledge-graph/concept-relations?status=CONFIRMED"
-```
-
-### 按关系类型筛选
-```bash
-curl "http://localhost:8000/api/v1/knowledge-graph/concept-relations?relation_type=COMPETES_WITH"
-```
-
-### 按置信度筛选
-```bash
-curl "http://localhost:8000/api/v1/knowledge-graph/concept-relations?min_confidence=0.7"
-```
-
-## 关系类型说明
-
-- `IS_UPSTREAM_OF` - 上游关系
-- `IS_DOWNSTREAM_OF` - 下游关系  
-- `COMPETES_WITH` - 竞争关系
-- `IS_PART_OF` - 组成关系
-- `ENABLER_FOR` - 赋能关系
+请使用股票图谱相关API进行数据分析。

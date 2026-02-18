@@ -7,10 +7,6 @@ from src.modules.coordinator.presentation.rest import (
 from src.modules.data_engineering.presentation.rest import router as de_router
 from src.modules.debate.presentation.rest import router as debate_router
 from src.modules.judge.presentation.rest import router as judge_router
-from src.modules.knowledge_center.presentation.rest.concept_relation_router import (
-    concept_query_router,
-    router as concept_relation_router,
-)
 from src.modules.knowledge_center.presentation.rest.graph_router import (
     router as knowledge_graph_router,
 )
@@ -31,8 +27,6 @@ api_router.include_router(scheduler_router, prefix="/scheduler", tags=["schedule
 api_router.include_router(debate_router)
 api_router.include_router(judge_router)
 api_router.include_router(knowledge_graph_router)
-api_router.include_router(concept_relation_router)
-api_router.include_router(concept_query_router)
 api_router.include_router(llm_router)
 api_router.include_router(market_insight_router)
 api_router.include_router(research_router)

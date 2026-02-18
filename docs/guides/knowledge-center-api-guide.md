@@ -380,7 +380,7 @@ curl -X GET "http://localhost:8000/api/v1/knowledge-graph/stocks/000001.SZ/neigh
 # 1. 查询"船舶制造"概念的所有股票
 curl -X GET "http://localhost:8000/api/v1/knowledge-graph/stocks/300008.SZ/neighbors?dimension=concept&dimension_name=船舶制造&limit=20"
 
-# 2. 获取包含概念关系的完整图谱
+# 2. 获取股票的完整图谱
 curl -X GET "http://localhost:8000/api/v1/knowledge-graph/stocks/300008.SZ/graph"
 ```
 

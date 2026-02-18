@@ -1,17 +1,17 @@
 """
-概念关系分析器 Prompt 运行时加载：从资源目录读取 system.md、user.md，不硬编码在代码中。
+Prompt 运行时加载：从资源目录读取 system.md、user.md，不硬编码在代码中。
 """
 
 import json
 from pathlib import Path
 from typing import Optional
 
-# 默认资源目录：相对于本文件定位 concept_relation_analyzer/prompts
-_DEFAULT_PROMPTS_DIR = Path(__file__).resolve().parent / "agents" / "concept_relation_analyzer" / "prompts"
+# 默认资源目录：相对于本文件定位
+_DEFAULT_PROMPTS_DIR = Path(__file__).resolve().parent / "agents" / "prompts"
 
 
 def load_system_prompt(prompts_dir: Optional[Path] = None) -> str:
-    """加载概念关系分析器 System Prompt。"""
+    """加载 System Prompt。"""
     base = prompts_dir or _DEFAULT_PROMPTS_DIR
     path = base / "system.md"
     if not path.exists():
@@ -20,7 +20,7 @@ def load_system_prompt(prompts_dir: Optional[Path] = None) -> str:
 
 
 def load_user_prompt_template(prompts_dir: Optional[Path] = None) -> str:
-    """加载概念关系分析器 User Prompt 模板（含占位符）。"""
+    """加载 User Prompt 模板（含占位符）。"""
     base = prompts_dir or _DEFAULT_PROMPTS_DIR
     path = base / "user.md"
     if not path.exists():

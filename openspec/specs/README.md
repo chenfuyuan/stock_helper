@@ -60,7 +60,7 @@
 **支撑模块**（不直接参与流水线编排）：
 - **data_engineering**：硬数据底座（股票列表、日线行情、财务指标）
 - **llm_platform**：大模型网关 + Web 搜索网关（博查 AI）
-- **knowledge_center**：知识图谱（股票知识图谱、概念关系网络）
+- **knowledge_center**：知识图谱（股票知识图谱、概念板块信息）
 - **market_insight**：市场洞察（市场情绪、舆情分析）
 
 ---
@@ -141,7 +141,7 @@
 
 | Spec | 一句话描述 | 状态 |
 |------|-----------|------|
-| [knowledge-center/spec.md](knowledge-center/spec.md) | 知识图谱 Schema 定义、知识图谱数据同步、知识图谱查询、概念关系手动管理、概念关系图谱同步、概念关系图谱查询、概念关系 LLM 推荐 | ✅ 已实现 |
+| [knowledge-center/spec.md](knowledge-center/spec.md) | 知识图谱 Schema 定义、知识图谱数据同步、知识图谱查询 | ✅ 已实现 |
 
 ---
 
