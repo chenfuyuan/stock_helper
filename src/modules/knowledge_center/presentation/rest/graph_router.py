@@ -260,3 +260,33 @@ async def sync_graph(
     except Exception as e:
         logger.error(f"同步图谱数据异常: {str(e)}")
         raise HTTPException(status_code=500, detail="同步失败")
+
+
+@router.delete(
+    "/clear",
+    summary="清空知识图谱",
+    description="删除所有图谱节点和关系，用于完全重建图谱。此操作不可逆，请谨慎使用！",
+)
+async def clear_graph(
+    service: GraphService = Depends(get_graph_service),
+) -> dict:
+    """
+    清空知识图谱。
+    
+    删除所有节点和关系，用于完全重建图谱。
+    
+    Returns:
+        清空结果统计信息
+    """
+    try:
+        result = await service.clear_all_graph_data()
+        return result
+    except GraphSyncError as e:
+        logger.error(f"清空图谱失败: {str(e)}")
+        raise HTTPException(status_code=e.status_code, detail=e.message)
+    except Neo4jConnectionError as e:
+        logger.error(f"Neo4j 连接失败: {str(e)}")
+        raise HTTPException(status_code=e.status_code, detail=e.message)
+    except Exception as e:
+        logger.error(f"清空图谱异常: {str(e)}")
+        raise HTTPException(status_code=500, detail="清空失败")

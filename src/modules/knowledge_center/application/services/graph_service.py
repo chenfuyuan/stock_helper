@@ -184,3 +184,17 @@ class GraphService:
             depth=depth,
         )
         return graph
+
+    async def clear_all_graph_data(self) -> dict:
+        """
+        清空整个图谱数据。
+        
+        删除所有节点和关系，用于完全重建图谱。
+        
+        Returns:
+            dict：包含删除的节点数和关系数的统计信息
+        """
+        logger.info("GraphService: 开始清空整个图谱数据")
+        result = await self._graph_repo.clear_all_graph_data()
+        logger.info(f"GraphService: 图谱清空完成 - {result.get('message', '')}")
+        return result

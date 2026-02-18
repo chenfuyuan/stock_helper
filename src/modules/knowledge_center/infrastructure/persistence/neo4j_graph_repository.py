@@ -724,6 +724,55 @@ class Neo4jGraphRepository(IGraphRepository):
                 details={"error": str(e)},
             )
 
+    async def clear_all_graph_data(self) -> dict:
+        """
+        清空整个图谱数据。
+        
+        删除所有节点和关系，用于完全重建图谱。
+        
+        Returns:
+            dict：包含删除的节点数和关系数的统计信息
+        """
+        # 先统计当前数据量
+        count_cypher = """
+        MATCH (n) 
+        OPTIONAL MATCH ()-[r]->() 
+        RETURN count(DISTINCT n) AS node_count, count(r) AS relationship_count
+        """
+        
+        # 清空所有数据
+        clear_cypher = """
+        MATCH (n) 
+        DETACH DELETE n
+        """
+        
+        try:
+            with self._driver.session() as session:
+                # 1. 统计当前数据量
+                count_result = session.run(count_cypher)
+                count_record = count_result.single()
+                node_count = count_record["node_count"] if count_record else 0
+                relationship_count = count_record["relationship_count"] if count_record else 0
+                
+                logger.info(f"开始清空图谱，当前节点数: {node_count}, 关系数: {relationship_count}")
+                
+                # 2. 执行清空操作
+                session.run(clear_cypher)
+                
+                logger.info(f"图谱清空完成，已删除 {node_count} 个节点和 {relationship_count} 条关系")
+                
+                return {
+                    "deleted_nodes": node_count,
+                    "deleted_relationships": relationship_count,
+                    "message": f"成功清空图谱，删除了 {node_count} 个节点和 {relationship_count} 条关系"
+                }
+        except Exception as e:
+            logger.error(f"清空图谱失败: {str(e)}")
+            raise GraphSyncError(
+                message="清空图谱失败",
+                details={"error": str(e)},
+            )
+
     async def find_concept_relations(
         self,
         concept_code: str,

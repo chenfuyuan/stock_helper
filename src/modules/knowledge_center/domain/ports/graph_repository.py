@@ -183,6 +183,17 @@ class IGraphRepository(ABC):
         """
 
     @abstractmethod
+    async def clear_all_graph_data(self) -> dict:
+        """
+        清空整个图谱数据。
+        
+        删除所有节点和关系，用于完全重建图谱。
+        
+        Returns:
+            dict：包含删除的节点数和关系数的统计信息
+        """
+
+    @abstractmethod
     async def find_concept_relations(
         self,
         concept_code: str,
