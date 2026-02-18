@@ -15,6 +15,9 @@ from src.modules.data_engineering.application.commands.sync_daily_history_cmd im
 from src.modules.data_engineering.application.commands.sync_stock_list_cmd import (
     SyncStockListCmd,
 )
+from src.modules.data_engineering.application.commands.sync_incremental_finance_cmd import (
+    SyncIncrementalFinanceCmd,
+)
 
 # Domain ports
 from src.modules.data_engineering.domain.ports.providers.market_quote_provider import (
@@ -23,11 +26,20 @@ from src.modules.data_engineering.domain.ports.providers.market_quote_provider i
 from src.modules.data_engineering.domain.ports.providers.stock_basic_provider import (
     IStockBasicProvider,
 )
+from src.modules.data_engineering.domain.ports.providers.financial_data_provider import (
+    IFinancialDataProvider,
+)
 from src.modules.data_engineering.domain.ports.repositories.market_quote_repo import (
     IMarketQuoteRepository,
 )
 from src.modules.data_engineering.domain.ports.repositories.stock_basic_repo import (
     IStockBasicRepository,
+)
+from src.modules.data_engineering.domain.ports.repositories.financial_data_repo import (
+    IFinancialDataRepository,
+)
+from src.modules.data_engineering.domain.ports.repositories.sync_task_repo import (
+    ISyncTaskRepository,
 )
 
 # Infrastructure
@@ -39,6 +51,12 @@ from src.modules.data_engineering.infrastructure.persistence.repositories.pg_quo
 )
 from src.modules.data_engineering.infrastructure.persistence.repositories.pg_stock_repo import (
     StockRepositoryImpl,
+)
+from src.modules.data_engineering.infrastructure.persistence.repositories.pg_finance_repo import (
+    StockFinanceRepositoryImpl,
+)
+from src.modules.data_engineering.infrastructure.persistence.repositories.pg_sync_task_repo import (
+    SyncTaskRepositoryImpl,
 )
 
 # Shared
@@ -56,6 +74,17 @@ class SyncStockDailyResponse(BaseModel):
     """股票日线同步响应模型。"""
     synced_stocks: int
     total_rows: int
+    message: str
+
+
+class SyncFinanceIncrementalResponse(BaseModel):
+    """财务增量同步响应模型。"""
+    status: str
+    synced_count: int
+    failed_count: int
+    retry_count: int
+    retry_success_count: int
+    target_period: str
     message: str
 
 
@@ -101,6 +130,31 @@ async def get_sync_daily_use_case(
     provider: IMarketQuoteProvider = Depends(get_provider),
 ) -> SyncDailyHistoryCmd:
     return SyncDailyHistoryCmd(stock_repo, daily_repo, provider)
+
+
+async def get_finance_repo(
+    db: AsyncSession = Depends(get_db_session),
+) -> IFinancialDataRepository:
+    return StockFinanceRepositoryImpl(db)
+
+
+async def get_sync_task_repo(
+    db: AsyncSession = Depends(get_db_session),
+) -> ISyncTaskRepository:
+    return SyncTaskRepositoryImpl(db)
+
+
+async def get_finance_provider() -> TushareClient:
+    return TushareClient()
+
+
+async def get_sync_finance_incremental_use_case(
+    finance_repo: IFinancialDataRepository = Depends(get_finance_repo),
+    stock_repo: IStockBasicRepository = Depends(get_stock_repo),
+    sync_task_repo: ISyncTaskRepository = Depends(get_sync_task_repo),
+    data_provider: IFinancialDataProvider = Depends(get_finance_provider),
+) -> SyncIncrementalFinanceCmd:
+    return SyncIncrementalFinanceCmd(finance_repo, stock_repo, sync_task_repo, data_provider)
 
 
 # API Routes
@@ -159,6 +213,52 @@ async def sync_stock_daily_incremental(
         )
     except Exception as e:
         logger.exception(f"日线增量同步失败：{str(e)}")
+        raise e
+
+
+@router.post("/sync/finance/incremental", response_model=BaseResponse[SyncFinanceIncrementalResponse])
+async def sync_finance_incremental(
+    actual_date: Optional[str] = None,
+    use_case: SyncIncrementalFinanceCmd = Depends(get_sync_finance_incremental_use_case),
+):
+    """
+    财务数据增量同步（日常操作）
+    
+    用于定期同步最新披露的财务数据，支持多策略同步：
+    - 策略 A：今日披露名单驱动（高优先级）
+    - 策略 B：长尾轮询补齐缺失数据（低优先级）
+    - 策略 C：失败重试机制（前置步骤）
+    
+    Args:
+        actual_date: 可选，指定同步日期 (YYYYMMDD)，默认为当天
+    
+    Returns:
+        包含同步结果详情的响应，包括成功/失败数量、重试统计等
+    """
+    logger.info(f"收到财务增量同步请求：actual_date={actual_date}")
+    try:
+        result = await use_case.execute(actual_date=actual_date)
+        logger.info(
+            f"财务增量同步完成：成功 {result.synced_count} 只，"
+            f"失败 {result.failed_count} 只，目标期间 {result.target_period}"
+        )
+
+        return BaseResponse(
+            success=True,
+            code="FINANCE_INCREMENTAL_SYNC_SUCCESS",
+            message="财务数据增量同步成功",
+            data=SyncFinanceIncrementalResponse(
+                status=result.status,
+                synced_count=result.synced_count,
+                failed_count=result.failed_count,
+                retry_count=result.retry_count,
+                retry_success_count=result.retry_success_count,
+                target_period=result.target_period,
+                message=result.message,
+            ),
+        )
+    except Exception as e:
+        logger.exception(f"财务增量同步失败：{str(e)}")
         raise e
 
 
