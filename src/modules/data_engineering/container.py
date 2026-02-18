@@ -13,6 +13,9 @@ from src.modules.data_engineering.application.commands.sync_akshare_market_data_
 from src.modules.data_engineering.application.commands.sync_broken_board_cmd import (
     SyncBrokenBoardCmd,
 )
+from src.modules.data_engineering.application.commands.sync_concept_data_incremental_cmd import (
+    SyncConceptDataIncrementalCmd,
+)
 from src.modules.data_engineering.application.commands.sync_concept_data_cmd import (
     SyncConceptDataCmd,
 )
@@ -177,6 +180,13 @@ class DataEngineeringContainer:
     def get_concept_repository(self) -> IConceptRepository:
         """获取概念数据仓储实例，供 KC 模块使用。"""
         return self._concept_repo
+
+    def get_sync_concept_data_incremental_cmd(self) -> SyncConceptDataIncrementalCmd:
+        """组装概念数据增量同步命令。"""
+        return SyncConceptDataIncrementalCmd(
+            concept_provider=self._concept_provider,
+            concept_repo=self._concept_repo,
+        )
 
     def get_sync_concept_data_cmd(self) -> SyncConceptDataCmd:
         """组装概念数据同步命令。"""

@@ -23,6 +23,19 @@ class IConceptRepository(ABC):
         """
 
     @abstractmethod
+    async def upsert_concept_with_stocks(self, concept: Concept, stocks: list[ConceptStock]) -> int:
+        """
+        在一个事务中完成概念 UPSERT 和成份股替换
+        
+        Args:
+            concept: 概念对象
+            stocks: 成份股列表
+            
+        Returns:
+            int: 总影响的行数（概念1行 + 成份股行数）
+        """
+
+    @abstractmethod
     async def replace_concept_stocks(self, concept_code: str, stocks: list[ConceptStock]) -> int:
         """
         替换指定概念的成份股映射（先清后建）

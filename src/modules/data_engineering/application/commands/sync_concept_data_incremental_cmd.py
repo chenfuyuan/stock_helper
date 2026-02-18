@@ -75,11 +75,8 @@ class SyncConceptDataIncrementalCmd(BaseUseCase):
                     concept_info.name
                 )
 
-                # 立即落库概念记录
+                # 在单个事务中完成概念和成份股的落库
                 concept = Concept(code=concept_info.code, name=concept_info.name)
-                concept_rows = await self.concept_repo.upsert_concept(concept)
-                
-                # 立即落库成份股映射
                 stocks = [
                     ConceptStock(
                         concept_code=concept_info.code,
@@ -88,16 +85,15 @@ class SyncConceptDataIncrementalCmd(BaseUseCase):
                     )
                     for constituent in constituents
                 ]
-                stock_rows = await self.concept_repo.replace_concept_stocks(
-                    concept_info.code, stocks
-                )
+                
+                total_rows = await self.concept_repo.upsert_concept_with_stocks(concept, stocks)
 
                 success_count += 1
                 total_stocks += len(constituents)
                 
                 logger.info(
                     f"[{idx}/{total_concepts}] ✓ 概念「{concept_info.name}」({concept_info.code}) "
-                    f"同步完成：概念 {concept_rows} 行，成份股 {stock_rows} 行"
+                    f"事务提交：总计 {total_rows} 行"
                 )
 
             except Exception as e:

@@ -24,6 +24,49 @@ class PgConceptRepository(BaseRepository[ConceptModel], IConceptRepository):
     def __init__(self, session):
         super().__init__(ConceptModel, session)
 
+    async def upsert_concept_with_stocks(self, concept: Concept, stocks: list[ConceptStock]) -> int:
+        """
+        在一个事务中完成概念 UPSERT 和成份股替换
+        
+        Args:
+            concept: 概念对象
+            stocks: 成份股列表
+            
+        Returns:
+            int: 总影响的行数（概念1行 + 成份股行数）
+        """
+        # UPSERT 概念记录
+        concept_data = concept.model_dump(exclude={"id"}, exclude_unset=True)
+        concept_stmt = insert(ConceptModel).values(**concept_data)
+        concept_stmt = concept_stmt.on_conflict_do_update(
+            index_elements=["code"],
+            set_={
+                "name": concept_stmt.excluded.name,
+                "updated_at": concept_stmt.excluded.updated_at,
+            },
+        )
+        await self.session.execute(concept_stmt)
+        
+        # 替换该概念的成份股映射
+        await self.session.execute(
+            delete(ConceptStockModel).where(ConceptStockModel.concept_code == concept.code)
+        )
+        
+        total_rows = 1  # 概念记录1行
+        
+        if stocks:
+            mapping_dicts = [
+                stock.model_dump(exclude={"id"}, exclude_unset=True) for stock in stocks
+            ]
+            await self.session.execute(insert(ConceptStockModel).values(mapping_dicts))
+            total_rows += len(stocks)
+        
+        # 统一提交事务
+        await self.session.commit()
+        
+        logger.debug(f"概念 {concept.code} 事务提交：概念1行，成份股{len(stocks)}行")
+        return total_rows
+
     async def upsert_concept(self, concept: Concept) -> int:
         """
         单个概念 UPSERT（by code）
