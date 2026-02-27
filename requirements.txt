@@ -23,7 +23,7 @@ pytest-asyncio
 # 代码质量工具
 flake8
 mypy
-black
+black==25.1.0
 isort
 autoflake
 pytest-cov
