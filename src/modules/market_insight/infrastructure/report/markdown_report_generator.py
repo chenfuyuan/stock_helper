@@ -367,7 +367,7 @@ class MarkdownReportGenerator:
                 lines.append("| 板块名称 | 净流入(万) | 涨跌幅(%) |")
                 lines.append("|---------|-----------|----------|")
                 for sector in top_inflows[:5]:
-                    sector_name = sector.get('sector_name', '')
+                    sector_name = sector.get("sector_name", "")
                     net_amount = f"{sector.get('net_amount', 0):.0f}"
                     pct_chg = f"{sector.get('pct_chg', 0):.2f}"
                     lines.append(f"| {sector_name} | {net_amount} | {pct_chg} |")
