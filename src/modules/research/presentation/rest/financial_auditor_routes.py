@@ -72,7 +72,7 @@ async def run_financial_audit(
             success=True,
             code="FINANCIAL_AUDIT_SUCCESS",
             message="财务审计成功完成",
-            data=FinancialAuditApiResponse(**result)
+            data=FinancialAuditApiResponse(**result),
         )
     except BadRequestException as e:
         raise HTTPException(status_code=400, detail=e.message)

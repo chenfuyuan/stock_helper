@@ -59,9 +59,7 @@ class PgSectorCapitalFlowRepository(
         """
         查询指定日期的板块资金流向记录
         """
-        stmt = select(SectorCapitalFlowModel).where(
-            SectorCapitalFlowModel.trade_date == trade_date
-        )
+        stmt = select(SectorCapitalFlowModel).where(SectorCapitalFlowModel.trade_date == trade_date)
 
         if sector_type:
             stmt = stmt.where(SectorCapitalFlowModel.sector_type == sector_type)
@@ -70,6 +68,7 @@ class PgSectorCapitalFlowRepository(
         models = result.scalars().all()
 
         import uuid
+
         return [
             SectorCapitalFlow(
                 id=uuid.UUID(int=model.id),  # 将整数ID转换为UUID

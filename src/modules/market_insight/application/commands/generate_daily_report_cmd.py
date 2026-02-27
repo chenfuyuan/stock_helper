@@ -21,18 +21,18 @@ from src.modules.market_insight.domain.dtos.insight_dtos import ConceptInfoDTO
 from src.modules.market_insight.domain.ports.capital_flow_data_port import ICapitalFlowDataPort
 from src.modules.market_insight.domain.ports.concept_data_port import IConceptDataPort
 from src.modules.market_insight.domain.ports.market_data_port import IMarketDataPort
-from src.modules.market_insight.domain.ports.sentiment_data_port import ISentimentDataPort
 from src.modules.market_insight.domain.ports.repositories.concept_heat_repo import (
     IConceptHeatRepository,
 )
 from src.modules.market_insight.domain.ports.repositories.limit_up_repo import (
     ILimitUpRepository,
 )
-from src.modules.market_insight.domain.services.concept_heat_calculator import (
-    ConceptHeatCalculator,
-)
+from src.modules.market_insight.domain.ports.sentiment_data_port import ISentimentDataPort
 from src.modules.market_insight.domain.services.capital_flow_analyzer import (
     CapitalFlowAnalyzer,
+)
+from src.modules.market_insight.domain.services.concept_heat_calculator import (
+    ConceptHeatCalculator,
 )
 from src.modules.market_insight.domain.services.limit_up_scanner import LimitUpScanner
 from src.modules.market_insight.domain.services.sentiment_analyzer import SentimentAnalyzer
@@ -117,9 +117,7 @@ class GenerateDailyReportCmd:
                 )
 
         # 4. 计算板块热度
-        concept_heats = self._concept_heat_calculator.calculate(
-            concepts, daily_bars_dict
-        )
+        concept_heats = self._concept_heat_calculator.calculate(concepts, daily_bars_dict)
         logger.info(f"计算出 {len(concept_heats)} 个概念的热度")
 
         # 5. 扫描涨停股
@@ -169,7 +167,9 @@ class GenerateDailyReportCmd:
         capital_flow_analysis: CapitalFlowAnalysisDTO | None = None
         try:
             dragon_tiger = await self._capital_flow_data_port.get_dragon_tiger(trade_date)
-            sector_capital_flow = await self._capital_flow_data_port.get_sector_capital_flow(trade_date)
+            sector_capital_flow = await self._capital_flow_data_port.get_sector_capital_flow(
+                trade_date
+            )
 
             # 通过领域服务分析
             dragon_tiger_analysis = self._capital_flow_analyzer.analyze_dragon_tiger(dragon_tiger)
@@ -191,11 +191,13 @@ class GenerateDailyReportCmd:
         report_path = ""
         if concept_heats or sentiment_metrics or capital_flow_analysis:
             # 按 avg_pct_chg 降序排序
-            concept_heats_sorted = sorted(
-                concept_heats, key=lambda x: x.avg_pct_chg, reverse=True
-            )
+            concept_heats_sorted = sorted(concept_heats, key=lambda x: x.avg_pct_chg, reverse=True)
             report_path = self._report_generator.generate_extended_report(
-                concept_heats_sorted, limit_up_stocks, sentiment_metrics, capital_flow_analysis, top_n=10
+                concept_heats_sorted,
+                limit_up_stocks,
+                sentiment_metrics,
+                capital_flow_analysis,
+                top_n=10,
             )
             logger.info(f"生成扩展 Markdown 报告: {report_path}")
 
@@ -213,5 +215,7 @@ class GenerateDailyReportCmd:
             report_path=report_path,
             elapsed_seconds=elapsed,
             sentiment_metrics=sentiment_metrics.model_dump() if sentiment_metrics else None,
-            capital_flow_analysis=capital_flow_analysis.model_dump() if capital_flow_analysis else None,
+            capital_flow_analysis=(
+                capital_flow_analysis.model_dump() if capital_flow_analysis else None
+            ),
         )

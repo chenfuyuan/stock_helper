@@ -23,10 +23,10 @@ class GetSentimentMetricsQuery(BaseUseCase):
     async def execute(self, trade_date: date) -> SentimentMetricsDTO:
         """
         执行查询
-        
+
         Args:
             trade_date: 交易日期
-            
+
         Returns:
             SentimentMetricsDTO: 市场情绪指标汇总
         """

@@ -135,7 +135,7 @@ async def post_research(
                 verdict=result.verdict,
                 session_id=result.session_id,
                 retry_count=result.retry_count,
-            )
+            ),
         )
     except BadRequestException as e:
         raise HTTPException(status_code=400, detail=e.message)
@@ -213,7 +213,7 @@ async def post_research_retry(
             success=True,
             code="RESEARCH_RETRY_SUCCESS",
             message="研究重试成功完成",
-            data=_build_response(result)
+            data=_build_response(result),
         )
     except SessionNotFoundError as e:
         raise HTTPException(status_code=404, detail=e.message)

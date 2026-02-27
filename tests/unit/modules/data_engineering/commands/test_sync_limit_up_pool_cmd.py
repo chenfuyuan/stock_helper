@@ -8,7 +8,6 @@ import pytest
 from src.modules.data_engineering.application.commands.sync_limit_up_pool_cmd import (
     SyncLimitUpPoolCmd,
 )
-from src.modules.data_engineering.domain.model.limit_up_pool import LimitUpPoolStock
 
 
 @pytest.fixture

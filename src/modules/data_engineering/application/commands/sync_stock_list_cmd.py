@@ -1,13 +1,13 @@
 from loguru import logger
 
+from src.modules.data_engineering.application.dtos.sync_result_dtos import (
+    StockListSyncResult,
+)
 from src.modules.data_engineering.domain.ports.providers.stock_basic_provider import (
     IStockBasicProvider,
 )
 from src.modules.data_engineering.domain.ports.repositories.stock_basic_repo import (
     IStockBasicRepository,
-)
-from src.modules.data_engineering.application.dtos.sync_result_dtos import (
-    StockListSyncResult,
 )
 
 
@@ -33,11 +33,7 @@ class SyncStockListCmd:
 
         if not stocks:
             logger.info("未获取到股票数据，任务结束")
-            return StockListSyncResult(
-                status="success",
-                synced_count=0,
-                message="No data fetched"
-            )
+            return StockListSyncResult(status="success", synced_count=0, message="No data fetched")
 
         # 2. 持久化存储 (批量)
         saved_stocks = await self.stock_repo.save_all(stocks)
@@ -46,7 +42,5 @@ class SyncStockListCmd:
         logger.info(f"股票数据同步完成，共更新 {count} 条记录")
 
         return StockListSyncResult(
-            status="success",
-            synced_count=count,
-            message=f"Successfully synced {count} stocks"
+            status="success", synced_count=count, message=f"Successfully synced {count} stocks"
         )

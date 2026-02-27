@@ -36,6 +36,4 @@ class ConceptStockModel(Base):
     stock_name = Column(String(100), nullable=True, comment="股票名称")
     created_at = Column(DateTime, nullable=False, default=datetime.now, comment="创建时间")
 
-    __table_args__ = (
-        UniqueConstraint("concept_code", "third_code", name="uq_concept_stock"),
-    )
+    __table_args__ = (UniqueConstraint("concept_code", "third_code", name="uq_concept_stock"),)

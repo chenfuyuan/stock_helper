@@ -11,7 +11,7 @@ from src.shared.domain.exceptions import AppException
 
 class SchedulerException(AppException):
     """调度器基础异常类"""
-    
+
     def __init__(
         self,
         message: str,
@@ -29,7 +29,7 @@ class SchedulerException(AppException):
 
 class SchedulerJobNotFoundException(SchedulerException):
     """调度任务未找到异常"""
-    
+
     def __init__(self, job_id: str):
         self.job_id = job_id
         message = f"调度任务未找到: {job_id}"
@@ -42,7 +42,7 @@ class SchedulerJobNotFoundException(SchedulerException):
 
 class SchedulerJobAlreadyExistsException(SchedulerException):
     """调度任务已存在异常"""
-    
+
     def __init__(self, job_id: str):
         self.job_id = job_id
         message = f"调度任务已存在: {job_id}"
@@ -55,13 +55,8 @@ class SchedulerJobAlreadyExistsException(SchedulerException):
 
 class SchedulerConfigurationException(SchedulerException):
     """调度器配置异常"""
-    
-    def __init__(
-        self,
-        config_key: str,
-        config_value: Any,
-        reason: str
-    ):
+
+    def __init__(self, config_key: str, config_value: Any, reason: str):
         self.config_key = config_key
         self.config_value = config_value
         self.reason = reason
@@ -75,12 +70,9 @@ class SchedulerConfigurationException(SchedulerException):
 
 class SchedulerExecutionException(SchedulerException):
     """调度器执行异常"""
-    
+
     def __init__(
-        self,
-        job_id: Optional[str],
-        error_message: str,
-        original_error: Optional[Exception] = None
+        self, job_id: Optional[str], error_message: str, original_error: Optional[Exception] = None
     ):
         self.job_id = job_id
         self.error_message = error_message

@@ -122,7 +122,7 @@ async def post_debate_run(
                 risk_matrix=[r.model_dump() for r in outcome.risk_matrix],
                 key_disagreements=outcome.key_disagreements,
                 conflict_resolution=outcome.conflict_resolution,
-            )
+            ),
         )
     except LLMOutputParseError as e:
         logger.warning("辩论 LLM 解析失败: %s", e.message)

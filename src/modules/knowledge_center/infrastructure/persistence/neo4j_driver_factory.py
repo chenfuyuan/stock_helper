@@ -12,10 +12,10 @@ from src.modules.knowledge_center.infrastructure.config import Neo4jConfig
 def create_neo4j_driver(config: Neo4jConfig) -> Driver:
     """
     创建 Neo4j Driver 实例。
-    
+
     Args:
         config: Neo4j 连接配置
-    
+
     Returns:
         Neo4j Driver 实例
     """

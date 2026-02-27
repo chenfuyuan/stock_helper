@@ -1,8 +1,9 @@
 """调度执行日志仓储实现"""
 
 import uuid
-from typing import Optional, List
 from datetime import datetime
+from typing import List, Optional
+
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -11,13 +12,13 @@ from ..models.scheduler_execution_log_model import SchedulerExecutionLogModel
 
 class SchedulerExecutionLogRepository:
     """调度执行日志仓储
-    
+
     提供执行日志的持久化操作，包括创建、更新、查询等。
     """
 
     def __init__(self, session: AsyncSession):
         """初始化仓储
-        
+
         Args:
             session: 数据库会话
         """
@@ -30,16 +31,17 @@ class SchedulerExecutionLogRepository:
         status: str = "RUNNING",
     ) -> SchedulerExecutionLogModel:
         """创建执行日志记录
-        
+
         Args:
             job_id: 任务标识
             started_at: 开始时间
             status: 初始状态，默认 RUNNING
-            
+
         Returns:
             创建的日志记录
         """
         import uuid
+
         log = SchedulerExecutionLogModel(
             id=uuid.uuid4(),
             job_id=job_id,
@@ -60,7 +62,7 @@ class SchedulerExecutionLogRepository:
         duration_ms: Optional[int] = None,
     ) -> None:
         """更新执行日志记录
-        
+
         Args:
             log_id: 日志记录 ID
             status: 执行状态（SUCCESS / FAILED）
@@ -90,11 +92,11 @@ class SchedulerExecutionLogRepository:
         limit: int = 20,
     ) -> List[SchedulerExecutionLogModel]:
         """查询指定任务的最近执行记录
-        
+
         Args:
             job_id: 任务标识
             limit: 返回记录数量上限，默认 20
-            
+
         Returns:
             执行记录列表，按 started_at 降序排列
         """
@@ -109,10 +111,10 @@ class SchedulerExecutionLogRepository:
 
     async def get_recent_all(self, limit: int = 20) -> List[SchedulerExecutionLogModel]:
         """查询所有任务的最近执行记录
-        
+
         Args:
             limit: 返回记录数量上限，默认 20
-            
+
         Returns:
             执行记录列表，按 started_at 降序排列
         """

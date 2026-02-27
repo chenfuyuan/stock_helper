@@ -1,5 +1,8 @@
 from loguru import logger
 
+from src.modules.data_engineering.application.dtos.sync_result_dtos import (
+    DailyHistorySyncResult,
+)
 from src.modules.data_engineering.domain.ports.providers.market_quote_provider import (
     IMarketQuoteProvider,
 )
@@ -8,9 +11,6 @@ from src.modules.data_engineering.domain.ports.repositories.market_quote_repo im
 )
 from src.modules.data_engineering.domain.ports.repositories.stock_basic_repo import (
     IStockBasicRepository,
-)
-from src.modules.data_engineering.application.dtos.sync_result_dtos import (
-    DailyHistorySyncResult,
 )
 
 
@@ -29,7 +29,9 @@ class SyncDailyHistoryCmd:
         self.daily_repo = daily_repo
         self.data_provider = data_provider
 
-    async def execute(self, limit: int = 10, offset: int = 0, symbol: str | None = None) -> DailyHistorySyncResult:
+    async def execute(
+        self, limit: int = 10, offset: int = 0, symbol: str | None = None
+    ) -> DailyHistorySyncResult:
         """
         执行同步逻辑（支持分页和指定股票）
 
@@ -42,9 +44,7 @@ class SyncDailyHistoryCmd:
             if not stock:
                 logger.warning(f"未找到股票代码 {symbol}")
                 return DailyHistorySyncResult(
-                    synced_stocks=0,
-                    total_rows=0,
-                    message=f"未找到股票代码 {symbol}"
+                    synced_stocks=0, total_rows=0, message=f"未找到股票代码 {symbol}"
                 )
             target_stocks = [stock]
         else:
@@ -52,11 +52,13 @@ class SyncDailyHistoryCmd:
             target_stocks = await self.stock_repo.get_all(skip=offset, limit=limit)
 
         if not target_stocks:
-            logger.warning(f"未找到需要同步的股票 (symbol={symbol}, offset={offset}, limit={limit})")
+            logger.warning(
+                f"未找到需要同步的股票 (symbol={symbol}, offset={offset}, limit={limit})"
+            )
             return DailyHistorySyncResult(
                 synced_stocks=0,
                 total_rows=0,
-                message=f"未找到需要同步的股票 (symbol={symbol}, offset={offset}, limit={limit})"
+                message=f"未找到需要同步的股票 (symbol={symbol}, offset={offset}, limit={limit})",
             )
 
         if symbol:
@@ -94,5 +96,5 @@ class SyncDailyHistoryCmd:
         return DailyHistorySyncResult(
             synced_stocks=synced_stocks_count,
             total_rows=total_rows_saved,
-            message=f"成功同步 {synced_stocks_count} 只股票，共 {total_rows_saved} 条日线记录"
+            message=f"成功同步 {synced_stocks_count} 只股票，共 {total_rows_saved} 条日线记录",
         )

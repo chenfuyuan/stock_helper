@@ -12,11 +12,13 @@ from pydantic import BaseModel, Field
 class SyncGraphRequest(BaseModel):
     """
     同步图谱请求 DTO。
-    
+
     用于 POST /sync 端点。
     """
 
-    mode: Literal["full", "incremental"] = Field(..., description="同步模式：full（全量）或 incremental（增量）")  # noqa: E501
+    mode: Literal["full", "incremental"] = Field(
+        ..., description="同步模式：full（全量）或 incremental（增量）"
+    )  # noqa: E501
     target: Literal["stock", "concept", "all"] = Field(
         "stock",
         description="同步目标：stock（股票）、concept（概念）或 all（全部），默认 stock",
@@ -35,7 +37,7 @@ class SyncGraphRequest(BaseModel):
 class SyncGraphResponse(BaseModel):
     """
     同步图谱响应 DTO。
-    
+
     返回同步结果摘要。
     """
 
@@ -49,7 +51,7 @@ class SyncGraphResponse(BaseModel):
 class StockNeighborResponse(BaseModel):
     """
     同维度股票响应 DTO。
-    
+
     用于 GET /stocks/{third_code}/neighbors 端点。
     """
 
@@ -84,7 +86,7 @@ class GraphRelationshipResponse(BaseModel):
 class StockGraphResponse(BaseModel):
     """
     个股关系网络响应 DTO。
-    
+
     用于 GET /stocks/{third_code}/graph 端点。
     """
 
@@ -95,7 +97,7 @@ class StockGraphResponse(BaseModel):
 class SyncStocksFullRequest(BaseModel):
     """
     股票全量同步请求 DTO。
-    
+
     用于 POST /sync/stocks/full 端点。
     """
 
@@ -108,7 +110,7 @@ class SyncStocksFullRequest(BaseModel):
 class SyncStocksIncrementalRequest(BaseModel):
     """
     股票增量同步请求 DTO。
-    
+
     用于 POST /sync/stocks/incremental 端点。
     """
 
@@ -125,7 +127,7 @@ class SyncStocksIncrementalRequest(BaseModel):
 class SyncConceptsRequest(BaseModel):
     """
     概念同步请求 DTO。
-    
+
     用于 POST /sync/concepts 端点。
     """
 
@@ -135,17 +137,21 @@ class SyncConceptsRequest(BaseModel):
 class SyncAllRequest(BaseModel):
     """
     全部同步请求 DTO。
-    
+
     用于 POST /sync/all 端点。
     """
 
-    mode: Literal["full", "incremental"] = Field(..., description="股票同步模式：full（全量）或 incremental（增量）")
+    mode: Literal["full", "incremental"] = Field(
+        ..., description="股票同步模式：full（全量）或 incremental（增量）"
+    )
     include_finance: bool = Field(False, description="是否包含财务快照数据")
     batch_size: int = Field(500, description="批量大小")
     third_codes: Optional[list[str]] = Field(
         None,
         description="股票代码列表（仅 mode=incremental 时有效）",
     )
-    window_days: int = Field(3, ge=1, description="自动模式下时间窗口天数（仅 mode=incremental 时有效）")
+    window_days: int = Field(
+        3, ge=1, description="自动模式下时间窗口天数（仅 mode=incremental 时有效）"
+    )
     skip: int = Field(0, description="跳过前 N 条记录（仅 mode=full 时有效）")
     limit: int = Field(10000, description="扫描/查询数量上限")

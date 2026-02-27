@@ -15,9 +15,7 @@ class DeMarketDataAdapter(IMarketDataPort):
     """Data Engineering 市场数据适配器"""
 
     def __init__(self, de_container: DataEngineeringContainer):
-        self._get_daily_bars_by_date_use_case = (
-            de_container.get_daily_bars_by_date_use_case()
-        )
+        self._get_daily_bars_by_date_use_case = de_container.get_daily_bars_by_date_use_case()
 
     async def get_daily_bars_by_date(self, trade_date: date) -> List[StockDailyDTO]:
         """
@@ -25,9 +23,7 @@ class DeMarketDataAdapter(IMarketDataPort):
         :param trade_date: 交易日期
         :return: 股票日线 DTO 列表
         """
-        de_bars = await self._get_daily_bars_by_date_use_case.execute(
-            trade_date=trade_date
-        )
+        de_bars = await self._get_daily_bars_by_date_use_case.execute(trade_date=trade_date)
 
         return [
             StockDailyDTO(

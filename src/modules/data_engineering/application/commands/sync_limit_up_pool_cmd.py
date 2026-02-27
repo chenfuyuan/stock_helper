@@ -16,7 +16,7 @@ from src.modules.data_engineering.domain.ports.repositories.limit_up_pool_repo i
 class SyncLimitUpPoolCmd:
     """
     同步涨停池数据命令。
-    
+
     从 AkShare 获取涨停池数据并写入 PostgreSQL。
     """
 
@@ -31,24 +31,24 @@ class SyncLimitUpPoolCmd:
     async def execute(self, trade_date: date) -> int:
         """
         执行涨停池数据同步。
-        
+
         Args:
             trade_date: 交易日期
-            
+
         Returns:
             同步条数
-            
+
         Raises:
             Exception: 同步失败时抛出
         """
         logger.info(f"开始同步涨停池数据：{trade_date}")
-        
+
         limit_up_dtos = await self.sentiment_provider.fetch_limit_up_pool(trade_date)
-        
+
         if not limit_up_dtos:
             logger.info(f"涨停池数据为空：{trade_date}")
             return 0
-        
+
         limit_up_entities = [
             LimitUpPoolStock(
                 trade_date=trade_date,
@@ -65,8 +65,8 @@ class SyncLimitUpPoolCmd:
             )
             for dto in limit_up_dtos
         ]
-        
+
         count = await self.limit_up_pool_repo.save_all(limit_up_entities)
         logger.info(f"涨停池数据同步成功：{count} 条")
-        
+
         return count

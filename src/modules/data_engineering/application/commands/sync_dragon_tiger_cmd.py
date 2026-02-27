@@ -16,7 +16,7 @@ from src.modules.data_engineering.domain.ports.repositories.dragon_tiger_repo im
 class SyncDragonTigerCmd:
     """
     同步龙虎榜数据命令。
-    
+
     从 AkShare 获取龙虎榜数据并写入 PostgreSQL。
     """
 
@@ -31,26 +31,24 @@ class SyncDragonTigerCmd:
     async def execute(self, trade_date: date) -> int:
         """
         执行龙虎榜数据同步。
-        
+
         Args:
             trade_date: 交易日期
-            
+
         Returns:
             同步条数
-            
+
         Raises:
             Exception: 同步失败时抛出
         """
         logger.info(f"开始同步龙虎榜数据：{trade_date}")
-        
-        dragon_tiger_dtos = await self.dragon_tiger_provider.fetch_dragon_tiger_detail(
-            trade_date
-        )
-        
+
+        dragon_tiger_dtos = await self.dragon_tiger_provider.fetch_dragon_tiger_detail(trade_date)
+
         if not dragon_tiger_dtos:
             logger.info(f"龙虎榜数据为空：{trade_date}")
             return 0
-        
+
         dragon_tiger_entities = [
             DragonTigerDetail(
                 trade_date=trade_date,
@@ -67,8 +65,8 @@ class SyncDragonTigerCmd:
             )
             for dto in dragon_tiger_dtos
         ]
-        
+
         count = await self.dragon_tiger_repo.save_all(dragon_tiger_entities)
         logger.info(f"龙虎榜数据同步成功：{count} 条")
-        
+
         return count

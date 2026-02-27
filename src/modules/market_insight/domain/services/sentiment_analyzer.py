@@ -22,10 +22,10 @@ class SentimentAnalyzer:
     ) -> ConsecutiveBoardLadder:
         """
         分析连板梯队分布
-        
+
         Args:
             limit_up_pool: 涨停池数据
-            
+
         Returns:
             ConsecutiveBoardLadder: 连板梯队分布分析结果
         """
@@ -55,10 +55,10 @@ class SentimentAnalyzer:
     ) -> PreviousLimitUpPerformance:
         """
         分析昨日涨停今日表现
-        
+
         Args:
             previous_limit_up: 昨日涨停今日表现数据
-            
+
         Returns:
             PreviousLimitUpPerformance: 昨日涨停表现分析结果
         """
@@ -102,11 +102,11 @@ class SentimentAnalyzer:
     ) -> BrokenBoardAnalysis:
         """
         分析炸板情况
-        
+
         Args:
             limit_up_pool: 涨停池数据
             broken_board_pool: 炸板池数据
-            
+
         Returns:
             BrokenBoardAnalysis: 炸板分析结果
         """

@@ -2,14 +2,16 @@
 
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, Integer, DateTime, Text, Index
+
+from sqlalchemy import Column, DateTime, Index, Integer, String, Text
 from sqlalchemy.dialects.postgresql import UUID
+
 from src.shared.infrastructure.db.base import Base
 
 
 class SchedulerExecutionLogModel(Base):
     """调度执行日志持久化模型
-    
+
     记录每次调度任务的执行情况，包括开始/结束时间、状态、错误信息等。
     对应 scheduler_execution_log 数据库表。
     """

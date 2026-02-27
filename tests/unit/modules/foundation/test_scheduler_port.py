@@ -10,7 +10,6 @@
 
 import inspect
 from abc import ABCMeta
-from typing import get_type_hints
 
 import pytest
 
@@ -51,26 +50,32 @@ class TestSchedulerPortInterface:
 
     def test_has_remove_job_method(self):
         """验证 remove_job 方法存在且为抽象方法（补全缺失的 Port 定义）"""
-        assert hasattr(SchedulerPort, "remove_job"), \
-            "remove_job 方法应在 Port 接口中定义，消除 Application Service 中的 hasattr hack"
-        assert getattr(SchedulerPort.remove_job, "__isabstractmethod__", False), \
-            "remove_job 必须是抽象方法"
+        assert hasattr(
+            SchedulerPort, "remove_job"
+        ), "remove_job 方法应在 Port 接口中定义，消除 Application Service 中的 hasattr hack"
+        assert getattr(
+            SchedulerPort.remove_job, "__isabstractmethod__", False
+        ), "remove_job 必须是抽象方法"
 
     def test_has_trigger_job_method(self):
         """验证 trigger_job 方法存在且为抽象方法（补全缺失的 Port 定义）"""
-        assert hasattr(SchedulerPort, "trigger_job"), \
-            "trigger_job 方法应在 Port 接口中定义，支持手动触发任务"
-        assert getattr(SchedulerPort.trigger_job, "__isabstractmethod__", False), \
-            "trigger_job 必须是抽象方法"
+        assert hasattr(
+            SchedulerPort, "trigger_job"
+        ), "trigger_job 方法应在 Port 接口中定义，支持手动触发任务"
+        assert getattr(
+            SchedulerPort.trigger_job, "__isabstractmethod__", False
+        ), "trigger_job 必须是抽象方法"
 
     def test_all_methods_count(self):
         """验证 Port 接口包含 7 个抽象方法"""
         abstract_methods = [
-            name for name, method in inspect.getmembers(SchedulerPort, predicate=inspect.isfunction)
+            name
+            for name, method in inspect.getmembers(SchedulerPort, predicate=inspect.isfunction)
             if getattr(method, "__isabstractmethod__", False)
         ]
-        assert len(abstract_methods) == 7, \
-            f"SchedulerPort 应包含 7 个抽象方法，实际: {len(abstract_methods)} 个 {abstract_methods}"
+        assert (
+            len(abstract_methods) == 7
+        ), f"SchedulerPort 应包含 7 个抽象方法，实际: {len(abstract_methods)} 个 {abstract_methods}"
 
     def test_cannot_instantiate_directly(self):
         """验证无法直接实例化 Port 接口"""
@@ -81,7 +86,7 @@ class TestSchedulerPortInterface:
         """验证 remove_job 方法签名符合预期"""
         method = getattr(SchedulerPort, "remove_job")
         sig = inspect.signature(method)
-        
+
         # 检查参数：self, job_id
         params = list(sig.parameters.keys())
         assert "job_id" in params, "remove_job 应接受 job_id 参数"
@@ -90,7 +95,7 @@ class TestSchedulerPortInterface:
         """验证 trigger_job 方法签名符合预期"""
         method = getattr(SchedulerPort, "trigger_job")
         sig = inspect.signature(method)
-        
+
         # 检查参数：self, job_id, 可能还有 **kwargs
         params = list(sig.parameters.keys())
         assert "job_id" in params, "trigger_job 应接受 job_id 参数"

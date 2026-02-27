@@ -1,5 +1,4 @@
 import asyncio
-import time
 from typing import List, Optional
 
 import pandas as pd
@@ -24,9 +23,6 @@ from src.modules.data_engineering.domain.ports.providers.stock_basic_provider im
     IStockBasicProvider,
 )
 from src.modules.data_engineering.infrastructure.config import de_config
-from src.modules.data_engineering.infrastructure.external_apis.tushare.rate_limiter import (
-    SlidingWindowRateLimiter,
-)
 from src.modules.data_engineering.infrastructure.external_apis.tushare.converters.finance_converter import (  # noqa: E501
     StockFinanceAssembler,
 )
@@ -38,6 +34,9 @@ from src.modules.data_engineering.infrastructure.external_apis.tushare.converter
 )
 from src.modules.data_engineering.infrastructure.external_apis.tushare.converters.stock_disclosure_assembler import (  # noqa: E501
     StockDisclosureAssembler,
+)
+from src.modules.data_engineering.infrastructure.external_apis.tushare.rate_limiter import (
+    SlidingWindowRateLimiter,
 )
 from src.shared.domain.exceptions import AppException
 
@@ -94,30 +93,30 @@ class TushareClient(IStockBasicProvider, IMarketQuoteProvider, IFinancialDataPro
         limiter = _get_tushare_rate_limiter()
         max_retries = 3
         base_wait = 3.0  # 基础等待时间（秒）
-        
+
         for retry in range(max_retries + 1):
             try:
                 # 获取调用许可（滑动窗口限速）
                 await limiter.acquire()
-                
+
                 # 执行实际调用
                 result = await self._run_in_executor(func, *args, **kwargs)
                 return result
-                
+
             except Exception as e:
                 error_msg = str(e).lower()
-                
+
                 # 检查是否为频率超限异常（关键词匹配）
                 is_rate_limit_error = (
-                    "频率" in error_msg or
-                    "每分钟" in error_msg or
-                    "rate limit" in error_msg or
-                    "too many requests" in error_msg
+                    "频率" in error_msg
+                    or "每分钟" in error_msg
+                    or "rate limit" in error_msg
+                    or "too many requests" in error_msg
                 )
-                
+
                 if is_rate_limit_error and retry < max_retries:
                     # 指数退避重试
-                    wait_time = base_wait * (2 ** retry)
+                    wait_time = base_wait * (2**retry)
                     logger.warning(
                         f"TuShare 频率超限，第 {retry + 1} 次重试，等待 {wait_time:.1f}s: {e}"
                     )
@@ -219,7 +218,7 @@ class TushareClient(IStockBasicProvider, IMarketQuoteProvider, IFinancialDataPro
         try:
             logger.info("开始从 Tushare 获取股票基础数据...")
             # 获取数据字段：ts_code, symbol, name, area, industry, market, list_date, fullname, enname, cnspell,  # noqa: E501
-# exchange, curr_type, list_status, delist_date, is_hs
+            # exchange, curr_type, list_status, delist_date, is_hs
             fields = (
                 "ts_code,symbol,name,area,industry,market,list_date,fullname,enname,cnspell,"  # noqa: E501
                 "exchange,curr_type,list_status,delist_date,is_hs"
@@ -298,7 +297,7 @@ class TushareClient(IStockBasicProvider, IMarketQuoteProvider, IFinancialDataPro
 
             # 3. 获取每日指标 (daily_basic)
             # fields: ts_code, trade_date, turnover_rate, turnover_rate_f, volume_ratio, pe, pe_ttm, pb, ps, ps_ttm,  # noqa: E501
-# dv_ratio, dv_ttm, total_share, float_share, free_share, total_mv, circ_mv
+            # dv_ratio, dv_ttm, total_share, float_share, free_share, total_mv, circ_mv
             basic_fields = (
                 "ts_code,trade_date,turnover_rate,turnover_rate_f,volume_ratio,pe,pe_ttm,pb,ps,ps_ttm,"  # noqa: E501
                 "dv_ratio,dv_ttm,total_share,float_share,free_share,total_mv,circ_mv"

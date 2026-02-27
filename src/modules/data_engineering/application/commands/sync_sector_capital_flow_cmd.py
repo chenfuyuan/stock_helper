@@ -16,7 +16,7 @@ from src.modules.data_engineering.domain.ports.repositories.sector_capital_flow_
 class SyncSectorCapitalFlowCmd:
     """
     同步板块资金流向数据命令。
-    
+
     从 AkShare 获取板块资金流向数据并写入 PostgreSQL。
     """
 
@@ -31,24 +31,24 @@ class SyncSectorCapitalFlowCmd:
     async def execute(self, trade_date: date) -> int:
         """
         执行板块资金流向数据同步。
-        
+
         Args:
             trade_date: 交易日期
-            
+
         Returns:
             同步条数
-            
+
         Raises:
             Exception: 同步失败时抛出
         """
         logger.info(f"开始同步板块资金流向数据：{trade_date}")
-        
+
         capital_flow_dtos = await self.capital_flow_provider.fetch_sector_capital_flow()
-        
+
         if not capital_flow_dtos:
             logger.info(f"板块资金流向数据为空：{trade_date}")
             return 0
-        
+
         capital_flow_entities = [
             SectorCapitalFlow(
                 trade_date=trade_date,
@@ -61,8 +61,8 @@ class SyncSectorCapitalFlowCmd:
             )
             for dto in capital_flow_dtos
         ]
-        
+
         count = await self.sector_capital_flow_repo.save_all(capital_flow_entities)
         logger.info(f"板块资金流向数据同步成功：{count} 条")
-        
+
         return count

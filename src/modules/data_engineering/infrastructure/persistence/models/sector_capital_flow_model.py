@@ -16,7 +16,9 @@ class SectorCapitalFlowModel(Base):
     id = Column(Integer, primary_key=True, index=True)
     trade_date = Column(Date, nullable=False, index=True, comment="交易日期")
     sector_name = Column(String(100), nullable=False, index=True, comment="板块名称")
-    sector_type = Column(String(50), nullable=False, index=True, comment="板块类型（如'概念资金流'）")
+    sector_type = Column(
+        String(50), nullable=False, index=True, comment="板块类型（如'概念资金流'）"
+    )
     net_amount = Column(Float, nullable=False, comment="净流入额（万元）")
     inflow_amount = Column(Float, nullable=False, comment="流入额（万元）")
     outflow_amount = Column(Float, nullable=False, comment="流出额（万元）")
@@ -27,7 +29,5 @@ class SectorCapitalFlowModel(Base):
     )
 
     __table_args__ = (
-        UniqueConstraint(
-            "trade_date", "sector_name", "sector_type", name="uq_sector_capital_flow"
-        ),
+        UniqueConstraint("trade_date", "sector_name", "sector_type", name="uq_sector_capital_flow"),
     )

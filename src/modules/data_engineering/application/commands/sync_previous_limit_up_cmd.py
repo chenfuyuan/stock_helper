@@ -16,7 +16,7 @@ from src.modules.data_engineering.domain.ports.repositories.previous_limit_up_re
 class SyncPreviousLimitUpCmd:
     """
     同步昨日涨停表现数据命令。
-    
+
     从 AkShare 获取昨日涨停股票的今日表现并写入 PostgreSQL。
     """
 
@@ -31,26 +31,24 @@ class SyncPreviousLimitUpCmd:
     async def execute(self, trade_date: date) -> int:
         """
         执行昨日涨停表现数据同步。
-        
+
         Args:
             trade_date: 交易日期
-            
+
         Returns:
             同步条数
-            
+
         Raises:
             Exception: 同步失败时抛出
         """
         logger.info(f"开始同步昨日涨停表现数据：{trade_date}")
-        
-        previous_limit_up_dtos = await self.sentiment_provider.fetch_previous_limit_up(
-            trade_date
-        )
-        
+
+        previous_limit_up_dtos = await self.sentiment_provider.fetch_previous_limit_up(trade_date)
+
         if not previous_limit_up_dtos:
             logger.info(f"昨日涨停表现数据为空：{trade_date}")
             return 0
-        
+
         previous_limit_up_entities = [
             PreviousLimitUpStock(
                 trade_date=trade_date,
@@ -65,8 +63,8 @@ class SyncPreviousLimitUpCmd:
             )
             for dto in previous_limit_up_dtos
         ]
-        
+
         count = await self.previous_limit_up_repo.save_all(previous_limit_up_entities)
         logger.info(f"昨日涨停表现数据同步成功：{count} 条")
-        
+
         return count

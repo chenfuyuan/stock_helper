@@ -77,14 +77,16 @@ async def get_catalyst_detective_analysis(
                 catalyst_assessment=dto["catalyst_assessment"],
                 confidence_score=dto["confidence_score"],
                 catalyst_summary=dto["catalyst_summary"],
-                dimension_analyses=[CatalystDimensionAnalysis(**x) for x in dto["dimension_analyses"]],
+                dimension_analyses=[
+                    CatalystDimensionAnalysis(**x) for x in dto["dimension_analyses"]
+                ],
                 positive_catalysts=[CatalystEvent(**x) for x in dto["positive_catalysts"]],
                 negative_catalysts=[CatalystEvent(**x) for x in dto["negative_catalysts"]],
                 information_sources=dto["information_sources"],
                 input=result_dict["user_prompt"],
                 output=result_dict["raw_llm_output"],
                 catalyst_indicators=indicators_json,
-            )
+            ),
         )
 
     except BadRequestException as e:

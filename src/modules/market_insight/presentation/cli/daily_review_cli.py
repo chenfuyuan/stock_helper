@@ -8,8 +8,6 @@ import asyncio
 import logging
 from datetime import date, datetime
 
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from src.modules.market_insight.container import MarketInsightContainer
 from src.shared.infrastructure.db.session import async_session_factory
 

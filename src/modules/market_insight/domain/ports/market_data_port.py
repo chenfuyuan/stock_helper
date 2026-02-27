@@ -12,7 +12,7 @@ from src.modules.market_insight.domain.dtos.insight_dtos import StockDailyDTO
 
 class IMarketDataPort(ABC):
     """市场行情数据查询接口"""
-    
+
     @abstractmethod
     async def get_daily_bars_by_date(self, trade_date: date) -> List[StockDailyDTO]:
         """
@@ -20,4 +20,3 @@ class IMarketDataPort(ABC):
         :param trade_date: 交易日期
         :return: 股票日线 DTO 列表
         """
-        pass

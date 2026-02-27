@@ -30,9 +30,7 @@ class PgDragonTigerRepository(BaseRepository[DragonTigerModel], IDragonTigerRepo
         if not details:
             return 0
 
-        detail_dicts = [
-            detail.model_dump(exclude={"id"}, exclude_unset=True) for detail in details
-        ]
+        detail_dicts = [detail.model_dump(exclude={"id"}, exclude_unset=True) for detail in details]
 
         stmt = insert(DragonTigerModel).values(detail_dicts)
         stmt = stmt.on_conflict_do_update(
@@ -66,6 +64,7 @@ class PgDragonTigerRepository(BaseRepository[DragonTigerModel], IDragonTigerRepo
         models = result.scalars().all()
 
         import uuid
+
         return [
             DragonTigerDetail(
                 id=uuid.UUID(int=model.id),  # 将整数ID转换为UUID

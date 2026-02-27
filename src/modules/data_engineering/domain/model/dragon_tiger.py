@@ -20,9 +20,5 @@ class DragonTigerDetail(BaseEntity):
     net_amount: float = Field(..., description="龙虎榜净买入额")
     buy_amount: float = Field(..., description="买入总额")
     sell_amount: float = Field(..., description="卖出总额")
-    buy_seats: list[dict] = Field(
-        default_factory=list, description="买入席位详情（JSONB 存储）"
-    )
-    sell_seats: list[dict] = Field(
-        default_factory=list, description="卖出席位详情（JSONB 存储）"
-    )
+    buy_seats: list[dict] = Field(default_factory=list, description="买入席位详情（JSONB 存储）")
+    sell_seats: list[dict] = Field(default_factory=list, description="卖出席位详情（JSONB 存储）")

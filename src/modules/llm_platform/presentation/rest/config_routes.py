@@ -17,8 +17,8 @@ from src.modules.llm_platform.infrastructure.persistence.repositories.pg_config_
     PgLLMConfigRepository,
 )
 from src.modules.llm_platform.infrastructure.registry import LLMRegistry
-from src.shared.infrastructure.db.session import get_db_session
 from src.shared.dtos import BaseResponse
+from src.shared.infrastructure.db.session import get_db_session
 
 router = APIRouter(prefix="/llm-platform/configs", tags=["LLM Platform"])
 
@@ -84,10 +84,7 @@ async def get_configs(service: ConfigService = Depends(get_config_service)):
     logger.info("API: get_configs called")
     configs = await service.get_all_configs()
     return BaseResponse(
-        success=True,
-        code="CONFIG_LIST_SUCCESS",
-        message="大模型配置列表获取成功",
-        data=configs
+        success=True, code="CONFIG_LIST_SUCCESS", message="大模型配置列表获取成功", data=configs
     )
 
 
@@ -103,14 +100,16 @@ async def get_config(alias: str, service: ConfigService = Depends(get_config_ser
             success=True,
             code="CONFIG_DETAIL_SUCCESS",
             message="大模型配置详情获取成功",
-            data=config
+            data=config,
         )
     except ConfigNotFoundException as e:
         logger.warning(f"API: Config not found: {alias}")
         raise HTTPException(status_code=404, detail=str(e))
 
 
-@router.post("", response_model=BaseResponse[LLMConfigResponse], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "", response_model=BaseResponse[LLMConfigResponse], status_code=status.HTTP_201_CREATED
+)
 async def create_config(dto: LLMConfigCreate, service: ConfigService = Depends(get_config_service)):
     """
     创建新的大模型配置。
@@ -121,10 +120,7 @@ async def create_config(dto: LLMConfigCreate, service: ConfigService = Depends(g
         result = await service.create_config(entity)
         logger.info(f"API: Config created successfully: {dto.alias}")
         return BaseResponse(
-            success=True,
-            code="CONFIG_CREATE_SUCCESS",
-            message="大模型配置创建成功",
-            data=result
+            success=True, code="CONFIG_CREATE_SUCCESS", message="大模型配置创建成功", data=result
         )
     except DuplicateConfigException as e:
         logger.warning(f"API: Duplicate config: {dto.alias}")
@@ -145,10 +141,7 @@ async def update_config(
         result = await service.update_config(alias, dto.dict(exclude_unset=True))
         logger.info(f"API: Config updated successfully: {alias}")
         return BaseResponse(
-            success=True,
-            code="CONFIG_UPDATE_SUCCESS",
-            message="大模型配置更新成功",
-            data=result
+            success=True, code="CONFIG_UPDATE_SUCCESS", message="大模型配置更新成功", data=result
         )
     except ConfigNotFoundException as e:
         logger.warning(f"API: Config not found for update: {alias}")
@@ -182,5 +175,5 @@ async def refresh_registry(
         success=True,
         code="REGISTRY_REFRESH_SUCCESS",
         message="大模型注册表刷新成功",
-        data={"status": "refreshed"}
+        data={"status": "refreshed"},
     )

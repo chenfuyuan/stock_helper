@@ -41,13 +41,13 @@ class AkShareMarketDataClient(
         """
         获取指定日期的涨停池数据（含连板天数）
         调用 akshare.stock_zt_pool_em(date=<yyyymmdd>) 接口
-        
+
         Args:
             trade_date: 交易日期
-            
+
         Returns:
             list[LimitUpPoolDTO]: 涨停池数据列表
-            
+
         Raises:
             AppException: API 调用失败时抛出
         """
@@ -108,13 +108,13 @@ class AkShareMarketDataClient(
         """
         获取指定日期的炸板池数据
         调用 akshare.stock_zt_pool_zbgc_em(date=<yyyymmdd>) 接口
-        
+
         Args:
             trade_date: 交易日期
-            
+
         Returns:
             list[BrokenBoardDTO]: 炸板池数据列表
-            
+
         Raises:
             AppException: API 调用失败时抛出
         """
@@ -177,13 +177,13 @@ class AkShareMarketDataClient(
         """
         获取昨日涨停股今日表现数据
         调用 akshare.stock_zt_pool_previous_em(date=<yyyymmdd>) 接口
-        
+
         Args:
             trade_date: 交易日期（今日日期，即表现观察日）
-            
+
         Returns:
             list[PreviousLimitUpDTO]: 昨日涨停表现数据列表
-            
+
         Raises:
             AppException: API 调用失败时抛出
         """
@@ -244,13 +244,13 @@ class AkShareMarketDataClient(
         """
         获取指定日期的龙虎榜详情数据
         调用 akshare.stock_lhb_detail_em(start_date=<yyyymmdd>, end_date=<yyyymmdd>) 接口
-        
+
         Args:
             trade_date: 交易日期
-            
+
         Returns:
             list[DragonTigerDetailDTO]: 龙虎榜详情数据列表
-            
+
         Raises:
             AppException: API 调用失败时抛出
         """
@@ -259,17 +259,17 @@ class AkShareMarketDataClient(
 
             date_str = trade_date.strftime("%Y%m%d")
             logger.info(f"开始获取龙虎榜数据：{date_str}")
-            
+
             # 检查是否为交易日，避免 akshare API 在非交易日时的 bug
             try:
                 trade_cal = ak.tool_trade_date_hist_sina()
-                is_trade_day = date_str in trade_cal['trade_date'].tolist()
+                is_trade_day = date_str in trade_cal["trade_date"].tolist()
                 if not is_trade_day:
                     logger.info(f"日期 {date_str} 非交易日，跳过龙虎榜数据获取")
                     return []
             except Exception as e:
                 logger.warning(f"无法检查交易日状态，继续尝试获取数据：{str(e)}")
-            
+
             df: pd.DataFrame = await self._rate_limited_call(
                 ak.stock_lhb_detail_em, start_date=date_str, end_date=date_str
             )
@@ -343,13 +343,13 @@ class AkShareMarketDataClient(
         """
         获取当日板块资金流向排名
         调用 akshare.stock_sector_fund_flow_rank(indicator="今日", sector_type=<type>) 接口
-        
+
         Args:
             sector_type: 板块类型（默认"概念资金流"）
-            
+
         Returns:
             list[SectorCapitalFlowDTO]: 板块资金流向数据列表
-            
+
         Raises:
             AppException: API 调用失败时抛出
         """

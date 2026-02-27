@@ -9,16 +9,14 @@
 - 各异常类符合预期的构造器签名
 """
 
-import pytest
-
-from src.shared.domain.exceptions import AppException
 from src.modules.foundation.domain.exceptions import (
-    SchedulerException,
-    SchedulerJobNotFoundException,
-    SchedulerJobAlreadyExistsException,
     SchedulerConfigurationException,
+    SchedulerException,
     SchedulerExecutionException,
+    SchedulerJobAlreadyExistsException,
+    SchedulerJobNotFoundException,
 )
+from src.shared.domain.exceptions import AppException
 
 
 class TestSchedulerExceptions:
@@ -42,7 +40,7 @@ class TestSchedulerExceptions:
             message="自定义消息",
             code="CUSTOM_SCHEDULER_ERROR",
             status_code=503,
-            details={"key": "value"}
+            details={"key": "value"},
         )
         assert exc.message == "自定义消息"
         assert exc.code == "CUSTOM_SCHEDULER_ERROR"
@@ -52,7 +50,7 @@ class TestSchedulerExceptions:
     def test_job_not_found_exception(self):
         """验证 SchedulerJobNotFoundException"""
         exc = SchedulerJobNotFoundException("test_job_123")
-        
+
         assert isinstance(exc, SchedulerException)
         assert isinstance(exc, AppException)
         assert exc.job_id == "test_job_123"
@@ -63,7 +61,7 @@ class TestSchedulerExceptions:
     def test_job_already_exists_exception(self):
         """验证 SchedulerJobAlreadyExistsException"""
         exc = SchedulerJobAlreadyExistsException("duplicate_job")
-        
+
         assert isinstance(exc, SchedulerException)
         assert isinstance(exc, AppException)
         assert exc.job_id == "duplicate_job"
@@ -74,11 +72,9 @@ class TestSchedulerExceptions:
     def test_configuration_exception(self):
         """验证 SchedulerConfigurationException"""
         exc = SchedulerConfigurationException(
-            config_key="max_workers",
-            config_value=-1,
-            reason="值必须为正整数"
+            config_key="max_workers", config_value=-1, reason="值必须为正整数"
         )
-        
+
         assert isinstance(exc, SchedulerException)
         assert isinstance(exc, AppException)
         assert exc.config_key == "max_workers"
@@ -92,11 +88,9 @@ class TestSchedulerExceptions:
         """验证 SchedulerExecutionException"""
         original_error = ValueError("原始错误")
         exc = SchedulerExecutionException(
-            job_id="failed_job",
-            error_message="任务执行失败",
-            original_error=original_error
+            job_id="failed_job", error_message="任务执行失败", original_error=original_error
         )
-        
+
         assert isinstance(exc, SchedulerException)
         assert isinstance(exc, AppException)
         assert exc.job_id == "failed_job"
@@ -108,11 +102,8 @@ class TestSchedulerExceptions:
 
     def test_execution_exception_without_job_id(self):
         """验证 SchedulerExecutionException 允许 job_id 为 None"""
-        exc = SchedulerExecutionException(
-            job_id=None,
-            error_message="调度器初始化失败"
-        )
-        
+        exc = SchedulerExecutionException(job_id=None, error_message="调度器初始化失败")
+
         assert exc.job_id is None
         assert exc.error_message == "调度器初始化失败"
         assert exc.original_error is None

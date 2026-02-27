@@ -14,7 +14,9 @@ class PreviousLimitUpModel(Base):
     __tablename__ = "de_previous_limit_up"
 
     id = Column(Integer, primary_key=True, index=True)
-    trade_date = Column(Date, nullable=False, index=True, comment="交易日期（今日日期，即表现观察日）")
+    trade_date = Column(
+        Date, nullable=False, index=True, comment="交易日期（今日日期，即表现观察日）"
+    )
     third_code = Column(String(20), nullable=False, index=True, comment="股票代码（系统标准格式）")
     stock_name = Column(String(100), nullable=False, comment="股票名称")
     pct_chg = Column(Float, nullable=False, comment="今日涨跌幅（百分比）")

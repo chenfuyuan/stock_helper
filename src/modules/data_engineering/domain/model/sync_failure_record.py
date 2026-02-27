@@ -29,7 +29,9 @@ class SyncFailureRecord(BaseEntity):
     retry_count: int = Field(default=0, description="当前重试次数")
     max_retries: int = Field(default=3, description="最大重试次数")
     last_attempt_at: Optional[datetime] = Field(default=None, description="最后一次尝试时间")
-    resolved_at: Optional[datetime] = Field(default=None, description="解决时间（重试成功或人工标记）")
+    resolved_at: Optional[datetime] = Field(
+        default=None, description="解决时间（重试成功或人工标记）"
+    )
 
     model_config = ConfigDict(from_attributes=True)
 

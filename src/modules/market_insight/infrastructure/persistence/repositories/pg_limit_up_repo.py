@@ -10,7 +10,7 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.market_insight.domain.model.enums import LimitType
-from src.modules.market_insight.domain.model.limit_up_stock import LimitUpStock, Concept
+from src.modules.market_insight.domain.model.limit_up_stock import Concept, LimitUpStock
 from src.modules.market_insight.domain.ports.repositories.limit_up_repo import (
     ILimitUpRepository,
 )
@@ -107,7 +107,7 @@ class PgLimitUpRepository(ILimitUpRepository):
             select(LimitUpStockModel)
             .where(
                 LimitUpStockModel.trade_date == trade_date,
-                LimitUpStockModel.concepts.op('@>')([{'code': concept_code}]),
+                LimitUpStockModel.concepts.op("@>")([{"code": concept_code}]),
             )
             .order_by(LimitUpStockModel.pct_chg.desc())
         )

@@ -30,9 +30,7 @@ class GetDailyBarsByDateUseCase:
         执行查询。trade_date 为交易日期。
         返回该日期所有股票的日线 DTO 列表。
         """
-        dailies: List[StockDaily] = await self._repo.get_all_by_trade_date(
-            trade_date=trade_date
-        )
+        dailies: List[StockDaily] = await self._repo.get_all_by_trade_date(trade_date=trade_date)
         return [
             DailyBarDTO(
                 third_code=d.third_code,

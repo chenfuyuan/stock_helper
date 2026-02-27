@@ -19,7 +19,7 @@ class SyncConceptDataIncrementalCmd(BaseUseCase):
     """
     增量同步概念数据命令
     逐个概念获取后立即落库，提高内存效率和容错性
-    
+
     执行流程：
     1. 获取概念列表
     2. 逐个概念获取成份股并立即落库
@@ -37,7 +37,7 @@ class SyncConceptDataIncrementalCmd(BaseUseCase):
     async def execute(self) -> ConceptSyncResult:
         """
         执行增量概念数据同步
-        
+
         Returns:
             ConceptSyncResult: 同步结果摘要
         """
@@ -85,12 +85,12 @@ class SyncConceptDataIncrementalCmd(BaseUseCase):
                     )
                     for constituent in constituents
                 ]
-                
+
                 total_rows = await self.concept_repo.upsert_concept_with_stocks(concept, stocks)
 
                 success_count += 1
                 total_stocks += len(constituents)
-                
+
                 logger.info(
                     f"[{idx}/{total_concepts}] ✓ 概念「{concept_info.name}」({concept_info.code}) "
                     f"事务提交：总计 {total_rows} 行"

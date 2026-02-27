@@ -7,7 +7,6 @@
 
 from datetime import datetime
 from typing import Any, Dict, Optional
-from uuid import UUID, uuid4
 
 from pydantic import ConfigDict, Field
 
@@ -27,12 +26,16 @@ class SyncTask(BaseEntity):
 
     job_type: SyncJobType = Field(default=SyncJobType.DAILY_HISTORY, description="任务类型")
     status: SyncTaskStatus = Field(default=SyncTaskStatus.PENDING, description="任务状态")
-    current_offset: int = Field(default=0, description="当前同步偏移量（用于历史全量同步的分批处理）")
+    current_offset: int = Field(
+        default=0, description="当前同步偏移量（用于历史全量同步的分批处理）"
+    )
     batch_size: int = Field(default=50, description="每批处理的股票数量")
     total_processed: int = Field(default=0, description="已处理总条数")
     started_at: Optional[datetime] = Field(default=None, description="任务启动时间")
     completed_at: Optional[datetime] = Field(default=None, description="任务完成时间")
-    config: Dict[str, Any] = Field(default_factory=dict, description="任务特定配置（如 start_date、end_date 等）")
+    config: Dict[str, Any] = Field(
+        default_factory=dict, description="任务特定配置（如 start_date、end_date 等）"
+    )
 
     model_config = ConfigDict(from_attributes=True)
 

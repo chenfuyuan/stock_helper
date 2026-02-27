@@ -29,11 +29,11 @@ class GetCapitalFlowAnalysisQuery(BaseUseCase):
     ) -> CapitalFlowAnalysisDTO:
         """
         执行查询
-        
+
         Args:
             trade_date: 交易日期
             sector_type: 板块类型（可选）
-            
+
         Returns:
             CapitalFlowAnalysisDTO: 资金流向分析汇总
         """

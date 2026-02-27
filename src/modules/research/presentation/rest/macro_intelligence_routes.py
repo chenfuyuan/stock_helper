@@ -107,7 +107,7 @@ async def run_macro_intelligence(
             success=True,
             code="MACRO_INTELLIGENCE_SUCCESS",
             message="宏观情报分析成功完成",
-            data=MacroIntelligenceApiResponse(**result)
+            data=MacroIntelligenceApiResponse(**result),
         )
     except BadRequestException as e:
         logger.warning("宏观情报分析请求错误: {}", e.message)

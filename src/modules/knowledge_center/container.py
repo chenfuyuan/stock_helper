@@ -12,14 +12,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.modules.data_engineering.application.queries.get_finance_for_ticker import (
     GetFinanceForTickerUseCase,
 )
+from src.modules.data_engineering.container import DataEngineeringContainer
 from src.modules.data_engineering.infrastructure.persistence.repositories.pg_finance_repo import (
     StockFinanceRepositoryImpl,
 )
 from src.modules.data_engineering.infrastructure.persistence.repositories.pg_stock_repo import (
     StockRepositoryImpl,
 )
-from src.modules.data_engineering.container import DataEngineeringContainer
-
 from src.modules.knowledge_center.application.commands.sync_concept_graph_command import (
     SyncConceptGraphCommand,
 )
@@ -42,7 +41,7 @@ from src.modules.knowledge_center.infrastructure.adapters.data_engineering_adapt
 from src.modules.knowledge_center.infrastructure.config import neo4j_config
 
 if TYPE_CHECKING:
-    from neo4j import Driver
+    pass
 
     from src.modules.knowledge_center.infrastructure.persistence.neo4j_graph_repository import (
         Neo4jGraphRepository,
@@ -68,7 +67,7 @@ def close_knowledge_center_driver() -> None:
 class KnowledgeCenterContainer:
     """
     Knowledge Center 模块依赖注入容器。
-    
+
     注册所有组件并管理依赖关系。
     """
 
@@ -141,5 +140,3 @@ class KnowledgeCenterContainer:
             neighbors_query=self.get_stock_neighbors_query(),
             graph_query=self.get_stock_graph_query(),
         )
-
-    

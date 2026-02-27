@@ -41,10 +41,7 @@ class DailySyncService(SyncServiceBase):
         """返回服务名称，用于日志和追踪。"""
         return "DailySyncService"
 
-    async def run_incremental_sync(
-        self,
-        target_date: Optional[str] = None
-    ) -> dict:
+    async def run_incremental_sync(self, target_date: Optional[str] = None) -> dict:
         """
         执行日线增量同步（含遗漏检测与自动补偿）。
 
@@ -76,9 +73,7 @@ class DailySyncService(SyncServiceBase):
         return await self._execute_with_tracking(
             job_id="sync_daily_by_date",
             operation=_do_sync,
-            success_message=(
-                f"日线增量同步完成：日期={date_str}"
-            ),
+            success_message=(f"日线增量同步完成：日期={date_str}"),
         )
 
     async def run_history_sync(self) -> SyncTask:
@@ -104,6 +99,7 @@ class DailySyncService(SyncServiceBase):
             print(f"处理记录: {task.total_processed}")
             ```
         """
+
         async def _do_sync() -> SyncTask:
             async with SyncUseCaseFactory.create_sync_engine() as engine:
                 config = {

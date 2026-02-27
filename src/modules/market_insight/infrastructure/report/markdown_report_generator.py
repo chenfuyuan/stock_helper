@@ -40,9 +40,7 @@ class MarkdownReportGenerator:
         Path(output_path).parent.mkdir(parents=True, exist_ok=True)
 
         # 生成报告内容
-        content = self._build_report_content(
-            trade_date, concept_heats, limit_up_stocks, top_n
-        )
+        content = self._build_report_content(trade_date, concept_heats, limit_up_stocks, top_n)
 
         # 写入文件
         with open(output_path, "w", encoding="utf-8") as f:
@@ -93,17 +91,14 @@ class MarkdownReportGenerator:
             lines.append("今日无涨停。")
         else:
             # 按概念分组
-            concept_groups = self._group_limit_up_by_concept(
-                limit_up_stocks, concept_heats[:top_n]
-            )
+            concept_groups = self._group_limit_up_by_concept(limit_up_stocks, concept_heats[:top_n])
 
             for concept_name, stocks in concept_groups.items():
                 lines.append(f"### {concept_name}")
                 lines.append("")
                 for stock in stocks:
                     lines.append(
-                        f"- **{stock.stock_name}** ({stock.third_code}) "
-                        f"+{stock.pct_chg:.2f}%"
+                        f"- **{stock.stock_name}** ({stock.third_code}) " f"+{stock.pct_chg:.2f}%"
                     )
                 lines.append("")
 
@@ -152,10 +147,7 @@ class MarkdownReportGenerator:
         # 按概念热度排序
         concept_order = {c.concept_name: idx for idx, c in enumerate(top_concepts)}
         sorted_groups = {
-            k: v
-            for k, v in sorted(
-                groups.items(), key=lambda x: concept_order.get(x[0], 999)
-            )
+            k: v for k, v in sorted(groups.items(), key=lambda x: concept_order.get(x[0], 999))
         }
 
         return sorted_groups
@@ -188,7 +180,12 @@ class MarkdownReportGenerator:
 
         # 生成报告内容
         content = self._build_extended_report_content(
-            trade_date, concept_heats, limit_up_stocks, sentiment_metrics, capital_flow_analysis, top_n
+            trade_date,
+            concept_heats,
+            limit_up_stocks,
+            sentiment_metrics,
+            capital_flow_analysis,
+            top_n,
         )
 
         # 写入文件
@@ -256,9 +253,7 @@ class MarkdownReportGenerator:
                 lines.append("今日无涨停。")
             else:
                 # 按概念分组
-                concept_groups = self._group_limit_up_by_concept(
-                    limit_up_stocks, top_concepts
-                )
+                concept_groups = self._group_limit_up_by_concept(limit_up_stocks, top_concepts)
 
                 for concept_name, stocks in concept_groups.items():
                     lines.append(f"### {concept_name}")
@@ -298,7 +293,7 @@ class MarkdownReportGenerator:
             lines.append("")
             lines.append(f"- **最高连板**: {ladder.get('max_height', 0)} 板")
             lines.append(f"- **涨停总数**: {ladder.get('total_limit_up_count', 0)} 只")
-            
+
             tiers = ladder.get("tiers", [])
             if tiers:
                 lines.append("")
@@ -348,8 +343,10 @@ class MarkdownReportGenerator:
             lines.append("### 龙虎榜汇总")
             lines.append("")
             lines.append(f"- **上榜个股数**: {dragon_tiger.get('total_count', 0)} 只")
-            lines.append(f"- **合计净买入**: {dragon_tiger.get('total_net_buy', 0)/100000000:.2f} 亿元")
-            
+            lines.append(
+                f"- **合计净买入**: {dragon_tiger.get('total_net_buy', 0)/100000000:.2f} 亿元"
+            )
+
             institutional = dragon_tiger.get("institutional_activity", [])
             if institutional:
                 lines.append(f"- **机构参与**: {len(institutional)} 只")
@@ -362,7 +359,7 @@ class MarkdownReportGenerator:
             lines.append("")
             lines.append(f"- **参与板块数**: {sector_flow.get('total_sectors', 0)} 个")
             lines.append(f"- **板块平均涨跌幅**: {sector_flow.get('avg_pct_chg', 0):.2f}%")
-            
+
             top_inflows = sector_flow.get("top_inflow_sectors", [])
             if top_inflows:
                 lines.append("")
@@ -370,9 +367,10 @@ class MarkdownReportGenerator:
                 lines.append("| 板块名称 | 净流入(万) | 涨跌幅(%) |")
                 lines.append("|---------|-----------|----------|")
                 for sector in top_inflows[:5]:
-                    lines.append(
-                        f"| {sector.get('sector_name', '')} | {sector.get('net_amount', 0):.0f} | {sector.get('pct_chg', 0):.2f} |"
-                    )
+                    sector_name = sector.get('sector_name', '')
+                    net_amount = f"{sector.get('net_amount', 0):.0f}"
+                    pct_chg = f"{sector.get('pct_chg', 0):.2f}"
+                    lines.append(f"| {sector_name} | {net_amount} | {pct_chg} |")
             lines.append("")
 
         return "\n".join(lines)

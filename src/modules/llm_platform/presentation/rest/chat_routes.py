@@ -71,7 +71,7 @@ async def generate_text(request: ChatRequest, service: LLMService = Depends(get_
             success=True,
             code="LLM_CHAT_SUCCESS",
             message="LLM 对话成功完成",
-            data=ChatResponse(response=result)
+            data=ChatResponse(response=result),
         )
     except Exception as e:
         logger.error(f"API: generate_text failed: {str(e)}")

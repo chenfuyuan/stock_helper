@@ -15,12 +15,12 @@ from src.modules.knowledge_center.application.dtos.graph_api_dtos import (
     GraphRelationshipResponse,
     StockGraphResponse,
     StockNeighborResponse,
+    SyncAllRequest,
+    SyncConceptsRequest,
     SyncGraphRequest,
     SyncGraphResponse,
     SyncStocksFullRequest,
     SyncStocksIncrementalRequest,
-    SyncConceptsRequest,
-    SyncAllRequest,
 )
 from src.modules.knowledge_center.application.services.graph_service import GraphService
 from src.modules.knowledge_center.container import KnowledgeCenterContainer
@@ -30,8 +30,8 @@ from src.modules.knowledge_center.domain.exceptions import (
     GraphSyncError,
     Neo4jConnectionError,
 )
-from src.shared.infrastructure.db.session import get_db_session
 from src.shared.dtos import BaseResponse
+from src.shared.infrastructure.db.session import get_db_session
 
 router = APIRouter(prefix="/knowledge-graph", tags=["Knowledge Graph"])
 
@@ -41,7 +41,7 @@ async def get_graph_service(
 ) -> GraphService:
     """
     依赖注入：获取 GraphService 实例。
-    
+
     使用请求级 DB session 组装 KnowledgeCenterContainer。
     """
     return KnowledgeCenterContainer(db).graph_service()
@@ -50,10 +50,10 @@ async def get_graph_service(
 def _build_sync_response(result: SyncResult) -> SyncGraphResponse:
     """
     构建同步响应 DTO（私有辅助函数）。
-    
+
     Args:
         result: 同步结果
-    
+
     Returns:
         SyncGraphResponse 实例
     """
@@ -72,11 +72,11 @@ def _merge_sync_results(
 ) -> SyncGraphResponse:
     """
     合并股票和概念同步结果（私有辅助函数）。
-    
+
     Args:
         stock_result: 股票同步结果
         concept_result: 概念同步结果
-    
+
     Returns:
         合并后的 SyncGraphResponse
     """
@@ -110,14 +110,14 @@ async def get_stock_neighbors(
 ) -> BaseResponse[list[StockNeighborResponse]]:
     """
     查询同维度股票。
-    
+
     Args:
         third_code: 股票第三方代码
         dimension: 维度类型
         limit: 返回数量上限
         dimension_name: 维度名称，概念维度必填
         service: 图谱服务实例
-    
+
     Returns:
         同维度股票列表
     """
@@ -127,7 +127,7 @@ async def get_stock_neighbors(
             status_code=422,
             detail="查询概念维度邻居时必须提供 dimension_name 参数",
         )
-    
+
     try:
         neighbors = await service.get_stock_neighbors(
             third_code=third_code,
@@ -135,7 +135,7 @@ async def get_stock_neighbors(
             limit=limit,
             dimension_name=dimension_name,
         )
-        
+
         neighbors_data = [
             StockNeighborResponse(
                 third_code=n.third_code,
@@ -151,7 +151,7 @@ async def get_stock_neighbors(
             success=True,
             code="STOCK_NEIGHBORS_SUCCESS",
             message="同维度股票查询成功",
-            data=neighbors_data
+            data=neighbors_data,
         )
     except GraphQueryError as e:
         logger.error(f"查询同维度股票失败: {str(e)}")
@@ -174,12 +174,12 @@ async def get_stock_graph(
 ) -> BaseResponse[StockGraphResponse | None]:
     """
     查询个股关系网络。
-    
+
     Args:
         third_code: 股票第三方代码
         depth: 遍历深度
         service: 图谱服务实例
-    
+
     Returns:
         个股关系网络（节点与关系列表）
     """
@@ -188,15 +188,15 @@ async def get_stock_graph(
             third_code=third_code,
             depth=depth,
         )
-        
+
         if not graph:
             return BaseResponse(
                 success=True,
                 code="STOCK_GRAPH_SUCCESS",
                 message="个股关系网络查询成功，无数据",
-                data=None
+                data=None,
             )
-        
+
         graph_data = StockGraphResponse(
             nodes=[
                 GraphNodeResponse(
@@ -219,7 +219,7 @@ async def get_stock_graph(
             success=True,
             code="STOCK_GRAPH_SUCCESS",
             message="个股关系网络查询成功",
-            data=graph_data
+            data=graph_data,
         )
     except GraphQueryError as e:
         logger.error(f"查询个股关系网络失败: {str(e)}")
@@ -243,11 +243,11 @@ async def sync_stocks_full(
 ) -> BaseResponse[SyncGraphResponse]:
     """
     股票全量同步。
-    
+
     Args:
         request: 同步请求参数
         service: 图谱服务实例
-    
+
     Returns:
         同步结果摘要
     """
@@ -259,12 +259,12 @@ async def sync_stocks_full(
             skip=request.skip,
             limit=request.limit,
         )
-        
+
         return BaseResponse(
             success=True,
             code="GRAPH_SYNC_SUCCESS",
             message="股票数据全量同步成功",
-            data=_build_sync_response(result)
+            data=_build_sync_response(result),
         )
     except GraphSyncError as e:
         logger.error(f"同步股票数据失败: {str(e)}")
@@ -289,11 +289,11 @@ async def sync_stocks_incremental(
 ) -> BaseResponse[SyncGraphResponse]:
     """
     股票增量同步。
-    
+
     Args:
         request: 同步请求参数
         service: 图谱服务实例
-    
+
     Returns:
         同步结果摘要
     """
@@ -306,12 +306,12 @@ async def sync_stocks_incremental(
             window_days=request.window_days,
             limit=request.limit,
         )
-        
+
         return BaseResponse(
             success=True,
             code="GRAPH_SYNC_SUCCESS",
             message="股票数据增量同步成功",
-            data=_build_sync_response(result)
+            data=_build_sync_response(result),
         )
     except GraphSyncError as e:
         logger.error(f"同步股票数据失败: {str(e)}")
@@ -336,23 +336,23 @@ async def sync_concepts(
 ) -> BaseResponse[SyncGraphResponse]:
     """
     概念同步。
-    
+
     Args:
         request: 同步请求参数
         service: 图谱服务实例
-    
+
     Returns:
         同步结果摘要
     """
     try:
         logger.info("执行概念全量同步")
         result = await service.sync_concept_graph(batch_size=request.batch_size)
-        
+
         return BaseResponse(
             success=True,
             code="GRAPH_SYNC_SUCCESS",
             message="概念数据同步成功",
-            data=_build_sync_response(result)
+            data=_build_sync_response(result),
         )
     except GraphSyncError as e:
         logger.error(f"同步概念数据失败: {str(e)}")
@@ -377,17 +377,17 @@ async def sync_all(
 ) -> BaseResponse[SyncGraphResponse]:
     """
     全部同步（股票 + 概念）。
-    
+
     Args:
         request: 同步请求参数
         service: 图谱服务实例
-    
+
     Returns:
         同步结果摘要
     """
     try:
         logger.info("执行全部同步：股票 + 概念")
-        
+
         # 执行股票同步
         if request.mode == "full":
             stock_result = await service.sync_full_graph(
@@ -404,18 +404,15 @@ async def sync_all(
                 window_days=request.window_days,
                 limit=request.limit,
             )
-        
+
         # 执行概念同步
         concept_result = await service.sync_concept_graph(batch_size=request.batch_size)
-        
+
         # 合并结果
         merged_result = _merge_sync_results(stock_result, concept_result)
-        
+
         return BaseResponse(
-            success=True,
-            code="GRAPH_SYNC_SUCCESS",
-            message="全部数据同步成功",
-            data=merged_result
+            success=True, code="GRAPH_SYNC_SUCCESS", message="全部数据同步成功", data=merged_result
         )
     except GraphSyncError as e:
         logger.error(f"同步数据失败: {str(e)}")
@@ -441,11 +438,11 @@ async def sync_graph(
 ) -> BaseResponse[SyncGraphResponse]:
     """
     同步图谱数据（已弃用，保持向后兼容）。
-    
+
     Args:
         request: 同步请求参数
         service: 图谱服务实例
-    
+
     Returns:
         同步结果摘要
     """
@@ -475,16 +472,13 @@ async def sync_graph(
                     window_days=request.window_days,
                     limit=request.limit,
                 )
-            
+
             concept_result = await service.sync_concept_graph(batch_size=request.batch_size)
-            
+
             # 合并结果
             result = _merge_sync_results(stock_result, concept_result)
             return BaseResponse(
-                success=True,
-                code="GRAPH_SYNC_SUCCESS",
-                message="图谱数据同步成功",
-                data=result
+                success=True, code="GRAPH_SYNC_SUCCESS", message="图谱数据同步成功", data=result
             )
         else:
             # target="stock" 的默认行为
@@ -506,12 +500,12 @@ async def sync_graph(
                 )
             else:
                 raise HTTPException(status_code=400, detail=f"无效的同步模式: {request.mode}")
-        
+
         return BaseResponse(
             success=True,
             code="GRAPH_SYNC_SUCCESS",
             message="图谱数据同步成功",
-            data=_build_sync_response(result)
+            data=_build_sync_response(result),
         )
     except GraphSyncError as e:
         logger.error(f"同步图谱数据失败: {str(e)}")
@@ -537,19 +531,16 @@ async def clear_graph(
 ) -> BaseResponse[dict]:
     """
     清空知识图谱。
-    
+
     删除所有节点和关系，用于完全重建图谱。
-    
+
     Returns:
         清空结果统计信息
     """
     try:
         result = await service.clear_all_graph_data()
         return BaseResponse(
-            success=True,
-            code="GRAPH_CLEAR_SUCCESS",
-            message="知识图谱清空成功",
-            data=result
+            success=True, code="GRAPH_CLEAR_SUCCESS", message="知识图谱清空成功", data=result
         )
     except GraphSyncError as e:
         logger.error(f"清空图谱失败: {str(e)}")

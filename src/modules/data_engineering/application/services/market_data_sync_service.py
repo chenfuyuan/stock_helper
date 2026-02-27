@@ -8,7 +8,7 @@
 - 板块资金流向数据同步
 """
 
-from datetime import date, datetime
+from datetime import datetime
 from typing import Optional
 
 from src.modules.data_engineering.application.dtos.sync_result_dtos import (
@@ -45,10 +45,7 @@ class MarketDataSyncService(SyncServiceBase):
         """返回服务名称，用于日志和追踪。"""
         return "MarketDataSyncService"
 
-    async def run_sync(
-        self,
-        target_date: Optional[str] = None
-    ) -> AkShareSyncResult:
+    async def run_sync(self, target_date: Optional[str] = None) -> AkShareSyncResult:
         """
         执行 AkShare 市场数据同步。
 
@@ -101,7 +98,5 @@ class MarketDataSyncService(SyncServiceBase):
         return await self._execute_with_tracking(
             job_id="sync_akshare_market_data",
             operation=_do_sync,
-            success_message=(
-                f"AkShare 市场数据同步完成：日期={trade_date}"
-            ),
+            success_message=(f"AkShare 市场数据同步完成：日期={trade_date}"),
         )

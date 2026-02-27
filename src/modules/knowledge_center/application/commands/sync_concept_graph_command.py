@@ -16,7 +16,7 @@ from src.modules.knowledge_center.infrastructure.adapters.concept_data_adapter i
 class SyncConceptGraphCommand:
     """
     同步概念图谱命令用例
-    
+
     全量同步概念数据到 Neo4j 图谱：
     1. 通过 ConceptDataAdapter 从 data_engineering PostgreSQL 获取概念数据
     2. 将数据转换为 ConceptGraphSyncDTO
@@ -31,7 +31,7 @@ class SyncConceptGraphCommand:
     ):
         """
         初始化概念同步命令用例
-        
+
         Args:
             graph_repo: 图谱仓储接口
             concept_adapter: 概念数据适配器
@@ -42,14 +42,14 @@ class SyncConceptGraphCommand:
     async def execute(self, batch_size: int = 500) -> SyncResult:
         """
         执行概念图谱全量同步
-        
+
         采用"先删后建"策略：
         1. 删除所有现有的 BELONGS_TO_CONCEPT 关系
         2. 批量写入 Concept 节点和新的关系
-        
+
         Args:
             batch_size: 每批提交的记录数
-        
+
         Returns:
             SyncResult：同步结果摘要
         """

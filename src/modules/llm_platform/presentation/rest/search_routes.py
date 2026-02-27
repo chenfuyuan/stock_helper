@@ -142,7 +142,7 @@ async def search_web(
                 query=response.query,
                 total_matches=response.total_matches,
                 results=api_results,
-            )
+            ),
         )
 
     except WebSearchConfigError as e:

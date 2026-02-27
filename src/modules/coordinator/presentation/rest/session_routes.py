@@ -80,10 +80,7 @@ async def list_sessions(
         limit=limit,
     )
     return BaseResponse(
-        success=True,
-        code="SESSION_LIST_SUCCESS",
-        message="会话列表查询成功",
-        data=sessions
+        success=True, code="SESSION_LIST_SUCCESS", message="会话列表查询成功", data=sessions
     )
 
 
@@ -102,10 +99,7 @@ async def get_session_detail(
     if detail is None:
         raise HTTPException(status_code=404, detail="会话不存在")
     return BaseResponse(
-        success=True,
-        code="SESSION_DETAIL_SUCCESS",
-        message="会话详情查询成功",
-        data=detail
+        success=True, code="SESSION_DETAIL_SUCCESS", message="会话详情查询成功", data=detail
     )
 
 
@@ -143,7 +137,7 @@ async def list_session_llm_calls(
         success=True,
         code="SESSION_LLM_CALLS_SUCCESS",
         message="会话 LLM 调用日志查询成功",
-        data=llm_calls
+        data=llm_calls,
     )
 
 
@@ -177,5 +171,5 @@ async def list_session_api_calls(
         success=True,
         code="SESSION_API_CALLS_SUCCESS",
         message="会话 API 调用日志查询成功",
-        data=api_calls
+        data=api_calls,
     )

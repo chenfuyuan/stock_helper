@@ -31,7 +31,7 @@ from src.modules.knowledge_center.domain.ports.graph_repository import IGraphRep
 class GraphService:
     """
     图谱服务门面。
-    
+
     聚合同步命令与查询用例，提供统一的服务接口。
     """
 
@@ -45,7 +45,7 @@ class GraphService:
     ):
         """
         初始化图谱服务。
-        
+
         Args:
             graph_repo: 图谱仓储接口（Port）
             sync_command: 股票同步命令用例
@@ -68,13 +68,13 @@ class GraphService:
     ) -> SyncResult:
         """
         全量同步图谱数据。
-        
+
         Args:
             include_finance: 是否包含财务快照
             batch_size: 批量大小
             skip: 跳过前 N 条记录
             limit: 查询数量上限
-        
+
         Returns:
             SyncResult：同步结果摘要
         """
@@ -98,14 +98,14 @@ class GraphService:
     ) -> SyncResult:
         """
         增量同步指定股票数据。
-        
+
         Args:
             third_codes: 股票代码列表；为空时按时间窗口自动确定
             include_finance: 是否包含财务快照
             batch_size: 批量大小
             window_days: 自动模式下时间窗口天数
             limit: 自动模式下扫描上限
-        
+
         Returns:
             SyncResult：同步结果摘要
         """
@@ -123,10 +123,10 @@ class GraphService:
     async def sync_concept_graph(self, batch_size: int = 500) -> SyncResult:
         """
         全量同步概念图谱数据。
-        
+
         Args:
             batch_size: 批量大小
-        
+
         Returns:
             SyncResult：同步结果摘要
         """
@@ -144,13 +144,13 @@ class GraphService:
     ) -> list[StockNeighborDTO]:
         """
         查询同维度股票。
-        
+
         Args:
             third_code: 股票第三方代码
             dimension: 维度类型（industry/area/market/exchange/concept）
             limit: 返回数量上限
             dimension_name: 维度名称，当 dimension="concept" 时必填
-        
+
         Returns:
             StockNeighborDTO 列表
         """
@@ -170,11 +170,11 @@ class GraphService:
     ) -> Optional[StockGraphDTO]:
         """
         查询个股关系网络。
-        
+
         Args:
             third_code: 股票第三方代码
             depth: 遍历深度，默认 1
-        
+
         Returns:
             StockGraphDTO 或 None（股票不存在时）
         """
@@ -188,9 +188,9 @@ class GraphService:
     async def clear_all_graph_data(self) -> dict:
         """
         清空整个图谱数据。
-        
+
         删除所有节点和关系，用于完全重建图谱。
-        
+
         Returns:
             dict：包含删除的节点数和关系数的统计信息
         """

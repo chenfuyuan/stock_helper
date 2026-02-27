@@ -195,8 +195,10 @@ class StockDailyRepositoryImpl(BaseRepository[StockDailyModel], IMarketQuoteRepo
 
     async def get_all_by_trade_date(self, trade_date: date) -> List[StockDaily]:
         """查询指定交易日的全市场日线数据"""
-        from src.modules.data_engineering.infrastructure.persistence.models.stock_model import StockModel
-        
+        from src.modules.data_engineering.infrastructure.persistence.models.stock_model import (
+            StockModel,
+        )
+
         stmt = (
             select(StockDailyModel, StockModel.name)
             .join(StockModel, StockDailyModel.third_code == StockModel.third_code, isouter=True)

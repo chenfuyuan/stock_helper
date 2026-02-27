@@ -7,6 +7,7 @@ from src.modules.data_engineering.domain.ports.repositories.broken_board_repo im
     IBrokenBoardRepository,
 )
 
+
 class GetBrokenBoardByDateUseCase:
     """
     按日期查询炒板池数据用例。

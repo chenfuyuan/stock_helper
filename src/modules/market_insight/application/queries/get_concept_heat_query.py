@@ -19,9 +19,7 @@ class GetConceptHeatQuery:
     def __init__(self, concept_heat_repo: IConceptHeatRepository):
         self._repo = concept_heat_repo
 
-    async def execute(
-        self, trade_date: date, top_n: Optional[int] = None
-    ) -> List[ConceptHeatDTO]:
+    async def execute(self, trade_date: date, top_n: Optional[int] = None) -> List[ConceptHeatDTO]:
         """
         执行查询
         :param trade_date: 交易日期

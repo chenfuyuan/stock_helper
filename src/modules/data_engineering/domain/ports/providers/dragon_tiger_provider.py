@@ -14,10 +14,10 @@ class IDragonTigerProvider(ABC):
     async def fetch_dragon_tiger_detail(self, trade_date: date) -> list[DragonTigerDetailDTO]:
         """
         获取指定日期的龙虎榜详情数据
-        
+
         Args:
             trade_date: 交易日期
-            
+
         Returns:
             list[DragonTigerDetailDTO]: 龙虎榜详情数据列表
         """

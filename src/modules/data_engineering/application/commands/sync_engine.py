@@ -1,5 +1,5 @@
 from datetime import date, datetime, timedelta
-from typing import Dict, Any, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 from loguru import logger
 
@@ -11,6 +11,10 @@ from src.modules.data_engineering.application.commands.sync_daily_history_cmd im
 )
 from src.modules.data_engineering.application.commands.sync_finance_history_cmd import (
     SyncFinanceHistoryCmd,
+)
+from src.modules.data_engineering.application.dtos.sync_result_dtos import (
+    DailyHistorySyncResult,
+    FinanceHistorySyncResult,
 )
 from src.modules.data_engineering.domain.model.enums import (
     SyncJobType,
@@ -36,11 +40,6 @@ from src.modules.data_engineering.domain.ports.repositories.sync_task_repo impor
     ISyncTaskRepository,
 )
 from src.modules.data_engineering.infrastructure.config import de_config
-from src.modules.data_engineering.application.dtos.sync_result_dtos import (
-    DailyByDateSyncResult,
-    DailyHistorySyncResult,
-    FinanceHistorySyncResult,
-)
 
 
 class SyncEngine:
@@ -102,7 +101,7 @@ class SyncEngine:
             now = datetime.utcnow()
             timeout_minutes = de_config.SYNC_TASK_STALE_TIMEOUT_MINUTES
             timeout_delta = timedelta(minutes=timeout_minutes)
-            
+
             if now - latest_task.updated_at > timeout_delta:
                 # 任务僵死，标记为 PAUSED 并允许创建新任务（保持断点续跑能力）
                 logger.warning(
@@ -159,9 +158,9 @@ class SyncEngine:
 
                 # 判断是否完成
                 processed_count = (
-                    result.synced_stocks if hasattr(result, 'synced_stocks') 
-                    else result.batch_size if hasattr(result, 'batch_size') 
-                    else 0
+                    result.synced_stocks
+                    if hasattr(result, "synced_stocks")
+                    else result.batch_size if hasattr(result, "batch_size") else 0
                 )
                 if processed_count == 0:
                     logger.info("本批未处理任何股票，标记任务为 COMPLETED")

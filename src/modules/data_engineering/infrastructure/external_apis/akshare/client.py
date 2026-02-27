@@ -27,10 +27,10 @@ class AkShareConceptClient(AkShareBaseClient, IConceptDataProvider):
         """
         获取所有概念板块列表
         调用 akshare.stock_board_concept_name_em() 接口
-        
+
         Returns:
             list[ConceptInfoDTO]: 概念板块列表
-            
+
         Raises:
             AppException: API 调用失败时抛出
         """
@@ -83,13 +83,13 @@ class AkShareConceptClient(AkShareBaseClient, IConceptDataProvider):
         """
         获取指定概念板块的成份股列表
         调用 akshare.stock_board_concept_cons_em(symbol=<概念名称>) 接口
-        
+
         Args:
             symbol: 概念板块名称（如 "低空经济"）
-            
+
         Returns:
             list[ConceptConstituentDTO]: 成份股列表，股票代码已转换为系统标准格式
-            
+
         Raises:
             AppException: API 调用失败时抛出
         """

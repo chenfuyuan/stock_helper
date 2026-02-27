@@ -72,7 +72,7 @@ async def run_technical_analysis(
             success=True,
             code="TECHNICAL_ANALYSIS_SUCCESS",
             message="技术分析成功完成",
-            data=TechnicalAnalysisApiResponse(**result)
+            data=TechnicalAnalysisApiResponse(**result),
         )
     except BadRequestException as e:
         raise HTTPException(status_code=400, detail=e.message)

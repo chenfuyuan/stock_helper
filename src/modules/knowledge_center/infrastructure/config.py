@@ -10,7 +10,7 @@ from pydantic_settings import BaseSettings
 class Neo4jConfig(BaseSettings):
     """
     Neo4j 连接配置。
-    
+
     从环境变量读取 Neo4j 连接参数。
     """
 

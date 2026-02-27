@@ -65,6 +65,7 @@ class PgBrokenBoardRepository(BaseRepository[BrokenBoardModel], IBrokenBoardRepo
         models = result.scalars().all()
 
         import uuid
+
         return [
             BrokenBoardStock(
                 id=uuid.UUID(int=model.id),  # 将整数ID转换为UUID

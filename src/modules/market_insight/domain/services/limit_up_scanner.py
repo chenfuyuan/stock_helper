@@ -9,7 +9,7 @@ from src.modules.market_insight.domain.dtos.insight_dtos import (
     StockDailyDTO,
 )
 from src.modules.market_insight.domain.model.enums import LimitType
-from src.modules.market_insight.domain.model.limit_up_stock import LimitUpStock, Concept
+from src.modules.market_insight.domain.model.limit_up_stock import Concept, LimitUpStock
 
 
 class LimitUpScanner:
@@ -30,7 +30,7 @@ class LimitUpScanner:
 
         for bar in daily_bars:
             limit_type = self._determine_limit_type(bar.stock_name, bar.third_code, bar.pct_chg)
-            
+
             if limit_type is None:
                 continue
 

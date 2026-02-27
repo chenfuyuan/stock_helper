@@ -3,17 +3,16 @@
 测试 APScheduler 适配器与实际调度器的集成功能。
 """
 
-import pytest
 import asyncio
-from datetime import datetime, timedelta
-from unittest.mock import AsyncMock
 
-from src.modules.foundation.infrastructure.adapters.apscheduler_adapter import APSchedulerAdapter
+import pytest
+
 from src.modules.foundation.domain.exceptions import (
-    SchedulerJobNotFoundException,
+    SchedulerExecutionException,
     SchedulerJobAlreadyExistsException,
-    SchedulerExecutionException
+    SchedulerJobNotFoundException,
 )
+from src.modules.foundation.infrastructure.adapters.apscheduler_adapter import APSchedulerAdapter
 
 
 class TestAPSchedulerAdapterIntegration:
@@ -30,9 +29,11 @@ class TestAPSchedulerAdapterIntegration:
     @pytest.fixture
     def sample_job_func(self):
         """示例任务函数"""
+
         async def sample_job(param1=None, param2=None):
             """示例任务"""
             return f"executed with {param1}, {param2}"
+
         return sample_job
 
     @pytest.mark.asyncio
@@ -41,7 +42,7 @@ class TestAPSchedulerAdapterIntegration:
         # 测试启动状态（在 fixture 中已经启动）
         # APScheduler 不提供 is_initialized/is_running 方法
         # 我们通过操作来验证状态
-        
+
         # 测试停止和重新启动
         await adapter.shutdown_scheduler()
         await adapter.start_scheduler()
@@ -56,9 +57,9 @@ class TestAPSchedulerAdapterIntegration:
             cron_expression="0 9 * * 1-5",
             timezone="UTC",
             param1="value1",
-            param2="value2"
+            param2="value2",
         )
-        
+
         # 获取任务状态
         job_status = await adapter.get_job_status("test_job")
         assert job_status is not None
@@ -69,17 +70,13 @@ class TestAPSchedulerAdapterIntegration:
         """测试调度重复任务"""
         # 第一次调度
         await adapter.schedule_job(
-            job_id="duplicate_job",
-            job_func=sample_job_func,
-            cron_expression="0 9 * * 1-5"
+            job_id="duplicate_job", job_func=sample_job_func, cron_expression="0 9 * * 1-5"
         )
-        
+
         # 第二次调度应该抛出异常
         with pytest.raises(SchedulerJobAlreadyExistsException):
             await adapter.schedule_job(
-                job_id="duplicate_job",
-                job_func=sample_job_func,
-                cron_expression="0 10 * * 1-5"
+                job_id="duplicate_job", job_func=sample_job_func, cron_expression="0 10 * * 1-5"
             )
 
     @pytest.mark.asyncio
@@ -87,19 +84,17 @@ class TestAPSchedulerAdapterIntegration:
         """测试移除任务"""
         # 调度任务
         await adapter.schedule_job(
-            job_id="removable_job",
-            job_func=sample_job_func,
-            cron_expression="0 9 * * 1-5"
+            job_id="removable_job", job_func=sample_job_func, cron_expression="0 9 * * 1-5"
         )
-        
+
         # 确认任务存在
         job_status = await adapter.get_job_status("removable_job")
         assert job_status is not None
         assert job_status["id"] == "removable_job"
-        
+
         # 移除任务
         await adapter.remove_job("removable_job")
-        
+
         # 确认任务不存在
         job_status = await adapter.get_job_status("removable_job")
         assert job_status is None
@@ -115,11 +110,9 @@ class TestAPSchedulerAdapterIntegration:
         """测试触发任务"""
         # 调度任务
         await adapter.schedule_job(
-            job_id="triggerable_job",
-            job_func=sample_job_func,
-            cron_expression="0 9 * * 1-5"
+            job_id="triggerable_job", job_func=sample_job_func, cron_expression="0 9 * * 1-5"
         )
-        
+
         # 触发任务（注意：实际执行可能需要等待）
         await adapter.trigger_job("triggerable_job")
 
@@ -133,27 +126,20 @@ class TestAPSchedulerAdapterIntegration:
     async def test_get_all_jobs(self, adapter, sample_job_func):
         """测试获取所有任务"""
         # 调度多个任务
-        jobs_data = [
-            ("job1", "0 8 * * 1-5"),
-            ("job2", "0 9 * * 1-5"),
-            ("job3", "0 10 * * 1-5")
-        ]
-        
+        jobs_data = [("job1", "0 8 * * 1-5"), ("job2", "0 9 * * 1-5"), ("job3", "0 10 * * 1-5")]
+
         for job_id, cron_expr in jobs_data:
             await adapter.schedule_job(
-                job_id=job_id,
-                job_func=sample_job_func,
-                cron_expression=cron_expr
+                job_id=job_id, job_func=sample_job_func, cron_expression=cron_expr
             )
-        
+
         # 获取所有任务
         all_jobs = await adapter.get_all_jobs()
         assert len(all_jobs) >= 3
-        
+
         job_ids = [job["id"] for job in all_jobs]
         for job_id, _ in jobs_data:
             assert job_id in job_ids
-
 
     @pytest.mark.asyncio
     async def test_schedule_job_with_invalid_cron(self, adapter, sample_job_func):
@@ -162,7 +148,7 @@ class TestAPSchedulerAdapterIntegration:
             await adapter.schedule_job(
                 job_id="invalid_cron_job",
                 job_func=sample_job_func,
-                cron_expression="invalid cron expression"
+                cron_expression="invalid cron expression",
             )
 
     @pytest.mark.asyncio
@@ -174,15 +160,15 @@ class TestAPSchedulerAdapterIntegration:
             task = adapter.schedule_job(
                 job_id=f"concurrent_job_{i}",
                 job_func=sample_job_func,
-                cron_expression=f"0 {8+i} * * 1-5"
+                cron_expression=f"0 {8+i} * * 1-5",
             )
             tasks.append(task)
-        
+
         await asyncio.gather(*tasks)
-        
+
         # 验证所有任务都被调度
         all_jobs = await adapter.get_all_jobs()
         job_ids = [job["id"] for job in all_jobs]
-        
+
         for i in range(5):
             assert f"concurrent_job_{i}" in job_ids

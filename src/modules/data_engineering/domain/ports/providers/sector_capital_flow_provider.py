@@ -15,10 +15,10 @@ class ISectorCapitalFlowProvider(ABC):
     ) -> list[SectorCapitalFlowDTO]:
         """
         获取当日板块资金流向排名
-        
+
         Args:
             sector_type: 板块类型（默认"概念资金流"）
-            
+
         Returns:
             list[SectorCapitalFlowDTO]: 板块资金流向数据列表
         """

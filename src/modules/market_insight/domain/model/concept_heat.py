@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 
 class ConceptHeat(BaseModel):
     """概念板块热度实体"""
-    
+
     trade_date: date = Field(..., description="交易日期")
     concept_code: str = Field(..., description="概念板块代码")
     concept_name: str = Field(..., description="概念板块名称")

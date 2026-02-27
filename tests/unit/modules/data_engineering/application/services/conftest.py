@@ -3,14 +3,13 @@
 提供 Service 测试所需的 mock 对象和辅助函数。
 """
 
-from typing import AsyncGenerator, Generator
+from typing import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.data_engineering.domain.model.sync_task import SyncTask
-
 
 # =============================================================================
 # Mock Fixtures for Session and Repository

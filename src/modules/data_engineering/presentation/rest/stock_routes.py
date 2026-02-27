@@ -12,11 +12,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.modules.data_engineering.application.commands.sync_daily_history_cmd import (
     SyncDailyHistoryCmd,
 )
+from src.modules.data_engineering.application.commands.sync_incremental_finance_cmd import (
+    SyncIncrementalFinanceCmd,
+)
 from src.modules.data_engineering.application.commands.sync_stock_list_cmd import (
     SyncStockListCmd,
 )
-from src.modules.data_engineering.application.commands.sync_incremental_finance_cmd import (
-    SyncIncrementalFinanceCmd,
+from src.modules.data_engineering.domain.ports.providers.financial_data_provider import (
+    IFinancialDataProvider,
 )
 
 # Domain ports
@@ -26,17 +29,14 @@ from src.modules.data_engineering.domain.ports.providers.market_quote_provider i
 from src.modules.data_engineering.domain.ports.providers.stock_basic_provider import (
     IStockBasicProvider,
 )
-from src.modules.data_engineering.domain.ports.providers.financial_data_provider import (
-    IFinancialDataProvider,
+from src.modules.data_engineering.domain.ports.repositories.financial_data_repo import (
+    IFinancialDataRepository,
 )
 from src.modules.data_engineering.domain.ports.repositories.market_quote_repo import (
     IMarketQuoteRepository,
 )
 from src.modules.data_engineering.domain.ports.repositories.stock_basic_repo import (
     IStockBasicRepository,
-)
-from src.modules.data_engineering.domain.ports.repositories.financial_data_repo import (
-    IFinancialDataRepository,
 )
 from src.modules.data_engineering.domain.ports.repositories.sync_task_repo import (
     ISyncTaskRepository,
@@ -46,14 +46,14 @@ from src.modules.data_engineering.domain.ports.repositories.sync_task_repo impor
 from src.modules.data_engineering.infrastructure.external_apis.tushare.client import (
     TushareClient,
 )
+from src.modules.data_engineering.infrastructure.persistence.repositories.pg_finance_repo import (
+    StockFinanceRepositoryImpl,
+)
 from src.modules.data_engineering.infrastructure.persistence.repositories.pg_quote_repo import (
     StockDailyRepositoryImpl,
 )
 from src.modules.data_engineering.infrastructure.persistence.repositories.pg_stock_repo import (
     StockRepositoryImpl,
-)
-from src.modules.data_engineering.infrastructure.persistence.repositories.pg_finance_repo import (
-    StockFinanceRepositoryImpl,
 )
 from src.modules.data_engineering.infrastructure.persistence.repositories.pg_sync_task_repo import (
     SyncTaskRepositoryImpl,
@@ -63,15 +63,18 @@ from src.modules.data_engineering.infrastructure.persistence.repositories.pg_syn
 from src.shared.dtos import BaseResponse
 from src.shared.infrastructure.db.session import get_db_session
 
+
 # Response Models
 class SyncStockResponse(BaseModel):
     """股票同步响应模型。"""
+
     synced_count: int
     message: str
 
 
 class SyncStockDailyResponse(BaseModel):
     """股票日线同步响应模型。"""
+
     synced_stocks: int
     total_rows: int
     message: str
@@ -79,6 +82,7 @@ class SyncStockDailyResponse(BaseModel):
 
 class SyncFinanceIncrementalResponse(BaseModel):
     """财务增量同步响应模型。"""
+
     status: str
     synced_count: int
     failed_count: int
@@ -90,6 +94,7 @@ class SyncFinanceIncrementalResponse(BaseModel):
 
 class HistorySyncResponse(BaseModel):
     """历史全量同步响应模型。"""
+
     task_id: str
     status: str
     total_processed: int
@@ -189,7 +194,7 @@ async def sync_stock_daily_incremental(
 ):
     """
     增量同步股票日线历史数据（日常操作）
-    
+
     用于定期同步最新数据，支持分页处理避免超时。
     可指定股票代码同步单只股票，不指定则按分页同步多只股票。
     """
@@ -197,8 +202,7 @@ async def sync_stock_daily_incremental(
     try:
         result = await use_case.execute(limit=limit, offset=offset, symbol=symbol)
         logger.info(
-            f"日线增量同步完成：{result.synced_stocks} 只股票，"
-            f"{result.total_rows} 条记录"
+            f"日线增量同步完成：{result.synced_stocks} 只股票，" f"{result.total_rows} 条记录"
         )
 
         return BaseResponse(
@@ -216,22 +220,24 @@ async def sync_stock_daily_incremental(
         raise e
 
 
-@router.post("/sync/finance/incremental", response_model=BaseResponse[SyncFinanceIncrementalResponse])
+@router.post(
+    "/sync/finance/incremental", response_model=BaseResponse[SyncFinanceIncrementalResponse]
+)
 async def sync_finance_incremental(
     actual_date: Optional[str] = None,
     use_case: SyncIncrementalFinanceCmd = Depends(get_sync_finance_incremental_use_case),
 ):
     """
     财务数据增量同步（日常操作）
-    
+
     用于定期同步最新披露的财务数据，支持多策略同步：
     - 策略 A：今日披露名单驱动（高优先级）
     - 策略 B：长尾轮询补齐缺失数据（低优先级）
     - 策略 C：失败重试机制（前置步骤）
-    
+
     Args:
         actual_date: 可选，指定同步日期 (YYYYMMDD)，默认为当天
-    
+
     Returns:
         包含同步结果详情的响应，包括成功/失败数量、重试统计等
     """
@@ -266,23 +272,23 @@ async def sync_finance_incremental(
 async def sync_daily_history_full():
     """
     日线历史全量同步（管理操作）
-    
+
     用于初始化或数据修复，一次性同步所有历史数据
     使用 SyncEngine 自动分批处理，适合低频手动触发
-    
+
     异步运行：立即返回任务ID，任务在后台执行
     """
     from src.modules.data_engineering.application.services.daily_sync_service import (
         DailySyncService,
     )
-    
+
     logger.info("收到日线历史全量同步请求")
     try:
         service = DailySyncService()
-        
+
         # 创建后台任务，不等待完成
         task = asyncio.create_task(service.run_history_sync())
-        
+
         # 立即返回响应，包含任务引用信息
         return BaseResponse(
             success=True,
@@ -304,23 +310,23 @@ async def sync_daily_history_full():
 async def sync_finance_history_full():
     """
     财务历史全量同步（管理操作）
-    
+
     用于初始化或数据修复，一次性同步所有财务历史数据
     使用 SyncEngine 自动分批处理，适合低频手动触发
-    
+
     异步运行：立即返回任务ID，任务在后台执行
     """
     from src.modules.data_engineering.application.services.finance_sync_service import (
         FinanceSyncService,
     )
-    
+
     logger.info("收到财务历史全量同步请求")
     try:
         service = FinanceSyncService()
-        
+
         # 创建后台任务，不等待完成
         task = asyncio.create_task(service.run_history_sync())
-        
+
         # 立即返回响应，包含任务引用信息
         return BaseResponse(
             success=True,

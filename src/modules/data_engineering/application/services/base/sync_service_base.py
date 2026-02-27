@@ -11,7 +11,9 @@ from typing import Awaitable, Callable, TypeVar
 
 from loguru import logger
 
-from src.modules.foundation.infrastructure.execution_tracker import ExecutionTracker
+from src.modules.foundation.infrastructure.execution_tracker import (
+    ExecutionTracker,
+)
 from src.modules.foundation.infrastructure.persistence.repositories.scheduler_execution_log_repo import (
     SchedulerExecutionLogRepository,
 )

@@ -13,7 +13,7 @@ from pydantic import BaseModel, Field
 class StockNode(BaseModel):
     """
     Stock 节点实体。
-    
+
     包含股票基本信息与可选的财务快照属性。
     """
 
@@ -24,7 +24,7 @@ class StockNode(BaseModel):
     list_date: Optional[date] = Field(None, description="上市日期")
     list_status: Optional[str] = Field(None, description="上市状态")
     curr_type: Optional[str] = Field(None, description="交易货币")
-    
+
     # 可选财务快照字段（最新一期）
     roe: Optional[float] = Field(None, description="净资产收益率")
     roa: Optional[float] = Field(None, description="总资产报酬率")
@@ -38,7 +38,7 @@ class StockNode(BaseModel):
 class IndustryNode(BaseModel):
     """
     Industry 节点实体。
-    
+
     代表行业维度节点。
     """
 
@@ -48,7 +48,7 @@ class IndustryNode(BaseModel):
 class AreaNode(BaseModel):
     """
     Area 节点实体。
-    
+
     代表地域维度节点。
     """
 
@@ -58,7 +58,7 @@ class AreaNode(BaseModel):
 class MarketNode(BaseModel):
     """
     Market 节点实体。
-    
+
     代表市场类型维度节点（如主板、创业板）。
     """
 
@@ -68,7 +68,7 @@ class MarketNode(BaseModel):
 class ExchangeNode(BaseModel):
     """
     Exchange 节点实体。
-    
+
     代表交易所维度节点（如 SSE、SZSE）。
     """
 

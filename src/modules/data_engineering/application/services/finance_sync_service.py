@@ -46,8 +46,7 @@ class FinanceSyncService(SyncServiceBase):
         return "FinanceSyncService"
 
     async def run_incremental_sync(
-        self,
-        target_date: Optional[str] = None
+        self, target_date: Optional[str] = None
     ) -> IncrementalFinanceSyncResult:
         """
         执行财务增量同步。
@@ -83,9 +82,7 @@ class FinanceSyncService(SyncServiceBase):
         return await self._execute_with_tracking(
             job_id="sync_incremental_finance",
             operation=_do_sync,
-            success_message=(
-                f"财务增量同步完成：日期={date_str}"
-            ),
+            success_message=(f"财务增量同步完成：日期={date_str}"),
         )
 
     async def run_history_sync(self) -> SyncTask:
@@ -111,6 +108,7 @@ class FinanceSyncService(SyncServiceBase):
             print(f"处理记录: {task.total_processed}")
             ```
         """
+
         async def _do_sync() -> SyncTask:
             async with SyncUseCaseFactory.create_sync_engine() as engine:
                 config = {

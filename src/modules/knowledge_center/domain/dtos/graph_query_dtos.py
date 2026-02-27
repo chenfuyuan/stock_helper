@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field
 class StockNeighborDTO(BaseModel):
     """
     同维度股票邻居 DTO。
-    
+
     用于返回与查询股票共享同一维度节点的其他股票信息。
     """
 
@@ -27,7 +27,7 @@ class StockNeighborDTO(BaseModel):
 class GraphNodeDTO(BaseModel):
     """
     图谱节点 DTO。
-    
+
     通用节点表示，包含节点标签、标识符与属性字典。
     """
 
@@ -39,7 +39,7 @@ class GraphNodeDTO(BaseModel):
 class GraphRelationshipDTO(BaseModel):
     """
     图谱关系 DTO。
-    
+
     描述节点间的关系。
     """
 
@@ -51,7 +51,7 @@ class GraphRelationshipDTO(BaseModel):
 class StockGraphDTO(BaseModel):
     """
     个股关系网络 DTO。
-    
+
     包含中心股票节点及其关联的维度节点和关系列表。
     """
 

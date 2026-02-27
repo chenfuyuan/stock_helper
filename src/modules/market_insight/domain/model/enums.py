@@ -7,7 +7,7 @@ from enum import Enum
 
 class LimitType(str, Enum):
     """涨停类型枚举"""
-    
+
     MAIN_BOARD = "MAIN_BOARD"
     GEM = "GEM"
     STAR = "STAR"

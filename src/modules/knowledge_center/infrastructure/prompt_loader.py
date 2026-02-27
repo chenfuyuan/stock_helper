@@ -2,7 +2,6 @@
 Prompt 运行时加载：从资源目录读取 system.md、user.md，不硬编码在代码中。
 """
 
-import json
 from pathlib import Path
 from typing import Optional
 

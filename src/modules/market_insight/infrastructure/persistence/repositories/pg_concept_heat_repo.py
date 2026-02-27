@@ -66,9 +66,7 @@ class PgConceptHeatRepository(IConceptHeatRepository):
         await self._session.commit()
         return len(heats)
 
-    async def get_by_date(
-        self, trade_date: date, top_n: Optional[int] = None
-    ) -> List[ConceptHeat]:
+    async def get_by_date(self, trade_date: date, top_n: Optional[int] = None) -> List[ConceptHeat]:
         """
         查询指定日期的板块热度
         :param trade_date: 交易日期

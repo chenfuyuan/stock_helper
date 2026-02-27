@@ -3,6 +3,9 @@ from typing import Set
 
 from loguru import logger
 
+from src.modules.data_engineering.application.dtos.sync_result_dtos import (
+    IncrementalFinanceSyncResult,
+)
 from src.modules.data_engineering.domain.model.enums import SyncJobType
 from src.modules.data_engineering.domain.model.sync_failure_record import (
     SyncFailureRecord,
@@ -20,9 +23,6 @@ from src.modules.data_engineering.domain.ports.repositories.sync_task_repo impor
     ISyncTaskRepository,
 )
 from src.modules.data_engineering.infrastructure.config import de_config
-from src.modules.data_engineering.application.dtos.sync_result_dtos import (
-    IncrementalFinanceSyncResult,
-)
 
 
 class SyncIncrementalFinanceCmd:
@@ -223,5 +223,5 @@ class SyncIncrementalFinanceCmd:
             message=(
                 f"成功同步 {synced_count} 只股票，失败 {failed_count} 只；"
                 f"重试 {retry_count} 条记录，成功 {retry_success_count} 条"
-            )
+            ),
         )

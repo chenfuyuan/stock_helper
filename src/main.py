@@ -1,17 +1,18 @@
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 
 from src.api.middlewares.error_handler import ErrorHandlingMiddleware
 from src.api.routes import api_router
+from src.modules.foundation.infrastructure.di.container import get_scheduler_service
 from src.modules.knowledge_center.container import (
     KnowledgeCenterContainer,
     close_knowledge_center_driver,
 )
 from src.shared.config import settings
 from src.shared.infrastructure.logging import setup_logging
-from src.modules.foundation.infrastructure.di.container import get_scheduler_service
 
 # 初始化日志配置
 setup_logging()
@@ -34,7 +35,7 @@ async def lifespan(app: FastAPI):
 
     # 从数据库加载持久化的调度配置并自动注册
     from src.modules.data_engineering.application.job_registry import get_job_registry
-    
+
     job_registry = get_job_registry()
     await scheduler_service.load_persisted_jobs(job_registry)
 

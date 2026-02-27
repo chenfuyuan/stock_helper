@@ -16,7 +16,7 @@ from src.modules.knowledge_center.domain.dtos.concept_sync_dtos import (
 class ConceptDataAdapter:
     """
     概念数据适配器
-    
+
     通过 data_engineering 的 IConceptRepository 获取概念数据，
     转换为 knowledge_center 模块的 ConceptGraphSyncDTO，
     避免直接依赖 data_engineering 的 Domain 实体
@@ -25,7 +25,7 @@ class ConceptDataAdapter:
     def __init__(self, concept_repo: IConceptRepository):
         """
         初始化概念数据适配器
-        
+
         Args:
             concept_repo: DE 模块的概念数据仓储
         """
@@ -34,7 +34,7 @@ class ConceptDataAdapter:
     async def fetch_all_concepts_for_sync(self) -> list[ConceptGraphSyncDTO]:
         """
         获取所有概念及其成份股数据并转换为同步 DTO
-        
+
         Returns:
             ConceptGraphSyncDTO 列表
         """

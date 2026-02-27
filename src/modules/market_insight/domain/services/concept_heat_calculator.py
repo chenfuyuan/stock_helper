@@ -29,9 +29,7 @@ class ConceptHeatCalculator:
 
         for concept in concepts:
             # 筛选出有行情数据的成分股
-            valid_stocks = [
-                s for s in concept.stocks if s.third_code in daily_bars
-            ]
+            valid_stocks = [s for s in concept.stocks if s.third_code in daily_bars]
 
             if not valid_stocks:
                 # 全部停牌，排除该概念

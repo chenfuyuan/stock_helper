@@ -49,7 +49,7 @@ from src.modules.data_engineering.domain.ports.repositories.sector_capital_flow_
 class SyncAkShareMarketDataCmd:
     """
     AkShare 市场数据同步编排命令。
-    
+
     作为编排入口，依次调用 5 个子 Command 完成数据同步，实现错误隔离：
     单个子任务失败不中断其他任务的执行。
     """
@@ -67,7 +67,7 @@ class SyncAkShareMarketDataCmd:
     ):
         """
         初始化编排命令，构建 5 个子 Command。
-        
+
         Args:
             sentiment_provider: 市场情绪数据提供方
             dragon_tiger_provider: 龙虎榜数据提供方
@@ -92,12 +92,12 @@ class SyncAkShareMarketDataCmd:
     async def execute(self, trade_date: date) -> AkShareSyncResult:
         """
         执行 AkShare 市场数据同步。
-        
+
         依次调用 5 个子 Command，错误隔离：单个失败不中断其他。
-        
+
         Args:
             trade_date: 交易日期
-            
+
         Returns:
             AkShareSyncResult: 聚合的同步结果摘要
         """

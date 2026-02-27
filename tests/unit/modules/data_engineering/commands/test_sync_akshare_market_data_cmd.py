@@ -1,7 +1,7 @@
 """SyncAkShareMarketDataCmd 单元测试（编排入口）。"""
 
 from datetime import date
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -36,7 +36,7 @@ async def test_execute_all_success(sync_cmd):
     """测试：所有子 Command 成功执行。"""
     # Arrange
     trade_date = date(2024, 1, 15)
-    
+
     # Mock 所有子 Command 的 execute 方法
     sync_cmd.limit_up_cmd.execute = AsyncMock(return_value=10)
     sync_cmd.broken_board_cmd.execute = AsyncMock(return_value=5)
@@ -62,7 +62,7 @@ async def test_execute_error_isolation(sync_cmd):
     """测试：错误隔离——某子 Command 失败不中断其他。"""
     # Arrange
     trade_date = date(2024, 1, 15)
-    
+
     # Mock：涨停池和龙虎榜失败，其他成功
     sync_cmd.limit_up_cmd.execute = AsyncMock(side_effect=Exception("涨停池失败"))
     sync_cmd.broken_board_cmd.execute = AsyncMock(return_value=5)
@@ -90,7 +90,7 @@ async def test_execute_all_failed(sync_cmd):
     """测试：所有子 Command 失败仍能返回结果。"""
     # Arrange
     trade_date = date(2024, 1, 15)
-    
+
     # Mock：所有失败
     sync_cmd.limit_up_cmd.execute = AsyncMock(side_effect=Exception("失败1"))
     sync_cmd.broken_board_cmd.execute = AsyncMock(side_effect=Exception("失败2"))

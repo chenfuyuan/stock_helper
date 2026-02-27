@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field
 class StockGraphSyncDTO(BaseModel):
     """
     Stock 图谱同步输入 DTO。
-    
+
     由 data_engineering_adapter 从 StockInfo 和 StockFinance 转换而来，
     包含构建 Stock 节点及其维度关系所需的全部字段。
     """
@@ -25,13 +25,13 @@ class StockGraphSyncDTO(BaseModel):
     list_date: Optional[str] = Field(None, description="上市日期，格式 YYYYMMDD")
     list_status: Optional[str] = Field(None, description="上市状态")
     curr_type: Optional[str] = Field(None, description="交易货币")
-    
+
     # 维度字段（用于构建关系）
     industry: Optional[str] = Field(None, description="所属行业")
     area: Optional[str] = Field(None, description="所在地域")
     market: Optional[str] = Field(None, description="市场类型")
     exchange: Optional[str] = Field(None, description="交易所代码")
-    
+
     # 可选财务快照（最新一期）
     roe: Optional[float] = Field(None, description="净资产收益率")
     roa: Optional[float] = Field(None, description="总资产报酬率")
@@ -59,7 +59,7 @@ class DimensionDTO(BaseModel):
 class SyncResult(BaseModel):
     """
     同步结果摘要 DTO。
-    
+
     记录同步操作的成功/失败数量与耗时信息。
     """
 

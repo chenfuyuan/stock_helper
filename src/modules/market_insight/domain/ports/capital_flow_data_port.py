@@ -17,14 +17,13 @@ class ICapitalFlowDataPort(ABC):
     async def get_dragon_tiger(self, trade_date: date) -> list[DragonTigerItemDTO]:
         """
         获取指定日期的龙虎榜详情
-        
+
         Args:
             trade_date: 交易日期
-            
+
         Returns:
             list[DragonTigerItemDTO]: 龙虎榜数据列表
         """
-        pass
 
     @abstractmethod
     async def get_sector_capital_flow(
@@ -32,12 +31,11 @@ class ICapitalFlowDataPort(ABC):
     ) -> list[SectorCapitalFlowItemDTO]:
         """
         获取指定日期的板块资金流向
-        
+
         Args:
             trade_date: 交易日期
             sector_type: 板块类型（可选，用于过滤）
-            
+
         Returns:
             list[SectorCapitalFlowItemDTO]: 板块资金流向数据列表
         """
-        pass

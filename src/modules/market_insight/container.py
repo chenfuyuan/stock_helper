@@ -9,11 +9,11 @@ from src.modules.data_engineering.container import DataEngineeringContainer
 from src.modules.market_insight.application.commands.generate_daily_report_cmd import (
     GenerateDailyReportCmd,
 )
-from src.modules.market_insight.application.queries.get_concept_heat_query import (
-    GetConceptHeatQuery,
-)
 from src.modules.market_insight.application.queries.get_capital_flow_analysis import (
     GetCapitalFlowAnalysisQuery,
+)
+from src.modules.market_insight.application.queries.get_concept_heat_query import (
+    GetConceptHeatQuery,
 )
 from src.modules.market_insight.application.queries.get_limit_up_query import (
     GetLimitUpQuery,
@@ -86,9 +86,7 @@ class MarketInsightContainer:
         self._capital_flow_analyzer = CapitalFlowAnalyzer()
 
         # 初始化 Report Generator
-        self._report_generator = MarkdownReportGenerator(
-            output_dir=self._report_output_dir
-        )
+        self._report_generator = MarkdownReportGenerator(output_dir=self._report_output_dir)
 
     def get_concept_heat_calculator(self) -> ConceptHeatCalculator:
         """获取概念热度计算器"""

@@ -13,14 +13,14 @@ from src.modules.knowledge_center.domain.ports.graph_repository import IGraphRep
 class GetStockNeighborsQuery:
     """
     查询同维度股票用例。
-    
+
     查询与指定股票共享同一维度节点的其他股票列表。
     """
 
     def __init__(self, graph_repo: IGraphRepository):
         """
         初始化查询用例。
-        
+
         Args:
             graph_repo: 图谱仓储接口
         """
@@ -35,13 +35,13 @@ class GetStockNeighborsQuery:
     ) -> list[StockNeighborDTO]:
         """
         执行同维度股票查询。
-        
+
         Args:
             third_code: 股票第三方代码
             dimension: 维度类型（industry/area/market/exchange/concept）
             limit: 返回数量上限，默认 20
             dimension_name: 维度名称，当 dimension="concept" 时必填
-        
+
         Returns:
             StockNeighborDTO 列表（不包含查询股票自身）
         """
@@ -49,13 +49,13 @@ class GetStockNeighborsQuery:
             f"查询同维度股票: third_code={third_code}, dimension={dimension}, "
             f"dimension_name={dimension_name}, limit={limit}"
         )
-        
+
         neighbors = await self._graph_repo.find_neighbors(
             third_code=third_code,
             dimension=dimension,
             limit=limit,
             dimension_name=dimension_name,
         )
-        
+
         logger.info(f"查询完成，返回 {len(neighbors)} 条同{dimension}股票记录")
         return neighbors

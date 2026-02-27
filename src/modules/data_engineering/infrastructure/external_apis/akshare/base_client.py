@@ -25,7 +25,7 @@ class AkShareBaseClient:
     def __init__(self, request_interval: float = 0.3):
         """
         初始化 AkShare 客户端
-        
+
         Args:
             request_interval: 请求间隔（秒），默认 0.3s，避免触发限流
         """
@@ -34,12 +34,12 @@ class AkShareBaseClient:
     async def _run_in_executor(self, func, *args, **kwargs):
         """
         在默认线程池中执行同步函数，避免阻塞事件循环
-        
+
         Args:
             func: 同步函数
             *args: 位置参数
             **kwargs: 关键字参数
-            
+
         Returns:
             函数执行结果
         """
@@ -50,12 +50,12 @@ class AkShareBaseClient:
         """
         带限速的 akshare API 调用，确保不触发限流
         全进程共享限速锁，按配置的 request_interval 控制调用频率
-        
+
         Args:
             func: 同步函数（通常是 akshare API 函数）
             *args: 位置参数
             **kwargs: 关键字参数
-            
+
         Returns:
             API 调用结果
         """

@@ -85,7 +85,7 @@ async def post_judge_verdict(
                 time_horizon=verdict.time_horizon,
                 risk_warnings=verdict.risk_warnings,
                 reasoning=verdict.reasoning,
-            )
+            ),
         )
     except LLMOutputParseError as e:
         logger.warning("裁决 LLM 解析失败: %s", e.message)

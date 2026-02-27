@@ -35,7 +35,7 @@ def _date_to_yyyymmdd(value: date | None) -> str | None:
 class DataEngineeringAdapter:
     """
     Data Engineering 适配器。
-    
+
     通过 data_engineering 的 Application 层 UseCase 获取数据，
     转换为 knowledge_center 模块的 StockGraphSyncDTO，
     避免直接依赖 data_engineering 的 Domain 实体。
@@ -48,7 +48,7 @@ class DataEngineeringAdapter:
     ):
         """
         初始化 Data Engineering Adapter。
-        
+
         Args:
             stock_repo: 股票仓储，用于批量查询股票列表
             get_finance_use_case: 财务数据查询用例（可选，用于获取财务快照）
@@ -64,24 +64,24 @@ class DataEngineeringAdapter:
     ) -> list[StockGraphSyncDTO]:
         """
         获取所有股票数据并转换为同步 DTO。
-        
+
         Args:
             include_finance: 是否包含最新一期财务快照
             skip: 跳过前 N 条记录
             limit: 查询数量上限
-        
+
         Returns:
             StockGraphSyncDTO 列表
         """
         # 1. 从 stock_repo 获取股票基础信息
         stocks = await self._stock_repo.get_all(skip=skip, limit=limit)
-        
+
         if not stocks:
             logger.warning(f"未找到股票数据 (skip={skip}, limit={limit})")
             return []
-        
+
         logger.info(f"从 data_engineering 获取到 {len(stocks)} 条股票数据")
-        
+
         # 2. 转换为 StockGraphSyncDTO
         sync_dtos: list[StockGraphSyncDTO] = []
         for stock in stocks:
@@ -99,7 +99,7 @@ class DataEngineeringAdapter:
                 "market": _enum_or_str_value(stock.market),
                 "exchange": _enum_or_str_value(stock.exchange),
             }
-            
+
             # 3. 可选：获取最新财务快照
             if include_finance and self._get_finance_use_case:
                 try:
@@ -109,21 +109,23 @@ class DataEngineeringAdapter:
                     )
                     if finances:
                         latest = finances[0]
-                        dto_dict.update({
-                            "roe": latest.roe_waa,
-                            "roa": getattr(latest, "roa", None),
-                            "gross_margin": latest.gross_margin,
-                            "debt_to_assets": latest.debt_to_assets,
-                            "pe_ttm": None,  # 财务指标中无 pe_ttm，需从估值日线获取
-                            "pb": None,  # 财务指标中无 pb，需从估值日线获取
-                            "total_mv": None,  # 财务指标中无 total_mv，需从估值日线获取
-                        })
+                        dto_dict.update(
+                            {
+                                "roe": latest.roe_waa,
+                                "roa": getattr(latest, "roa", None),
+                                "gross_margin": latest.gross_margin,
+                                "debt_to_assets": latest.debt_to_assets,
+                                "pe_ttm": None,  # 财务指标中无 pe_ttm，需从估值日线获取
+                                "pb": None,  # 财务指标中无 pb，需从估值日线获取
+                                "total_mv": None,  # 财务指标中无 total_mv，需从估值日线获取
+                            }
+                        )
                 except Exception as e:
                     logger.warning(f"获取 {stock.third_code} 财务数据失败: {str(e)}")
                     # 财务数据获取失败不影响基础同步，继续处理
-            
+
             sync_dtos.append(StockGraphSyncDTO(**dto_dict))
-        
+
         logger.info(f"成功转换 {len(sync_dtos)} 条 StockGraphSyncDTO")
         return sync_dtos
 
@@ -134,26 +136,26 @@ class DataEngineeringAdapter:
     ) -> list[StockGraphSyncDTO]:
         """
         按股票代码列表获取数据并转换为同步 DTO（增量同步）。
-        
+
         Args:
             third_codes: 股票代码列表
             include_finance: 是否包含最新一期财务快照
-        
+
         Returns:
             StockGraphSyncDTO 列表
         """
         if not third_codes:
             return []
-        
+
         # 1. 批量查询股票基础信息
         stocks = await self._stock_repo.get_by_third_codes(third_codes)
-        
+
         if not stocks:
             logger.warning(f"未找到指定股票数据: {third_codes}")
             return []
-        
+
         logger.info(f"从 data_engineering 获取到 {len(stocks)} 条指定股票数据")
-        
+
         # 2. 转换逻辑同 fetch_all_stocks_for_sync
         sync_dtos: list[StockGraphSyncDTO] = []
         for stock in stocks:
@@ -170,7 +172,7 @@ class DataEngineeringAdapter:
                 "market": _enum_or_str_value(stock.market),
                 "exchange": _enum_or_str_value(stock.exchange),
             }
-            
+
             if include_finance and self._get_finance_use_case:
                 try:
                     finances = await self._get_finance_use_case.execute(
@@ -179,20 +181,22 @@ class DataEngineeringAdapter:
                     )
                     if finances:
                         latest = finances[0]
-                        dto_dict.update({
-                            "roe": latest.roe_waa,
-                            "roa": getattr(latest, "roa", None),
-                            "gross_margin": latest.gross_margin,
-                            "debt_to_assets": latest.debt_to_assets,
-                            "pe_ttm": None,
-                            "pb": None,
-                            "total_mv": None,
-                        })
+                        dto_dict.update(
+                            {
+                                "roe": latest.roe_waa,
+                                "roa": getattr(latest, "roa", None),
+                                "gross_margin": latest.gross_margin,
+                                "debt_to_assets": latest.debt_to_assets,
+                                "pe_ttm": None,
+                                "pb": None,
+                                "total_mv": None,
+                            }
+                        )
                 except Exception as e:
                     logger.warning(f"获取 {stock.third_code} 财务数据失败: {str(e)}")
-            
+
             sync_dtos.append(StockGraphSyncDTO(**dto_dict))
-        
+
         logger.info(f"成功转换 {len(sync_dtos)} 条 StockGraphSyncDTO（增量）")
         return sync_dtos
 
@@ -233,7 +237,8 @@ class DataEngineeringAdapter:
         candidate_codes = [
             stock.third_code
             for stock in stocks
-            if stock.last_finance_sync_date is None or stock.last_finance_sync_date >= threshold_date
+            if stock.last_finance_sync_date is None
+            or stock.last_finance_sync_date >= threshold_date
         ]
 
         if not candidate_codes:

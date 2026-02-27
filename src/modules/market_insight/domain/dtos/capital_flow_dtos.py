@@ -1,11 +1,11 @@
 from pydantic import BaseModel
 
-
 # ========== 输入 DTO（用于接收 DE 模块数据） ==========
+
 
 class DragonTigerItemDTO(BaseModel):
     """龙虎榜单项 DTO（MI 领域层）"""
-    
+
     third_code: str
     stock_name: str
     pct_chg: float
@@ -20,7 +20,7 @@ class DragonTigerItemDTO(BaseModel):
 
 class SectorCapitalFlowItemDTO(BaseModel):
     """板块资金流向单项 DTO（MI 领域层）"""
-    
+
     sector_name: str
     sector_type: str
     net_amount: float
@@ -31,9 +31,10 @@ class SectorCapitalFlowItemDTO(BaseModel):
 
 # ========== 输出 DTO（分析结果） ==========
 
+
 class DragonTigerStockSummary(BaseModel):
     """龙虎榜个股汇总"""
-    
+
     third_code: str
     stock_name: str
     pct_chg: float
@@ -43,7 +44,7 @@ class DragonTigerStockSummary(BaseModel):
 
 class DragonTigerAnalysis(BaseModel):
     """龙虎榜分析结果"""
-    
+
     total_count: int
     total_net_buy: float
     top_net_buy_stocks: list[DragonTigerStockSummary]
@@ -53,7 +54,7 @@ class DragonTigerAnalysis(BaseModel):
 
 class SectorCapitalFlowAnalysis(BaseModel):
     """板块资金流向分析结果"""
-    
+
     total_sectors: int
     top_inflow_sectors: list[SectorCapitalFlowItemDTO]
     top_outflow_sectors: list[SectorCapitalFlowItemDTO]

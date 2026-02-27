@@ -1,13 +1,13 @@
 from loguru import logger
 
+from src.modules.data_engineering.application.dtos.sync_result_dtos import (
+    DailyByDateSyncResult,
+)
 from src.modules.data_engineering.domain.ports.providers.market_quote_provider import (
     IMarketQuoteProvider,
 )
 from src.modules.data_engineering.domain.ports.repositories.market_quote_repo import (
     IMarketQuoteRepository,
-)
-from src.modules.data_engineering.application.dtos.sync_result_dtos import (
-    DailyByDateSyncResult,
 )
 
 
@@ -29,16 +29,10 @@ class SyncDailyByDateCmd:
 
         dailies = await self.data_provider.fetch_daily(trade_date=trade_date)
         if not dailies:
-            return DailyByDateSyncResult(
-                status="success",
-                count=0,
-                message="No data"
-            )
+            return DailyByDateSyncResult(status="success", count=0, message="No data")
 
         saved_count = await self.daily_repo.save_all(dailies)
 
         return DailyByDateSyncResult(
-            status="success",
-            count=saved_count,
-            message=f"Synced {saved_count} daily bars"
+            status="success", count=saved_count, message=f"Synced {saved_count} daily bars"
         )

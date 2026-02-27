@@ -14,10 +14,10 @@ class ISectorCapitalFlowRepository(ABC):
     async def save_all(self, flows: list[SectorCapitalFlow]) -> int:
         """
         批量 UPSERT 板块资金流向记录（以 trade_date + sector_name + sector_type 为唯一键）
-        
+
         Args:
             flows: 板块资金流向列表
-            
+
         Returns:
             int: 影响的行数
         """
@@ -28,11 +28,11 @@ class ISectorCapitalFlowRepository(ABC):
     ) -> list[SectorCapitalFlow]:
         """
         查询指定日期的板块资金流向记录
-        
+
         Args:
             trade_date: 交易日期
             sector_type: 板块类型（可选，用于过滤）
-            
+
         Returns:
             list[SectorCapitalFlow]: 板块资金流向记录列表
         """

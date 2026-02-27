@@ -18,10 +18,10 @@ class CapitalFlowAnalyzer:
     def analyze_dragon_tiger(self, details: list[DragonTigerItemDTO]) -> DragonTigerAnalysis:
         """
         分析龙虎榜数据
-        
+
         Args:
             details: 龙虎榜详情数据
-            
+
         Returns:
             DragonTigerAnalysis: 龙虎榜分析结果
         """
@@ -116,10 +116,10 @@ class CapitalFlowAnalyzer:
     ) -> SectorCapitalFlowAnalysis:
         """
         分析板块资金流向
-        
+
         Args:
             flows: 板块资金流向数据
-            
+
         Returns:
             SectorCapitalFlowAnalysis: 板块资金流向分析结果
         """

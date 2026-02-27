@@ -53,10 +53,7 @@ async def get_concept_heat(
         query = container.get_concept_heat_query()
         result = await query.execute(trade_date, top_n)
         return BaseResponse(
-            success=True,
-            code="CONCEPT_HEAT_SUCCESS",
-            message="概念热度查询成功",
-            data=result
+            success=True, code="CONCEPT_HEAT_SUCCESS", message="概念热度查询成功", data=result
         )
     except Exception as e:
         logger.exception(f"查询概念热度失败: {e}")
@@ -79,10 +76,7 @@ async def get_limit_up(
         query = container.get_limit_up_query()
         result = await query.execute(trade_date, concept_code)
         return BaseResponse(
-            success=True,
-            code="LIMIT_UP_SUCCESS",
-            message="涨停股查询成功",
-            data=result
+            success=True, code="LIMIT_UP_SUCCESS", message="涨停股查询成功", data=result
         )
     except Exception as e:
         logger.exception(f"查询涨停股失败: {e}")
@@ -104,10 +98,7 @@ async def post_daily_report(
         cmd = container.get_generate_daily_report_cmd()
         result = await cmd.execute(trade_date)
         return BaseResponse(
-            success=True,
-            code="DAILY_REPORT_SUCCESS",
-            message="每日复盘报告生成成功",
-            data=result
+            success=True, code="DAILY_REPORT_SUCCESS", message="每日复盘报告生成成功", data=result
         )
     except Exception as e:
         logger.exception(f"生成每日复盘报告失败: {e}")
@@ -132,7 +123,7 @@ async def get_sentiment_metrics(
             success=True,
             code="SENTIMENT_METRICS_SUCCESS",
             message="市场情绪指标查询成功",
-            data=result
+            data=result,
         )
     except Exception as e:
         logger.exception(f"查询市场情绪指标失败: {e}")
@@ -155,10 +146,7 @@ async def get_capital_flow_analysis(
         query = container.get_capital_flow_analysis_query()
         result = await query.execute(trade_date, sector_type)
         return BaseResponse(
-            success=True,
-            code="CAPITAL_FLOW_SUCCESS",
-            message="资金流向分析查询成功",
-            data=result
+            success=True, code="CAPITAL_FLOW_SUCCESS", message="资金流向分析查询成功", data=result
         )
     except Exception as e:
         logger.exception(f"查询资金流向分析失败: {e}")

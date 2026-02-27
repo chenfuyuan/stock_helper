@@ -1,11 +1,11 @@
 from pydantic import BaseModel
 
-
 # ========== 输入 DTO（用于接收 DE 模块数据） ==========
+
 
 class LimitUpPoolItemDTO(BaseModel):
     """涨停池单项 DTO（MI 领域层）"""
-    
+
     third_code: str
     stock_name: str
     pct_chg: float
@@ -17,7 +17,7 @@ class LimitUpPoolItemDTO(BaseModel):
 
 class BrokenBoardItemDTO(BaseModel):
     """炸板池单项 DTO（MI 领域层）"""
-    
+
     third_code: str
     stock_name: str
     pct_chg: float
@@ -29,7 +29,7 @@ class BrokenBoardItemDTO(BaseModel):
 
 class PreviousLimitUpItemDTO(BaseModel):
     """昨日涨停表现单项 DTO（MI 领域层）"""
-    
+
     third_code: str
     stock_name: str
     pct_chg: float
@@ -41,16 +41,17 @@ class PreviousLimitUpItemDTO(BaseModel):
 
 # ========== 输出 DTO（分析结果） ==========
 
+
 class BoardTier(BaseModel):
     """连板梯队"""
-    
+
     board_count: int
     stocks: list[str]
 
 
 class ConsecutiveBoardLadder(BaseModel):
     """连板梯队分布分析结果"""
-    
+
     max_height: int
     tiers: list[BoardTier]
     total_limit_up_count: int
@@ -58,7 +59,7 @@ class ConsecutiveBoardLadder(BaseModel):
 
 class PreviousLimitUpPerformance(BaseModel):
     """昨日涨停今日表现分析结果"""
-    
+
     total_count: int
     up_count: int
     down_count: int
@@ -70,7 +71,7 @@ class PreviousLimitUpPerformance(BaseModel):
 
 class BrokenBoardAnalysis(BaseModel):
     """炸板分析结果"""
-    
+
     broken_count: int
     total_attempted: int
     broken_rate: float

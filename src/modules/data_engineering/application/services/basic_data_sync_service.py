@@ -71,6 +71,7 @@ class BasicDataSyncService(SyncServiceBase):
             print(f"耗时: {result.elapsed_time:.2f} 秒")
             ```
         """
+
         async def _do_sync() -> ConceptSyncResult:
             container = DataEngineeringContainer()
 
@@ -108,6 +109,7 @@ class BasicDataSyncService(SyncServiceBase):
             print(f"状态: {result['status']}")
             ```
         """
+
         async def _do_sync() -> dict:
             async with SyncUseCaseFactory.create_sync_stock_basic_use_case() as use_case:
                 result = await use_case.execute()

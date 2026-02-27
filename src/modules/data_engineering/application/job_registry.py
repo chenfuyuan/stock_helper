@@ -4,22 +4,22 @@
 按照 Application 层归属原则，注册表从 Presentation 层提升到此处。
 """
 
-from typing import Dict, Callable
+from typing import Callable, Dict
 
-from src.modules.data_engineering.presentation.jobs.sync_scheduler import (
-    sync_daily_data_job,
-    sync_incremental_finance_job,
-    sync_concept_data_job,
-    sync_stock_basic_job,
-)
 from src.modules.data_engineering.presentation.jobs.akshare_market_data_jobs import (
     sync_akshare_market_data_job,
+)
+from src.modules.data_engineering.presentation.jobs.sync_scheduler import (
+    sync_concept_data_job,
+    sync_daily_data_job,
+    sync_incremental_finance_job,
+    sync_stock_basic_job,
 )
 
 
 def get_job_registry() -> Dict[str, Callable]:
     """获取 Data Engineering 模块的任务注册表
-    
+
     Returns:
         任务 ID 到任务函数的映射字典
     """

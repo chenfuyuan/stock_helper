@@ -66,6 +66,7 @@ class PgLimitUpPoolRepository(BaseRepository[LimitUpPoolModel], ILimitUpPoolRepo
         models = result.scalars().all()
 
         import uuid
+
         return [
             LimitUpPoolStock(
                 id=uuid.UUID(int=model.id),  # 将整数ID转换为UUID

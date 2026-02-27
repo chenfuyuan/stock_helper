@@ -4,8 +4,8 @@
 这些类型别名在 Port 接口、DTO 和服务实现中广泛使用。
 """
 
-from typing import Dict, Any, Optional, Callable, Union
 from datetime import datetime
+from typing import Any, Callable, Dict, Optional, Union
 
 # ==================== 基础类型别名 ====================
 
@@ -97,18 +97,22 @@ JobScheduleOptions = Dict[str, Any]
 
 # ==================== 常量定义 ====================
 
+
 # 常用的任务状态值
 class JobStatusValues:
     """任务状态常量"""
+
     PENDING = "pending"
     RUNNING = "running"
     SUCCESS = "success"
     FAILED = "failed"
     CANCELLED = "cancelled"
 
+
 # 常用的执行状态值
 class ExecutionStatusValues:
     """执行状态常量"""
+
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
@@ -116,18 +120,22 @@ class ExecutionStatusValues:
     TIMEOUT = "timeout"
     CANCELLED = "cancelled"
 
+
 # 常用的时区值
 class TimezoneValues:
     """时区常量"""
+
     UTC = "UTC"
     ASIA_SHANGHAI = "Asia/Shanghai"
     ASIA_TOKYO = "Asia/Tokyo"
     AMERICA_NEW_YORK = "America/New_York"
     EUROPE_LONDON = "Europe/London"
 
+
 # 常用的 Cron 表达式模板
 class CronTemplates:
     """Cron 表达式模板"""
+
     DAILY_MIDNIGHT = "0 0 * * *"
     HOURLY = "0 * * * *"
     EVERY_15_MINUTES = "*/15 * * * *"

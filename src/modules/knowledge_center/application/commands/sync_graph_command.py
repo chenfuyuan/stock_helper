@@ -16,7 +16,7 @@ from src.modules.knowledge_center.infrastructure.adapters.data_engineering_adapt
 class SyncGraphCommand:
     """
     同步图谱命令用例。
-    
+
     全量或增量同步股票数据到 Neo4j 图谱：
     1. 通过 DataEngineeringAdapter 从 data_engineering 模块获取数据
     2. 将数据转换为 StockGraphSyncDTO
@@ -30,7 +30,7 @@ class SyncGraphCommand:
     ):
         """
         初始化同步命令用例。
-        
+
         Args:
             graph_repo: 图谱仓储接口
             data_adapter: Data Engineering 适配器
@@ -47,27 +47,27 @@ class SyncGraphCommand:
     ) -> SyncResult:
         """
         执行全量同步。
-        
+
         Args:
             include_finance: 是否包含财务快照数据
             batch_size: 每批提交的记录数
             skip: 跳过前 N 条记录
             limit: 查询数量上限
-        
+
         Returns:
             SyncResult：同步结果摘要
         """
         logger.info(
             f"开始全量同步图谱数据: include_finance={include_finance}, batch_size={batch_size}, skip={skip}, limit={limit}"  # noqa: E501
         )
-        
+
         # 1. 从 data_engineering 获取数据
         stocks = await self._data_adapter.fetch_all_stocks_for_sync(
             include_finance=include_finance,
             skip=skip,
             limit=limit,
         )
-        
+
         if not stocks:
             logger.warning("未获取到股票数据，跳过同步")
             return SyncResult(
@@ -77,20 +77,20 @@ class SyncGraphCommand:
                 duration_ms=0.0,
                 error_details=[],
             )
-        
+
         # 2. 确保图谱约束存在（幂等）
         await self._graph_repo.ensure_constraints()
-        
+
         # 3. 批量写入 Neo4j
         result = await self._graph_repo.merge_stocks(
             stocks=stocks,
             batch_size=batch_size,
         )
-        
+
         logger.info(
             f"全量同步完成: total={result.total}, success={result.success}, failed={result.failed}, duration={result.duration_ms:.2f}ms"  # noqa: E501
         )
-        
+
         return result
 
     async def execute_incremental_sync(
@@ -103,14 +103,14 @@ class SyncGraphCommand:
     ) -> SyncResult:
         """
         执行增量同步（指定股票代码列表）。
-        
+
         Args:
             third_codes: 股票代码列表；为空时按时间窗口自动确定
             include_finance: 是否包含财务快照数据
             batch_size: 每批提交的记录数
             window_days: 自动模式下时间窗口天数
             limit: 自动模式下扫描上限
-        
+
         Returns:
             SyncResult：同步结果摘要
         """
@@ -125,7 +125,7 @@ class SyncGraphCommand:
             window_days=window_days,
             limit=limit,
         )
-        
+
         if not stocks:
             logger.warning("未获取到指定股票数据，跳过同步")
             return SyncResult(
@@ -135,18 +135,18 @@ class SyncGraphCommand:
                 duration_ms=0.0,
                 error_details=[],
             )
-        
+
         # 2. 确保图谱约束存在（幂等）
         await self._graph_repo.ensure_constraints()
-        
+
         # 3. 批量写入 Neo4j
         result = await self._graph_repo.merge_stocks(
             stocks=stocks,
             batch_size=batch_size,
         )
-        
+
         logger.info(
             f"增量同步完成: total={result.total}, success={result.success}, failed={result.failed}, duration={result.duration_ms:.2f}ms"  # noqa: E501
         )
-        
+
         return result

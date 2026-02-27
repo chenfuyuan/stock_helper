@@ -31,9 +31,7 @@ class TestSyncFailureRecordCanRetry:
         assert record.can_retry() is False
 
     def test_已解决不可重试(self) -> None:
-        record = SyncFailureRecord(
-            retry_count=1, max_retries=3, resolved_at=datetime.now()
-        )
+        record = SyncFailureRecord(retry_count=1, max_retries=3, resolved_at=datetime.now())
         assert record.can_retry() is False
 
 

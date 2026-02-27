@@ -14,9 +14,7 @@ from src.modules.data_engineering.infrastructure.persistence.models.previous_lim
 from src.shared.infrastructure.base_repository import BaseRepository
 
 
-class PgPreviousLimitUpRepository(
-    BaseRepository[PreviousLimitUpModel], IPreviousLimitUpRepository
-):
+class PgPreviousLimitUpRepository(BaseRepository[PreviousLimitUpModel], IPreviousLimitUpRepository):
     """
     PostgreSQL 昨日涨停表现数据仓储实现
     实现 IPreviousLimitUpRepository 接口
@@ -60,13 +58,12 @@ class PgPreviousLimitUpRepository(
         """
         查询指定日期的昨日涨停表现记录
         """
-        stmt = select(PreviousLimitUpModel).where(
-            PreviousLimitUpModel.trade_date == trade_date
-        )
+        stmt = select(PreviousLimitUpModel).where(PreviousLimitUpModel.trade_date == trade_date)
         result = await self.session.execute(stmt)
         models = result.scalars().all()
 
         import uuid
+
         return [
             PreviousLimitUpStock(
                 id=uuid.UUID(int=model.id),  # 将整数ID转换为UUID
