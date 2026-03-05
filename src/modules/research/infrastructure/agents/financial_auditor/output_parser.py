@@ -38,8 +38,15 @@ def _ensure_signal_consistent(
 
 
 def _default_narrative_report(data: dict) -> dict:
-    """为缺少 narrative_report 字段的数据补充默认空字符串。"""
+    """为缺少 narrative_report 字段的数据补充默认空字符串，并返回更新后的 dict。"""
     data.setdefault("narrative_report", "")
+    return data
+
+
+def _default_risk_warning(data: dict) -> dict:
+    """为缺少 risk_warning 字段的数据补充默认空字符串，并返回更新后的 dict。"""
+    data.setdefault("risk_warning", "")
+    return data
 
 
 def parse_financial_audit_result(raw: str) -> FinancialAuditResultDTO:
@@ -56,7 +63,7 @@ def parse_financial_audit_result(raw: str) -> FinancialAuditResultDTO:
         dto = parse_llm_json_output(
             raw,
             FinancialAuditResultDTO,
-            normalizers=[_default_narrative_report],
+            normalizers=[_default_narrative_report, _default_risk_warning],
             context_label="财务审计员",
         )
     except LLMJsonParseError as e:

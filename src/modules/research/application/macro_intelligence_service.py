@@ -6,6 +6,9 @@
 
 from typing import Any
 
+from loguru import logger
+
+from src.modules.research.domain.exceptions import LLMOutputParseError
 from src.modules.research.domain.ports.macro_context_builder import (
     IMacroContextBuilder,
 )
@@ -105,10 +108,30 @@ class MacroIntelligenceService:
         )
 
         # 6. 调用宏观分析 Agent
-        agent_result = await self._agent.analyze(
-            symbol=symbol,
-            macro_context=macro_context,
-        )
+        try:
+            agent_result = await self._agent.analyze(
+                symbol=symbol,
+                macro_context=macro_context,
+            )
+        except LLMOutputParseError as e:
+            logger.warning(
+                "宏观情报员解析失败，降级为空结果：symbol=%s，错误=%s",
+                symbol,
+                e,
+            )
+            return {
+                "macro_environment": "Unknown",
+                "confidence_score": 0.0,
+                "macro_summary": "宏观情报员 LLM 输出解析失败，本次结果降级为中性占位，仅供参考。",
+                "dimension_analyses": [],
+                "key_opportunities": [],
+                "key_risks": [],
+                "information_sources": [],
+                "narrative_report": "",
+                "input": "",
+                "macro_indicators": macro_context.model_dump(),
+                "output": "",
+            }
 
         # 7. 组装完整响应（解析结果 + input + macro_indicators + output）
         result_dto = agent_result.result

@@ -48,17 +48,16 @@ class CatalystDataAdapter(ICatalystDataPort):
         """
         try:
             result = await self.stock_info_use_case.execute(symbol)
-            if not result or not result.info:
+            if not result:
                 logger.warning(f"Stock basic info not found for symbol: {symbol}")
                 return None
 
-            info = result.info
-            industry_val = info.industry if info.industry else "未知行业"
+            industry_val = result.industry if result.industry else "未知行业"
 
             return CatalystStockOverview(
-                stock_name=info.name,
+                stock_name=result.name,
                 industry=industry_val,
-                third_code=info.third_code,
+                third_code=result.third_code,
             )
         except SQLAlchemyError as e:
             logger.error(

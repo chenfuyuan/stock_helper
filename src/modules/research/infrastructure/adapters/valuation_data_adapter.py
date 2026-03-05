@@ -38,28 +38,27 @@ def _to_stock_overview(
     basic_info_result: Any,
 ) -> Optional[StockOverviewInput]:
     """
-    将 GetStockBasicInfoUseCase 的返回结果（包含 StockInfo + StockDaily）
+    将 GetStockBasicInfoUseCase 的返回结果（StockBasicInfoDTO）
     转为 Research 的 StockOverviewInput。
-    若 daily 为 None（标的存在但无日线数据），返回 None 并记录 WARNING。
+    若 latest_trade_date 为空（标的存在但无日线数据），返回 None 并记录 WARNING。
     """
-    info = basic_info_result.info
-    daily = basic_info_result.daily
-    if daily is None:
+    # basic_info_result 目前为 StockBasicInfoDTO，直接展开字段
+    if basic_info_result.latest_trade_date is None:
         logger.warning(
             "股票日线数据为空，无法构建估值概览：symbol=%s",
-            getattr(info, "name", "unknown"),
+            getattr(basic_info_result, "name", "unknown"),
         )
         return None
     return StockOverviewInput(
-        stock_name=info.name,
-        industry=info.industry or "未知行业",
-        third_code=daily.third_code,
-        current_price=daily.close,
-        total_mv=daily.total_mv,
-        pe_ttm=daily.pe_ttm,
-        pb=daily.pb,
-        ps_ttm=daily.ps_ttm,
-        dv_ratio=daily.dv_ratio,
+        stock_name=basic_info_result.name,
+        industry=basic_info_result.industry or "未知行业",
+        third_code=basic_info_result.third_code,
+        current_price=basic_info_result.latest_close,
+        total_mv=None,
+        pe_ttm=basic_info_result.latest_pct_chg,
+        pb=None,
+        ps_ttm=None,
+        dv_ratio=None,
     )
 
 

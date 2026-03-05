@@ -79,6 +79,60 @@ def _strip_markdown_code_block(text: str) -> str:
     return content.strip()
 
 
+def _repair_trailing_quote_after_array(text: str) -> str:
+    """
+    修复数组闭合方括号后意外多出的一个引号导致的 JSON 语法错误。
+
+    常见错误模式示例（LLM 误输出）：
+        ..."risk_warnings":["a","b"]","reasoning":"..."
+    正确形式应为：
+        ..."risk_warnings":["a","b"],"reasoning":"..."
+
+    本函数在字符串外部扫描，当遇到 ] 后紧跟模式 ]"," 时，
+    自动将其纠正为 ],"，不影响字符串内部的合法内容。
+    """
+    result: list[str] = []
+    i = 0
+    in_string = False
+    escape = False
+    while i < len(text):
+        c = text[i]
+        if in_string:
+            result.append(c)
+            if escape:
+                escape = False
+            elif c == "\\":
+                escape = True
+            elif c == '"':
+                in_string = False
+            i += 1
+            continue
+
+        # 当前不在字符串内部
+        if c == '"':
+            in_string = True
+            result.append(c)
+            i += 1
+            continue
+
+        # 捕获 ]"," 模式，修正为 ],"
+        if (
+            c == "]"
+            and i + 2 < len(text)
+            and text[i + 1] == '"'
+            and text[i + 2] == ","
+        ):
+            result.append("]")
+            result.append(",")
+            i += 3
+            continue
+
+        result.append(c)
+        i += 1
+
+    return "".join(result)
+
+
 def _repair_control_chars_in_json_strings(text: str) -> str:
     """
     在 JSON 字符串值内部，将未转义的控制字符（换行、回车、制表等）转为转义形式。
@@ -216,10 +270,13 @@ def parse_llm_json_output(
     # 3. 剥离 Markdown 代码块
     text = _strip_markdown_code_block(text)
 
-    # 4. 修复控制字符
+    # 4. 修复数组后的意外引号等简单语法错误
+    text = _repair_trailing_quote_after_array(text)
+
+    # 5. 修复控制字符
     text = _repair_control_chars_in_json_strings(text)
 
-    # 5. json.loads（+ 6. fallback 提取）
+    # 6. json.loads（+ 7. fallback 提取）
     data: dict | list | None = None
     last_json_error: json.JSONDecodeError | None = None
     try:

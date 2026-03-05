@@ -21,6 +21,25 @@ def _default_narrative_report(data: dict) -> dict:
     return data
 
 
+def _normalize_catalyst_events(data: dict) -> dict:
+    """
+    归一化正负面催化事件列表：
+    - 若缺少 expected_impact 字段，则补充为空字符串，避免因单个字段遗漏导致整体解析失败。
+    """
+    for key in ("positive_catalysts", "negative_catalysts"):
+        events = data.get(key)
+        if not isinstance(events, list):
+            continue
+        normalized: list[dict] = []
+        for ev in events:
+            if not isinstance(ev, dict):
+                continue
+            ev.setdefault("expected_impact", "")
+            normalized.append(ev)
+        data[key] = normalized
+    return data
+
+
 def parse_catalyst_detective_result(raw: str) -> CatalystDetectiveResultDTO:
     """
     将催化剂侦探 LLM 返回的字符串解析为 CatalystDetectiveResultDTO。
@@ -34,7 +53,7 @@ def parse_catalyst_detective_result(raw: str) -> CatalystDetectiveResultDTO:
         dto = parse_llm_json_output(
             raw,
             CatalystDetectiveResultDTO,
-            normalizers=[_default_narrative_report],
+            normalizers=[_default_narrative_report, _normalize_catalyst_events],
             context_label="催化剂侦探",
         )
     except LLMJsonParseError as e:

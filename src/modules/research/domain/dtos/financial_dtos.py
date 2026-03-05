@@ -34,9 +34,8 @@ class FinancialAuditResultDTO(BaseModel):
     confidence: float = Field(..., ge=0.0, le=1.0, description="置信度 0~1")
     summary_reasoning: str = Field(..., description="审计逻辑摘要，须引用输入中的财务指标读数")
     dimension_analyses: list[DimensionAnalysisDTO] = Field(
-        ...,
-        description="5 个维度的分析结果",
-        min_length=1,
+        default_factory=list,
+        description="5 个维度的分析结果（允许为空列表，表示模型未按维度展开）",
     )
     key_risks: list[str] = Field(default_factory=list, description="主要风险标记")
     risk_warning: str = Field(..., description="评估被证伪时的关键条件描述")
